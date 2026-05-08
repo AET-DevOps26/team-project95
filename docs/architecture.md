@@ -1,3 +1,5 @@
+![Architecture Diagram](./diagrams/architecture.png)
+
 # System Architecture Overview
 
 The system is divided into a frontend client, three Spring Boot backend microservices, a separate Python GenAI service, and persistent storage. The goal is to keep the system modular while still keeping the implementation manageable for the project.
