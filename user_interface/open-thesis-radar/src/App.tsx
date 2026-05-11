@@ -1,5 +1,5 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
-import './App.css'
+// import './App.css'
 import HomePage from './pages/HomePage'
 import DetailedThesisPage from './pages/DetailedThesisPage'
 
