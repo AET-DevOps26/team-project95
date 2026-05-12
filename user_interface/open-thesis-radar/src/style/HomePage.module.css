@@ -1,17 +1,486 @@
-  .page {
-    /* width: 100%; */
-    width: 100vw;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: stretch;
-    border: 2px solid black;
+.page {
+  min-height: 100vh;
+  color: #081533;
+  background: #f9fbff;
+}
+
+.header {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.clickableButton {
+  appearance: none;
+  -webkit-appearance: none;
+  font: inherit;
+  line-height: inherit;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: filter 0.12s ease, transform 0.05s ease;
+}
+
+.clickableButton:active {
+  filter: brightness(0.9);
+  transform: translateY(1px);
+}
+
+/* .nav { */
+/*   display: flex; */
+/*   align-items: center; */
+/*   gap: 28px; */
+/* } */
+/*  */
+/* .navItem { */
+/*   font-size: 18px; */
+/*   font-weight: 600; */
+/* } */
+
+.hero {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 28px 24px 64px;
+}
+
+.heroTitle {
+  margin: 0;
+  max-width: 760px;
+  font-size: clamp(36px, 6vw, 72px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+.heroSubtitle {
+  max-width: 760px;
+  margin: 28px 0 0;
+  font-size: clamp(16px, 1.8vw, 27px);
+  line-height: 1.45;
+  color: #3f4f74;
+}
+
+.heroActions {
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.primaryAction,
+.secondaryAction {
+  border-radius: 14px;
+  min-height: 68px;
+  min-width: 230px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.primaryAction {
+  background: #1861ff;
+  color: #ffffff;
+}
+
+.secondaryAction {
+  background: #ffffff;
+  border: 1px solid #d4def2;
+  color: #081533;
+}
+
+.scrollHint {
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+}
+.scrollHintText {
+  margin-top: 72px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 600;
+  color: #20458f;
+}
+
+.scrollHintIcon {
+    /* changed color in svg file directly */
+}
+
+.searchSection {
+  border-top: 1px solid #e3eaf7;
+  background: #f6f9ff;
+  padding: 58px 24px 72px;
+}
+
+.searchTitle {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(27px, 3.3vw, 46px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.searchSubtitle {
+  margin: 12px auto 0;
+  max-width: 900px;
+  text-align: center;
+  color: #42537a;
+  font-size: clamp(15px, 1.6vw, 23px);
+}
+
+.modeTabs {
+  max-width: 700px;
+  margin: 34px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #d5e0f4;
+  background: #ffffff;
+}
+
+.tab,
+.activeTab {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.activeTab {
+  color: #1861ff;
+  border-bottom: 3px solid #1861ff;
+  background: #ffffff;
+  border-left: 1px solid #d5e0f4;
+}
+
+.tab {
+  color: #344568;
+  background: #ffffff;
+  border-left: 1px solid #d5e0f4;
+}
+
+.modeTabs > button:first-child {
+  border-left: none;
+}
+
+.searchBarBlock {
+  max-width: 1200px;
+  margin: 22px auto 0;
+  border-radius: 14px;
+  border: 1px solid #d5e0f4;
+  background: #ffffff;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+}
+
+.searchInput {
+  flex: 1;
+  min-height: 76px;
+  border-radius: 12px;
+  border: 1px solid #dce6f7;
+  background: #fcfdff;
+  padding: 0 24px;
+  color: #586a93;
+  font-size: 19px;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: #8faeea;
+}
+
+.searchButton {
+  width: 140px;
+  min-height: 76px;
+  border-radius: 12px;
+  background: #1861ff;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.filtersCard {
+  max-width: 1200px;
+  margin: 22px auto 0;
+  border: 1px solid #d5e0f4;
+  border-radius: 14px;
+  background: #ffffff;
+  padding: 24px;
+}
+
+/* This is the base animation setup.
+ When a section switches between visible and hidden, these properties
+ animate smoothly over 0.25s:
+opacity: fades in/out
+transform: slight vertical slide
+max-height: expands/collapses the block in layout
+margin-top: removes/restores top spacing
+`overflow: hidden` prevents content from spilling out while collapsing. */
+.animatedSection {
+  transition: opacity 0.25s ease, transform 0.25s ease, max-height 0.25s ease, margin-top 0.25s ease;
+  transform-origin: top center;
+  overflow: hidden;
+}
+
+/* Visible state.
+The section is fully shown:
+opacity 1 means fully opaque
+translateY(0) means no vertical offset
+max-height is large enough to let content expand
+pointer-events auto allows clicking/typing inside */
+.isVisible {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 1200px;
+  pointer-events: auto;
+}
+
+/* Hidden state.
+The section is visually and physically collapsed:
+opacity 0 makes it transparent
+translateY(-6px) moves it slightly upward for a softer exit
+max-height 0 collapses the section so it no longer takes vertical space
+margin-top 0 removes extra gap
+pointer-events none prevents interaction while hidden */
+.isHidden {
+  opacity: 0;
+  transform: translateY(-6px);
+  max-height: 0;
+  margin-top: 0;
+  pointer-events: none;
+}
+
+.filtersHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.filtersTitle {
+  margin: 0;
+  font-size: 27px;
+}
+
+.resetLink {
+  color: #1c62f7;
+  font-size: 19px;
+  font-weight: 700;
+  background: transparent;
+  border: none;
+}
+
+.filtersGrid {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.filterBox {
+  min-height: 84px;
+  border-radius: 10px;
+  border: 1px solid #d7e2f5;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-size: 18px;
+  color: #2f4066;
+  background: #ffffff;
+}
+
+.emptyState {
+  max-width: 1200px;
+  margin: 24px auto 0;
+  padding: 56px 24px;
+  border: 1px solid #d5e0f4;
+  border-radius: 14px;
+  background: #ffffff;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 46px;
+  color: #7a8fb8;
+}
+
+.emptyTitle {
+  margin: 10px 0 0;
+  font-size: 39px;
+}
+
+.emptyText {
+  margin: 10px auto 0;
+  max-width: 920px;
+  font-size: 20px;
+  color: #53668f;
+}
+
+@media (max-width: 1024px) {
+  .filtersGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .pageHeader {
-    border: 2px solid black;
-    margin-top: 15px;
-    margin-left: 15px;
-    font-weight: 800;
+  .searchBarBlock {
+    flex-direction: column;
+  }
+
+  .searchButton {
+    width: 100%;
+  }
+}
+
+@media (max-width: 700px) {
+  .page {
+    align-items: center;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 18px 14px;
+  }
+
+  .nav {
+    gap: 16px;
+  }
+
+  .hero {
+    padding: 18px 14px 36px;
+    text-align: center;
+  }
+
+  .heroSubtitle {
+    margin-top: 18px;
+  }
+
+  .heroActions {
+    margin-top: 24px;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .primaryAction,
+  .secondaryAction {
+    min-height: 54px;
+    min-width: 176px;
+    border-radius: 10px;
+    font-size: 18px;
+  }
+
+.scrollHint {
+  display: flex;
+  flex-direction: column;
+  justify-items: center;
+  align-items: center;
+}
+.scrollHintText {
+  margin-top: 72px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+  color: #20458f;
+}
+
+.scrollHintIcon {
+    /* changed color in svg file directly */
+}
+
+  .searchSection {
+    padding: 36px 14px 44px;
+  }
+
+  .modeTabs {
+    max-width: 100%;
+  }
+
+  .tab,
+  .activeTab {
+    min-height: 58px;
+    font-size: 17px;
+  }
+
+  .searchBarBlock {
+    padding: 10px;
+    gap: 10px;
+    border-radius: 10px;
+  }
+
+  .searchInput {
+    min-height: 58px;
+    padding: 0 14px;
+    font-size: 16px;
+  }
+
+  .searchButton {
+    min-height: 58px;
+    font-size: 18px;
+    border-radius: 10px;
+  }
+
+  .filtersCard {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .filtersHeader {
+    align-items: center;
+  }
+
+  .filtersTitle {
     font-size: 22px;
   }
+
+  .resetLink {
+    font-size: 16px;
+  }
+
+  .filtersGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .filterBox {
+    min-height: 62px;
+    font-size: 16px;
+  }
+
+  .emptyState {
+    margin-top: 16px;
+    padding: 30px 12px;
+    border-radius: 10px;
+  }
+
+  .emptyIcon {
+    font-size: 38px;
+  }
+
+  .emptyTitle {
+    font-size: 30px;
+  }
+
+  .emptyText {
+    font-size: 16px;
+  }
+}
