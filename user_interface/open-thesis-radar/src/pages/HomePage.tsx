@@ -12,14 +12,10 @@ export default function HomePage() {
 
     return (
         <main className={styles.page}>
-            <header className={styles.header}>
-                <div className={styles.logo}>ThesisHub</div>
-                {/*
-                <nav className={styles.nav}>
-                    <div className={styles.navItem}>Explore</div>
-                    <div className={styles.navItem}>How it works</div>
-                </nav>
-                */}
+            <header className={styles.topBar}>
+                <div className={styles.topBarInner}>
+                    <div className={styles.logo}>ThesisHub</div>
+                </div>
             </header>
 
             <section className={styles.hero}>

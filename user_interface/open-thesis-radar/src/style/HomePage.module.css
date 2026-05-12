@@ -4,18 +4,26 @@
   background: #f9fbff;
 }
 
-.header {
+.topBar {
+  border-bottom: 1px solid #dbe5f7;
+  background: #ffffff;
+  margin-bottom: 30px;
+}
+
+.topBarInner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 28px 24px;
+  min-height: 84px;
+  padding: 0 24px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
 }
 
 .logo {
-  font-size: 30px;
-  font-weight: 800;
+  font-size: 38px;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
@@ -353,13 +361,25 @@ pointer-events none prevents interaction while hidden */
   .page {
     align-items: center;
   }
+.topBar {
+  border-bottom: 1px solid #dbe5f7;
+  background: #ffffff;
+}
 
-  .header {
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-    padding: 18px 14px;
-  }
+.topBarInner {
+  max-width: 1200px;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
 
   .nav {
     gap: 16px;
