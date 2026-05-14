@@ -1,0 +1,18 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: ingestion-service
+
+app:
+  services:
+    main-thesis: http://localhost:8080
+    genai: http://localhost:8000
+
+# Actuator config for DevOps health checks
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
