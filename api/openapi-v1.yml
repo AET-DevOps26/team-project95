@@ -5,21 +5,21 @@ info:
   description: |
     Simplified API contract for the thesis discovery platform.
 
-    The system has three backend microservices:
+    The system has four services:
 
-    - Main Thesis Service: owns PostgreSQL data and exposes the frontend API.
-    - Ingestion Service: periodically scrapes chair/source websites and sends extracted results to the Main Thesis Service.
+    - Thesis Service: owns PostgreSQL data and exposes the frontend API.
+    - Ingestion Service: periodically scrapes chair/source websites and sends extracted results to the Thesis Service.
     - GenAI Service: converts raw scraped content into structured thesis entries.
     - Vector Search Service: owns the vector database and supports semantic search plus reindexing.
 
     Important design decision:
-    During every scrape run for a chair, the Main Thesis Service deletes all existing thesis proposals
-    for that chair from PostgreSQL before inserting the newly scraped proposals. It also instructs the
-    Vector Search Service to delete all vector entries for the same chair before inserting fresh embeddings.
+    During every successful scrape run for a chair, the Thesis Service replaces all existing thesis proposals
+    for that chair in one transaction before instructing the Vector Search Service to refresh the
+    corresponding vector index entries.
 
 servers:
   - url: http://localhost:8080
-    description: Main Thesis Service
+    description: Thesis Service
   - url: http://localhost:8081
     description: Ingestion Service
   - url: http://localhost:8082
@@ -30,8 +30,10 @@ servers:
 tags:
   - name: Frontend API
     description: Endpoints called by the web frontend.
-  - name: Main Service - Ingestion API
-    description: Endpoints exposed by the Main Thesis Service for the Ingestion Service.
+  - name: Thesis Service Internal API
+    description: Internal endpoints exposed by the Thesis Service.
+  - name: Ingestion Service API
+    description: Endpoints exposed by the Ingestion Service.
   - name: Vector Search API
     description: Endpoints exposed by the Vector Search Service.
   - name: GenAI API
@@ -40,7 +42,7 @@ tags:
     description: Health checks for all services.
 
 paths:
-  /api/theses/search:
+  /api/v1/theses/search:
     post:
       tags:
         - Frontend API
@@ -53,7 +55,7 @@ paths:
         - Only natural language: `"I want a thesis about semantic search with LLMs"`
         - Hybrid: natural language query plus traditional filters
 
-        The Main Thesis Service fetches matching structured data from PostgreSQL.
+        The Thesis Service fetches matching structured data from PostgreSQL.
         If `naturalLanguageQuery` is present, it also calls the Vector Search Service
         and combines vector results with relational filtering.
       operationId: searchTheses
@@ -99,7 +101,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/SearchThesesResponse'
 
-  /api/theses/{thesisId}:
+  /api/v1/theses/{thesisId}:
     get:
       tags:
         - Frontend API
@@ -122,7 +124,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /api/chairs:
+  /api/v1/chairs:
     get:
       tags:
         - Frontend API
@@ -139,7 +141,7 @@ paths:
                 items:
                   $ref: '#/components/schemas/Chair'
 
-  /api/filters:
+  /api/v1/filters:
     get:
       tags:
         - Frontend API
@@ -154,15 +156,15 @@ paths:
               schema:
                 $ref: '#/components/schemas/AvailableFiltersResponse'
 
-  /internal/source-endpoints:
+  /internal/v1/thesis-service/source-endpoints:
     get:
       tags:
-        - Main Service - Ingestion API
+        - Thesis Service Internal API
       summary: List source endpoints for scraping
       description: |
         Called by the Ingestion Service before a scrape cycle.
 
-        The Main Thesis Service returns all configured chair websites/source endpoints that should be scraped.
+        The Thesis Service returns all configured chair websites/source endpoints that should be scraped.
         The Ingestion Service then processes them sequentially.
       operationId: listSourceEndpointsForIngestion
       responses:
@@ -173,31 +175,35 @@ paths:
               schema:
                 $ref: '#/components/schemas/SourceEndpointListResponse'
 
-  /internal/scrape-runs:
-    post:
+  /internal/v1/thesis-service/chairs/{chairId}/theses:
+    put:
       tags:
-        - Main Service - Ingestion API
-      summary: Submit result of one scrape run
+        - Thesis Service Internal API
+      summary: Replace all thesis proposals for a chair
       description: |
-        Called by the Ingestion Service after scraping and GenAI extraction for one chair/source endpoint.
+        Called by the Ingestion Service only after successful scraping and successful
+        GenAI extraction for one chair/source endpoint.
 
-        Main Thesis Service behavior:
-        1. Save a new ScrapeRun entry.
-        2. Delete all existing thesis proposals for the affected chair from PostgreSQL.
-        3. Insert the newly extracted thesis proposals into PostgreSQL.
-        4. Call the Vector Search Service to replace all vector entries for the same chair.
+        Thesis Service behavior:
+        1. Save a new scrape run entry.
+        2. In one transaction, delete all existing thesis proposals for `chairId`
+           and insert the newly extracted thesis proposals.
+        3. Commit only if the full replacement succeeds.
+        4. After relational replacement succeeds, call the Vector Search Service
+           to replace the vector index entries for the same chair.
 
-        This endpoint represents the handoff from the ingestion pipeline to the persistent system.
-      operationId: submitScrapeRun
+        If validation or insertion fails, the old thesis data must remain unchanged.
+      operationId: replaceChairTheses
+      parameters:
+        - $ref: '#/components/parameters/ChairId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ScrapeRunSubmission'
+              $ref: '#/components/schemas/ChairThesesReplacementRequest'
             example:
               sourceEndpointId: 10
-              chairId: 3
               startedAt: "2026-05-10T08:00:00Z"
               finishedAt: "2026-05-10T08:01:42Z"
               status: "SUCCESS"
@@ -210,7 +216,6 @@ paths:
                   aiOverview: "Build and evaluate a semantic search pipeline for thesis discovery."
                   researchArea: "Artificial Intelligence"
                   sourceUrl: "https://example-chair.tum.de/theses/semantic-search"
-                  extractionConfidence: 0.93
                   status: "OPEN"
                   advisors:
                     - name: "Max Mustermann"
@@ -221,29 +226,56 @@ paths:
                     - "LLM"
                     - "Information Retrieval"
       responses:
-        '201':
-          description: Scrape run saved and chair thesis data replaced.
+        '200':
+          description: Chair thesis data replaced successfully.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ScrapeRunSubmissionResponse'
+                $ref: '#/components/schemas/ChairThesesReplacementResponse'
         '400':
-          description: Invalid scrape run payload.
+          description: Invalid replacement payload.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /internal/vector/search:
+  /internal/v1/ingestion-service/scrape:
+    post:
+      tags:
+        - Ingestion Service API
+      summary: Trigger a scrape run
+      description: |
+        Starts a scrape run in the Ingestion Service.
+
+        If `sourceEndpointIds` is omitted, all active source endpoints are scraped.
+        This endpoint can be used by a scheduled job or manually for demo/testing.
+      operationId: triggerScrape
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TriggerScrapeRequest'
+            example:
+              sourceEndpointIds: [10, 11]
+      responses:
+        '202':
+          description: Scrape run accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TriggerScrapeResponse'
+
+  /internal/v1/vector-search-service/search:
     post:
       tags:
         - Vector Search API
       summary: Semantic thesis search
       description: |
-        Called by the Main Thesis Service when the frontend sends a natural language query.
+        Called by the Thesis Service when the frontend sends a natural language query.
 
         The Vector Search Service embeds the query, searches the vector database, and returns matching thesis ids
-        with similarity scores. The Main Thesis Service can then fetch full thesis data from PostgreSQL and apply
+        with similarity scores. The Thesis Service can then fetch full thesis data from PostgreSQL and apply
         additional traditional filters.
       operationId: semanticSearch
       requestBody:
@@ -266,21 +298,19 @@ paths:
               schema:
                 $ref: '#/components/schemas/VectorSearchResponse'
 
-  /internal/vector/chairs/{chairId}/replace-theses:
+  /internal/v1/vector-search-service/chairs/{chairId}/index:
     post:
       tags:
         - Vector Search API
-      summary: Replace all vector entries for a chair
+      summary: Replace vector index entries for a chair
       description: |
-        Called by the Main Thesis Service after receiving a successful scrape run.
+        Called by the Thesis Service after relational thesis replacement succeeded.
 
         Vector Search Service behavior:
-        1. Delete all existing vector entries belonging to `chairId`.
+        1. Delete all existing vector index entries belonging to `chairId`.
         2. Generate embeddings for the provided theses.
-        3. Insert the new vector entries.
-
-        This mirrors the PostgreSQL replacement strategy used by the Main Thesis Service.
-      operationId: replaceChairThesisVectors
+        3. Insert the new vector index entries.
+      operationId: indexChairTheses
       parameters:
         - $ref: '#/components/parameters/ChairId'
       requestBody:
@@ -303,13 +333,13 @@ paths:
                   tags: ["Semantic Search", "LLM", "Information Retrieval"]
       responses:
         '200':
-          description: Vector entries for the chair were replaced successfully.
+          description: Vector index entries for the chair were replaced successfully.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReplaceChairVectorsResponse'
 
-  /internal/genai/extract-theses:
+  /internal/v1/genai-service/extract-theses:
     post:
       tags:
         - GenAI API
@@ -347,7 +377,7 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
 
-  /health:
+  /internal/v1/health:
     get:
       tags:
         - Health
@@ -568,6 +598,10 @@ components:
         sourceUrl:
           type: string
           format: uri
+        rawHtmlSnapshot:
+          type: string
+          nullable: true
+          description: Optional raw HTML snippet stored for this thesis proposal.
         extractionConfidence:
           type: number
           format: float
@@ -614,16 +648,6 @@ components:
         sourceUrl:
           type: string
           format: uri
-        rawHtmlSnapshot:
-          type: string
-          nullable: true
-          description: Optional raw HTML snippet for this specific proposal.
-        extractionConfidence:
-          type: number
-          format: float
-          nullable: true
-          minimum: 0
-          maximum: 1
         status:
           type: string
           default: "OPEN"
@@ -668,20 +692,16 @@ components:
           format: uri
           nullable: true
 
-    ScrapeRunSubmission:
+    ChairThesesReplacementRequest:
       type: object
       required:
         - sourceEndpointId
-        - chairId
         - startedAt
         - finishedAt
         - status
         - theses
       properties:
         sourceEndpointId:
-          type: integer
-          format: int64
-        chairId:
           type: integer
           format: int64
         startedAt:
@@ -709,7 +729,7 @@ components:
           items:
             $ref: '#/components/schemas/ThesisProposalInput'
 
-    ScrapeRunSubmissionResponse:
+    ChairThesesReplacementResponse:
       type: object
       required:
         - scrapeRunId
@@ -735,6 +755,27 @@ components:
         replacedVectorEntries:
           type: integer
           example: 9
+
+    TriggerScrapeRequest:
+      type: object
+      properties:
+        sourceEndpointIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+
+    TriggerScrapeResponse:
+      type: object
+      required:
+        - started
+      properties:
+        started:
+          type: boolean
+          example: true
+        message:
+          type: string
+          example: "Scrape run started."
 
     GenAIExtractionRequest:
       type: object
