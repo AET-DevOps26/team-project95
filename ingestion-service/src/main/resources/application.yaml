@@ -4,11 +4,16 @@ server:
 spring:
   application:
     name: ingestion-service
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
 
 app:
   services:
     main-thesis: http://localhost:8080
     genai: http://localhost:8000
+  scheduling:
+    scrape-cron: "0 0 * * * *"
 
 # Actuator config for DevOps health checks
 management:
