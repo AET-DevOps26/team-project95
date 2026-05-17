@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import styles from '../style/HomePage.module.css'
-import scrollIcon from "/public/assets/icons/chevrons-down.svg";
+import scrollIcon from "/assets/icons/chevrons-down.svg";
 
 type QueryMode = 'Natural Language' | 'Filters' | 'Both'
 
