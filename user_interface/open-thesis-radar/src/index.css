@@ -1,0 +1,27 @@
+@font-face {
+  font-family: "Nunito";
+  src: url("/public/assets/fonts/Nunito-VariableFont_wght.ttf") format("truetype");
+  font-weight: 200 1000;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Nunito";
+  src: url("/public/assets/fonts/Nunito-Italic-VariableFont_wght.ttf") format("truetype");
+  font-weight: 200 1000;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root,
+body {
+  font-family: "Nunito", sans-serif;
+}
+
+input,
+textarea,
+select,
+button {
+  font: inherit;
+}
