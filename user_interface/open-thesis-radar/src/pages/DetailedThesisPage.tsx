@@ -1,13 +1,13 @@
 import styles from '../style/DetailedThesisPage.module.css'
-import arrowLeftIcon from "../../assets/icons/arrow-left.svg";
-import graduationCapIcon from "../../assets/icons/graduation-cap.svg";
-import locationIcon from "../../assets/icons/location.svg";
-import notebookIcon from "../../assets/icons/notebook.svg";
-import circleQuestionMarkIcon from "../../assets/icons/circle-question-mark.svg";
-import sparklesIcon from "../../assets/icons/sparkles.svg";
-import fileIcon from "../../assets/icons/file.svg";
-import infoIcon from "../../assets/icons/info.svg";
-import externalLinkIcon from "../../assets/icons/external-link.svg";
+import arrowLeftIcon from "/public/assets/icons/arrow-left.svg";
+import graduationCapIcon from "/public/assets/icons/graduation-cap.svg";
+import locationIcon from "/public/assets/icons/location.svg";
+import notebookIcon from "/public/assets/icons/notebook.svg";
+import circleQuestionMarkIcon from "/public/assets/icons/circle-question-mark.svg";
+import sparklesIcon from "/public/assets/icons/sparkles.svg";
+import fileIcon from "/public/assets/icons/file.svg";
+import infoIcon from "/public/assets/icons/info.svg";
+import externalLinkIcon from "/public/assets/icons/external-link.svg";
 import { useNavigate } from 'react-router-dom'
 
 

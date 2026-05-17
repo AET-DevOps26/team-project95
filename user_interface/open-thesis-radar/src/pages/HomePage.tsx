@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import styles from '../style/HomePage.module.css'
-import scrollIcon from "../../assets/icons/chevrons-down.svg";
+import scrollIcon from "/public/assets/icons/chevrons-down.svg";
 
 type QueryMode = 'Natural Language' | 'Filters' | 'Both'
 
@@ -70,6 +70,9 @@ export default function HomePage() {
 
                 <form
                     className={`${styles.searchBarBlock} ${styles.animatedSection} ${showSearchBar ? styles.isVisible : styles.isHidden}`}
+                    aria-hidden={!showSearchBar}
+                    inert={!showSearchBar}
+
                     onSubmit={(event) => event.preventDefault()}
                 >
                     <input
@@ -86,7 +89,10 @@ export default function HomePage() {
 
                 <div
                     className={`${styles.filtersCard} ${styles.animatedSection} ${showFilters ? styles.isVisible : styles.isHidden}`}
-                >
+                
+                    aria-hidden={!showFilters}
+                    inert={!showFilters}
+                    >
                     <div className={styles.filtersHeader}>
                         <h3 className={styles.filtersTitle}>Filters</h3>
                         <button className={`${styles.resetLink} ${styles.clickableButton}`} type="button">
