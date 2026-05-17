@@ -3,9 +3,17 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
-COPY . .
+# COPY . .
+COPY index.html .
+COPY eslint.config.js .
+COPY vite.config.ts .
+COPY tsconfig.node.json .
+COPY tsconfig.app.json .
+COPY tsconfig.json .
+COPY public ./public
+COPY src ./src
 RUN npm run build
 
 
