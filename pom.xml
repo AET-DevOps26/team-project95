@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+    
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.0.6</version>
+    <relativePath/>
+  </parent>
+    
+  <groupId>com.project95.thesis</groupId>
+  <artifactId>root-parent</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+    
+  <name>team-project95-root</name>
+
+  <modules>
+    <module>services</module>
+  </modules>
+
+  <properties>
+    <java.version>25</java.version>
+    <jackson-databind-nullable.version>0.2.6</jackson-databind-nullable.version>
+    <swagger-annotations.version>2.2.22</swagger-annotations.version>
+    <openapi-generator-plugin.version>7.5.0</openapi-generator-plugin.version>
+    <directory-maven-plugin.version>1.0</directory-maven-plugin.version>
+  </properties>
+
+  <build>
+    <plugins>
+      <!-- Calculates the top-level directory execution absolute path -->
+      <plugin>
+        <groupId>org.commonjava.maven.plugins</groupId>
+        <artifactId>directory-maven-plugin</artifactId>
+        <version>${directory-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>find-root</id>
+            <phase>initialize</phase>
+            <goals>
+              <goal>highest-basedir</goal>
+            </goals>
+            <configuration>
+              <property>repository.root</property>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+</project>

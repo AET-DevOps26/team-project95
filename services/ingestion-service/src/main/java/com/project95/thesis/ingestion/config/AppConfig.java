@@ -1,4 +1,4 @@
-package com.project95.thesis.ingestion_service.config;
+package com.project95.thesis.ingestion.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

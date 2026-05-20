@@ -1,12 +1,14 @@
-package com.project95.thesis.ingestion_service.service;
+package com.project95.thesis.ingestion.service;
 
-import com.project95.thesis.ingestion_service.dto.*;
+import com.project95.thesis.ingestion.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.util.List;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -34,7 +36,7 @@ public class ScrapeCoordinationService {
     public void runScrapeCycle() {
         log.info("Starting scheduled scrape cycle...");
 
-        String endpointsUrl = mainThesisServiceUrl + "/internal/source-endpoints";
+        String endpointsUrl = mainThesisServiceUrl + "/internal/v1/thesis-service/source-endpoints";
         SourceEndpointListResponse response = null;
         try {
             response = restClient.get()
@@ -46,12 +48,12 @@ public class ScrapeCoordinationService {
             return;
         }
 
-        if (response == null || response.endpoints() == null || response.endpoints().isEmpty()) {
+        if (response == null || response.getEndpoints() == null || response.getEndpoints().isEmpty()) {
             log.info("No source endpoints found to scrape.");
             return;
         }
 
-        for (SourceEndpoint endpoint : response.endpoints()) {
+        for (SourceEndpoint endpoint : response.getEndpoints()) {
             processEndpoint(endpoint);
         }
 
@@ -59,16 +61,16 @@ public class ScrapeCoordinationService {
     }
 
     private void processEndpoint(SourceEndpoint endpoint) {
-        log.info("Scraping endpoint: {} (Chair: {})", endpoint.url(), endpoint.chairName());
+        log.info("Scraping endpoint: {} (Chair: {})", endpoint.getUrl(), endpoint.getChairName());
         
         OffsetDateTime startedAt = OffsetDateTime.now(ZoneOffset.UTC);
-        ScrapeStatus status = ScrapeStatus.SUCCESS;
         String errorMessage = null;
         GenAIExtractionResponse genAiResponse = null;
+        String status = "SUCCESS";
 
         try {
             String rawHtml = restClient.get()
-                    .uri(endpoint.url())
+                    .uri(endpoint.getUrl())
                     .retrieve()
                     .body(String.class);
 
@@ -76,16 +78,14 @@ public class ScrapeCoordinationService {
                 throw new RuntimeException("Received empty HTML from source URL");
             }
 
-            GenAIExtractionRequest genAiRequest = new GenAIExtractionRequest(
-                    endpoint.id(),
-                    endpoint.chairId(),
-                    endpoint.chairName(),
-                    endpoint.url(),
-                    rawHtml,
-                    null
-            );
+            GenAIExtractionRequest genAiRequest = new GenAIExtractionRequest();
+            genAiRequest.setSourceEndpointId(endpoint.getId());
+            genAiRequest.setChairId(endpoint.getChairId());
+            genAiRequest.setChairName(JsonNullable.of(endpoint.getChairName()));
+            genAiRequest.setSourceUrl(endpoint.getUrl());
+            genAiRequest.setRawHtml(rawHtml);
             
-            String extractUrl = genAiServiceUrl + "/internal/genai/extract-theses";
+            String extractUrl = genAiServiceUrl + "/internal/v1/genai-service/extract-theses";
             
             genAiResponse = restClient.post()
                     .uri(extractUrl)
@@ -94,38 +94,41 @@ public class ScrapeCoordinationService {
                     .body(GenAIExtractionResponse.class);
 
         } catch (Exception e) {
-            log.error("Failed to process endpoint ID {}", endpoint.id(), e);
-            status = ScrapeStatus.FAILED;
+            log.error("Failed to process endpoint ID {}", endpoint.getId(), e);
             errorMessage = e.getMessage();
+            status = "FAILED";
         }
 
         OffsetDateTime finishedAt = OffsetDateTime.now(ZoneOffset.UTC);
 
-        ScrapeRunSubmission submission = new ScrapeRunSubmission(
-                endpoint.id(),
-                endpoint.chairId(),
-                startedAt,
-                finishedAt,
-                status,
-                errorMessage,
-                null,
-                genAiResponse != null && genAiResponse.theses() != null ? genAiResponse.theses() : Collections.emptyList()
-        );
+        ChairThesesReplacementRequest requestBody = new ChairThesesReplacementRequest();
+        requestBody.setSourceEndpointId(endpoint.getId());
+        requestBody.setStartedAt(startedAt);
+        requestBody.setFinishedAt(finishedAt);
+        
+        requestBody.setStatus(ChairThesesReplacementRequest.StatusEnum.fromValue(status));
+        requestBody.setErrorMessage(JsonNullable.of(errorMessage));
+        requestBody.setRawHtmlSnapshotUrl(JsonNullable.of(null));
 
-        submitScrapeRun(submission);
+        List<ThesisProposalInput> extractedTheses = (genAiResponse != null && genAiResponse.getTheses() != null) 
+                ? genAiResponse.getTheses() 
+                : Collections.emptyList();
+        requestBody.setTheses(extractedTheses);
+
+        submitScrapeRun(endpoint.getChairId(), requestBody);
     }
 
-    private void submitScrapeRun(ScrapeRunSubmission submission) {
-        String submitUrl = mainThesisServiceUrl + "/internal/scrape-runs";
+    private void submitScrapeRun(Long chairId, ChairThesesReplacementRequest submission) {
+        String submitUrl = mainThesisServiceUrl + "/internal/v1/thesis-service/chairs/" + chairId + "/theses";
         try {
-            restClient.post()
+            restClient.put()
                     .uri(submitUrl)
                     .body(submission)
                     .retrieve()
                     .toBodilessEntity();
-            log.info("Successfully submitted scrape run for sourceEndpointId: {}", submission.sourceEndpointId());
+            log.info("Successfully submitted scrape run for chairId: {}", chairId);
         } catch (Exception e) {
-            log.error("Failed to submit scrape run to Main Thesis Service for sourceEndpointId: {}", submission.sourceEndpointId(), e);
+            log.error("Failed to submit scrape run to Main Thesis Service for sourceEndpointId: {}", chairId, e);
         }
     }
 }

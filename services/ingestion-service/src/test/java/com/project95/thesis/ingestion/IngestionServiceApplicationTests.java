@@ -1,4 +1,4 @@
-package com.project95.thesis.ingestion_service;
+package com.project95.thesis.ingestion;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
