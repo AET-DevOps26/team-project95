@@ -4,21 +4,29 @@
   <modelVersion>4.0.0</modelVersion>
     
   <parent>
-    <groupId>com.project95.thesis</groupId>
-    <artifactId>root-parent</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <relativePath>../pom.xml</relativePath> 
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>4.0.6</version>
+    <relativePath/>
   </parent>
-    
+
+  <groupId>com.project95.thesis</groupId>
   <artifactId>services-parent</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <packaging>pom</packaging> 
+  <packaging>pom</packaging>
 
   <name>services-parent</name>
 
   <modules>
     <module>ingestion-service</module>
   </modules>
+
+  <properties>
+    <java.version>25</java.version>
+    <jackson-databind-nullable.version>0.2.6</jackson-databind-nullable.version>
+    <swagger-annotations.version>2.2.22</swagger-annotations.version>
+    <openapi-generator-plugin.version>7.5.0</openapi-generator-plugin.version>
+  </properties>
 
   <dependencies>
     <dependency>

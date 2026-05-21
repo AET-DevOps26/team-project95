@@ -31,7 +31,7 @@
               <goal>generate</goal>
             </goals>
             <configuration>
-              <inputSpec>${repository.root}/api/openapi-v1.yml</inputSpec>
+              <inputSpec>${project.basedir}/../../api/openapi-v1.yml</inputSpec>
                             
               <generatorName>spring</generatorName>
                             
