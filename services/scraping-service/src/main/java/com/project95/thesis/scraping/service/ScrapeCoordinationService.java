@@ -34,7 +34,7 @@ public class ScrapeCoordinationService {
 
     @Scheduled(cron = "${app.scheduling.scrape-cron}")
     public void runScrapeCycle() {
-        log.info("Starting scheduled scrape cycle...");
+        log.info("Starting scrape cycle...");
 
         String endpointsUrl = mainThesisServiceUrl + "/internal/v1/thesis-service/source-endpoints";
         SourceEndpointListResponse response = null;
@@ -64,9 +64,7 @@ public class ScrapeCoordinationService {
         log.info("Scraping endpoint: {} (Chair: {})", endpoint.getUrl(), endpoint.getChairName());
         
         OffsetDateTime startedAt = OffsetDateTime.now(ZoneOffset.UTC);
-        String errorMessage = null;
         GenAIExtractionResponse genAiResponse = null;
-        String status = "SUCCESS";
 
         try {
             String rawHtml = restClient.get()
@@ -94,9 +92,8 @@ public class ScrapeCoordinationService {
                     .body(GenAIExtractionResponse.class);
 
         } catch (Exception e) {
-            log.error("Failed to process endpoint ID {}", endpoint.getId(), e);
-            errorMessage = e.getMessage();
-            status = "FAILED";
+            log.error("Failed to process endpoint ID {}. Skipping thesis replacement to avoid deleting existing data.", endpoint.getId(), e);
+            return;
         }
 
         OffsetDateTime finishedAt = OffsetDateTime.now(ZoneOffset.UTC);
@@ -106,8 +103,8 @@ public class ScrapeCoordinationService {
         requestBody.setStartedAt(startedAt);
         requestBody.setFinishedAt(finishedAt);
         
-        requestBody.setStatus(ChairThesesReplacementRequest.StatusEnum.fromValue(status));
-        requestBody.setErrorMessage(JsonNullable.of(errorMessage));
+        requestBody.setStatus(ChairThesesReplacementRequest.StatusEnum.SUCCESS);
+        requestBody.setErrorMessage(JsonNullable.of(null));
         requestBody.setRawHtmlSnapshotUrl(JsonNullable.of(null));
 
         List<ThesisProposalInput> extractedTheses = (genAiResponse != null && genAiResponse.getTheses() != null) 
