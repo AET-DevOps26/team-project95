@@ -245,19 +245,9 @@ paths:
         - Scraping Service API
       summary: Trigger a scrape run
       description: |
-        Starts a scrape run in the Scraping Service.
-
-        If `sourceEndpointIds` is omitted, all active source endpoints are scraped.
+        Starts a scrape run in the Scraping Service for all source endpoints returned by the Thesis Service.
         This endpoint can be used by a scheduled job or manually for demo/testing.
       operationId: triggerScrape
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/TriggerScrapeRequest'
-            example:
-              sourceEndpointIds: [10, 11]
       responses:
         '202':
           description: Scrape run accepted.
@@ -755,15 +745,6 @@ components:
         replacedVectorEntries:
           type: integer
           example: 9
-
-    TriggerScrapeRequest:
-      type: object
-      properties:
-        sourceEndpointIds:
-          type: array
-          items:
-            type: integer
-            format: int64
 
     TriggerScrapeResponse:
       type: object
