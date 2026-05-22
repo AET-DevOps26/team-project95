@@ -1,0 +1,27 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: vector-search-service
+
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      embedding:
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+
+    vectorstore:
+      azure:
+        url: ${AZURE_AI_SEARCH_ENDPOINT:}
+        api-key: ${AZURE_AI_SEARCH_API_KEY:}
+        index-name: ${AZURE_AI_SEARCH_INDEX:thesis-vector-index}
+        initialize-schema: ${AZURE_AI_SEARCH_INITIALIZE_SCHEMA:false}
+
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health, info
