@@ -7,8 +7,8 @@ spring:
 
 app:
   services:
-    main-thesis: http://localhost:8080
-    genai: http://localhost:8000
+    main-thesis: ${APP_SERVICES_MAIN_THESIS:http://localhost:8080}
+    genai: ${APP_SERVICES_GENAI:http://localhost:8000}
   scheduling:
     scrape-cron: "0 0 * * * *"
 
