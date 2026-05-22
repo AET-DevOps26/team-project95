@@ -1,0 +1,21 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: scraping-service
+
+app:
+  services:
+    main-thesis: ${APP_SERVICES_MAIN_THESIS:http://localhost:8080}
+    genai: ${APP_SERVICES_GENAI:http://localhost:8000}
+  scheduling:
+    scrape-cron: "0 0 * * * *"
+
+# Actuator config for DevOps health checks
+management:
+  endpoints:
+    web:
+      base-path: /
+      exposure:
+        include: health, info
