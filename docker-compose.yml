@@ -1,0 +1,15 @@
+name: team-project95
+
+services:
+  frontend:
+    build:
+      context: ./user_interface/open-thesis-radar
+    ports:
+      - "3000:80"
+
+  scraping-service:
+    build:
+      context: .
+      dockerfile: services/scraping-service/Dockerfile
+    ports:
+      - "8081:8081"
