@@ -1,0 +1,18 @@
+name: team-project95
+
+services:
+  frontend:
+    build:
+      context: ./user_interface/open-thesis-radar
+    ports:
+      - "3000:80"
+
+  scraping-service:
+    build:
+      context: .
+      dockerfile: services/scraping-service/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      APP_SERVICES_MAIN_THESIS: http://thesis-service:8080
+      APP_SERVICES_GENAI: http://genai-service:8000
