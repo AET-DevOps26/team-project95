@@ -7,12 +7,26 @@ services:
     ports:
       - "3000:80"
 
+  genai-service:
+    build:
+      context: .
+      dockerfile: services/genai-service/Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      GENAI_MODEL_PROVIDER: ${GENAI_MODEL_PROVIDER:-openai}
+      GENAI_MODEL_NAME: ${GENAI_MODEL_NAME:-gpt-4o-mini}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+
   scraping-service:
     build:
       context: .
       dockerfile: services/scraping-service/Dockerfile
     ports:
       - "8081:8081"
+    environment:
+      APP_SERVICES_GENAI: ${APP_SERVICES_GENAI:-http://genai-service:8000}
 
   vector-search-service:
     build:
