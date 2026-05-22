@@ -17,14 +17,14 @@ The server side is implemented using Spring Boot REST APIs and split into three 
 | Service | Technology | Responsibility |
 |---|---|---|
 | Thesis Service | Spring Boot | Provides the main thesis API, stores and retrieves thesis proposals, handles filtering and thesis details |
-| Ingestion Service | Spring Boot | Runs the scraping workflow, fetches thesis pages from chair websites, calls the GenAI service, and imports extracted thesis data |
+| Scraping Service | Spring Boot | Runs the scraping workflow, fetches thesis pages from chair websites, calls the GenAI service, and imports extracted thesis data |
 | Vector Search Service | Spring Boot | Provides semantic search functionality and manages communication with the vector database |
 
-The services communicate over REST. The Thesis Service is the main user-facing backend service. The Ingestion Service runs mostly in the background and is triggered periodically. The Vector Search Service is responsible for semantic retrieval.
+The services communicate over REST. The Thesis Service is the main user-facing backend service. The Scraping Service runs mostly in the background and is triggered periodically. The Vector Search Service is responsible for semantic retrieval.
 
 ### GenAI Service
 
-The GenAI component is implemented as a separate Python microservice using LangChain. It receives raw HTML or extracted page text from the Ingestion Service and returns structured thesis information.
+The GenAI component is implemented as a separate Python microservice using LangChain. It receives raw HTML or extracted page text from the Scraping Service and returns structured thesis information.
 
 Example output fields include:
 
@@ -37,7 +37,7 @@ Example output fields include:
 - source URL
 - extraction confidence
 
-The GenAI service does not directly write to the database. It only returns structured data to the Ingestion Service.
+The GenAI service does not directly write to the database. It only returns structured data to the Scraping Service.
 
 ### Database
 

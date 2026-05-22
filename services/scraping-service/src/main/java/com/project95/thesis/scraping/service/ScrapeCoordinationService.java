@@ -1,6 +1,6 @@
-package com.project95.thesis.ingestion.service;
+package com.project95.thesis.scraping.service;
 
-import com.project95.thesis.ingestion.dto.*;
+import com.project95.thesis.scraping.dto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

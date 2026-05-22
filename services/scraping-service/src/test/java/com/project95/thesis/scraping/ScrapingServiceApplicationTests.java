@@ -1,10 +1,10 @@
-package com.project95.thesis.ingestion;
+package com.project95.thesis.scraping;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class IngestionServiceApplicationTests {
+class ScrapingServiceApplicationTests {
 
 	@Test
 	void contextLoads() {

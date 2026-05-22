@@ -3,7 +3,7 @@ server:
 
 spring:
   application:
-    name: ingestion-service
+    name: scraping-service
 
 app:
   services:

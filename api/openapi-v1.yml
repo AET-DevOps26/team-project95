@@ -8,7 +8,7 @@ info:
     The system has four services:
 
     - Thesis Service: owns PostgreSQL data and exposes the frontend API.
-    - Ingestion Service: periodically scrapes chair/source websites and sends extracted results to the Thesis Service.
+    - Scraping Service: periodically scrapes chair/source websites and sends extracted results to the Thesis Service.
     - GenAI Service: converts raw scraped content into structured thesis entries.
     - Vector Search Service: owns the vector database and supports semantic search plus reindexing.
 
@@ -21,7 +21,7 @@ servers:
   - url: http://localhost:8080
     description: Thesis Service
   - url: http://localhost:8081
-    description: Ingestion Service
+    description: Scraping Service
   - url: http://localhost:8082
     description: Vector Search Service
   - url: http://localhost:8000
@@ -32,8 +32,8 @@ tags:
     description: Endpoints called by the web frontend.
   - name: Thesis Service Internal API
     description: Internal endpoints exposed by the Thesis Service.
-  - name: Ingestion Service API
-    description: Endpoints exposed by the Ingestion Service.
+  - name: Scraping Service API
+    description: Endpoints exposed by the Scraping Service.
   - name: Vector Search API
     description: Endpoints exposed by the Vector Search Service.
   - name: GenAI API
@@ -162,11 +162,11 @@ paths:
         - Thesis Service Internal API
       summary: List source endpoints for scraping
       description: |
-        Called by the Ingestion Service before a scrape cycle.
+        Called by the Scraping Service before a scrape cycle.
 
         The Thesis Service returns all configured chair websites/source endpoints that should be scraped.
-        The Ingestion Service then processes them sequentially.
-      operationId: listSourceEndpointsForIngestion
+        The Scraping Service then processes them sequentially.
+      operationId: listSourceEndpointsForScraping
       responses:
         '200':
           description: Source endpoints returned successfully.
@@ -181,7 +181,7 @@ paths:
         - Thesis Service Internal API
       summary: Replace all thesis proposals for a chair
       description: |
-        Called by the Ingestion Service only after successful scraping and successful
+        Called by the Scraping Service only after successful scraping and successful
         GenAI extraction for one chair/source endpoint.
 
         Thesis Service behavior:
@@ -239,13 +239,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-  /internal/v1/ingestion-service/scrape:
+  /internal/v1/scraping-service/scrape:
     post:
       tags:
-        - Ingestion Service API
+        - Scraping Service API
       summary: Trigger a scrape run
       description: |
-        Starts a scrape run in the Ingestion Service.
+        Starts a scrape run in the Scraping Service.
 
         If `sourceEndpointIds` is omitted, all active source endpoints are scraped.
         This endpoint can be used by a scheduled job or manually for demo/testing.
@@ -345,7 +345,7 @@ paths:
         - GenAI API
       summary: Extract structured theses from scraped content
       description: |
-        Called by the Ingestion Service after it downloads raw HTML/text from a source endpoint.
+        Called by the Scraping Service after it downloads raw HTML/text from a source endpoint.
 
         The GenAI Service returns structured thesis proposals extracted from the raw content.
         It does not write to PostgreSQL or the vector database.
@@ -802,7 +802,7 @@ components:
         extractedPlainText:
           type: string
           nullable: true
-          description: Optional plain text extracted by the Ingestion Service before calling GenAI.
+          description: Optional plain text extracted by the Scraping Service before calling GenAI.
 
     GenAIExtractionResponse:
       type: object
