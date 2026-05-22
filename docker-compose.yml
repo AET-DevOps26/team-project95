@@ -13,3 +13,17 @@ services:
       dockerfile: services/scraping-service/Dockerfile
     ports:
       - "8081:8081"
+
+  vector-search-service:
+    build:
+      context: .
+      dockerfile: services/vector-search-service/Dockerfile
+    ports:
+      - "8082:8082"
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
+      AZURE_AI_SEARCH_ENDPOINT: ${AZURE_AI_SEARCH_ENDPOINT}
+      AZURE_AI_SEARCH_API_KEY: ${AZURE_AI_SEARCH_API_KEY}
+      AZURE_AI_SEARCH_INDEX: ${AZURE_AI_SEARCH_INDEX:-thesis-vector-index}
+      AZURE_AI_SEARCH_INITIALIZE_SCHEMA: ${AZURE_AI_SEARCH_INITIALIZE_SCHEMA:-false}
