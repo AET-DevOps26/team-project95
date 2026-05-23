@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 
 @Service
 public class ThesisManagementService {
@@ -13,6 +14,9 @@ public class ThesisManagementService {
 
   @Transactional
   public int replaceThesesInDatabase(Long chairId, ChairThesesReplacementRequest request) {
+    Objects.requireNonNull(chairId, "chairId must not be null");
+    Objects.requireNonNull(request, "request must not be null");
+
     log.info("Starting atomic database replacement transaction for chairId: {}", chairId);
     // TODO
     return request.getTheses() != null ? request.getTheses().size() : 0;

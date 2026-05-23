@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.util.Objects;
+
 @Service
 public class ThesisCoordinationService {
 
@@ -27,8 +29,11 @@ public class ThesisCoordinationService {
   }
 
   public ChairThesesReplacementResponse executeScrapeIngestionPipeline(Long chairId, ChairThesesReplacementRequest request) {
-    // TODO
-   return null; 
+    Objects.requireNonNull(chairId, "chairId must not be null");
+    Objects.requireNonNull(request, "request must not be null");
+
+    log.info("Pipeline execution requested for chairId {} via vector search service {}", chairId, vectorSearchServiceUrl);
+    throw new UnsupportedOperationException("Scrape ingestion pipeline not implemented yet");
   }
 
 }

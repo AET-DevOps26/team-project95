@@ -43,15 +43,18 @@ services:
       AZURE_AI_SEARCH_INITIALIZE_SCHEMA: ${AZURE_AI_SEARCH_INITIALIZE_SCHEMA:-false}
 
   thesis-db:
-    # TODO: add credential environment variables
     image: postgres:16-alpine
     container_name: thesis-postgres-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-thesis_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d thesis_db"]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 5s
       retries: 5
