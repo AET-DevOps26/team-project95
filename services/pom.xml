@@ -20,6 +20,7 @@
   <modules>
     <module>scraping-service</module>
     <module>vector-search-service</module>
+    <module>thesis-service</module>
   </modules>
 
   <properties>
