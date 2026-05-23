@@ -2,18 +2,17 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-RUN pip install --no-cache-dir --upgrade pip
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
 
-RUN pip install --no-cache-dir \
-    fastapi \
-    "uvicorn[standard]" \
-    pydantic \
-    langchain \
-    langchain-openai \
-    langchain-ollama \
-    beautifulsoup4
-
+COPY services/genai-service/pyproject.toml /app/pyproject.toml
 COPY services/genai-service/app.py /app/app.py
+COPY services/genai-service/README.md /app/README.md
+
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir .
+
+RUN chown -R appuser:appgroup /app
+USER appuser
 
 EXPOSE 8000
 

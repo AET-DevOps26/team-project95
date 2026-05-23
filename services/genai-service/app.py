@@ -1,14 +1,17 @@
 import logging
 import os
 import re
-from typing import Optional
+from functools import lru_cache
+from typing import Any, Optional
 
 from bs4 import BeautifulSoup
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 
 logging.basicConfig(
@@ -59,9 +62,57 @@ class HealthResponse(BaseModel):
     service: str
 
 
-class ExtractionResult(BaseModel):
-    theses: list[ThesisProposalInput] = Field(default_factory=list)
+class ErrorResponse(BaseModel):
+    message: str
+    details: Optional[dict[str, Any]] = None
+
+
+class DraftAdvisorInput(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    profileUrl: Optional[str] = None
+
+
+class DraftThesisProposalInput(BaseModel):
+    title: Optional[str] = None
+    degreeType: Optional[str] = None
+    originalDescription: Optional[str] = None
+    aiOverview: Optional[str] = None
+    researchArea: Optional[str] = None
+    sourceUrl: Optional[str] = None
+    status: Optional[str] = None
+    advisors: list[DraftAdvisorInput] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
+
+
+class ExtractionDraftResult(BaseModel):
+    theses: list[DraftThesisProposalInput] = Field(default_factory=list)
     extractionNotes: Optional[str] = None
+
+
+class GenAIServiceError(Exception):
+    status_code = 500
+    message = "Internal server error."
+
+    def __init__(self, message: Optional[str] = None, details: Optional[dict[str, Any]] = None):
+        self.message = message or self.message
+        self.details = details
+        super().__init__(self.message)
+
+
+class ConfigError(GenAIServiceError):
+    status_code = 500
+    message = "GenAI service configuration error."
+
+
+class UpstreamServiceError(GenAIServiceError):
+    status_code = 502
+    message = "GenAI provider request failed."
+
+
+class ExtractionError(GenAIServiceError):
+    status_code = 422
+    message = "Extraction could not produce reliable structured output."
 
 
 app = FastAPI(
@@ -71,6 +122,25 @@ app = FastAPI(
 )
 
 
+@app.exception_handler(GenAIServiceError)
+async def handle_genai_service_error(_: Request, exc: GenAIServiceError) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=ErrorResponse(message=exc.message, details=exc.details).model_dump(exclude_none=True),
+    )
+
+
+@app.exception_handler(RequestValidationError)
+async def handle_validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
+    return JSONResponse(
+        status_code=422,
+        content=ErrorResponse(
+            message="Request validation failed.",
+            details={"errors": exc.errors()},
+        ).model_dump(exclude_none=True),
+    )
+
+
 def get_env(name: str, default: Optional[str] = None) -> Optional[str]:
     return os.getenv(name, default)
 
@@ -78,7 +148,10 @@ def get_env(name: str, default: Optional[str] = None) -> Optional[str]:
 def get_required_env(name: str) -> str:
     value = os.getenv(name)
     if not value:
-        raise RuntimeError(f"Missing required environment variable: {name}")
+        raise ConfigError(
+            message="GenAI service configuration error.",
+            details={"missingEnvironmentVariable": name},
+        )
     return value
 
 
@@ -100,6 +173,7 @@ def preprocess_input(raw_html: str, extracted_plain_text: Optional[str]) -> str:
     return cleaned[:MAX_INPUT_CHARS]
 
 
+@lru_cache(maxsize=1)
 def get_llm():
     provider = (get_env("GENAI_MODEL_PROVIDER", "openai") or "openai").lower()
     default_model = DEFAULT_OPENAI_MODEL if provider == "openai" else DEFAULT_OLLAMA_MODEL
@@ -123,7 +197,10 @@ def get_llm():
             temperature=0,
         )
 
-    raise RuntimeError(f"Unsupported GENAI_MODEL_PROVIDER: {provider}")
+    raise ConfigError(
+        message="GenAI service configuration error.",
+        details={"unsupportedProvider": provider},
+    )
 
 
 def build_prompt(request: GenAIExtractionRequest, cleaned_text: str) -> str:
@@ -157,7 +234,10 @@ Cleaned page content:
 '''.strip()
 
 
-def normalize_thesis(thesis: ThesisProposalInput, source_url: str) -> ThesisProposalInput:
+def normalize_thesis(thesis: DraftThesisProposalInput, source_url: str) -> ThesisProposalInput:
+    if not thesis.title or not thesis.title.strip():
+        raise ExtractionError(details={"reason": "Model returned a thesis item without a title."})
+
     normalized_title = thesis.title.strip()
     normalized_degree = thesis.degreeType.strip().upper() if thesis.degreeType else None
     if normalized_degree not in {"BACHELOR", "MASTER"}:
@@ -202,26 +282,34 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
         return GenAIExtractionResponse(theses=[], extractionNotes="Input page was empty after preprocessing.")
 
     llm = get_llm()
-    structured_llm = llm.with_structured_output(ExtractionResult)
+    structured_llm = llm.with_structured_output(ExtractionDraftResult)
 
-    result = structured_llm.invoke([
-        SystemMessage(
-            content=(
-                "You are a precise information extraction system. "
-                "Return only structured thesis data supported by the input."
-            )
-        ),
-        HumanMessage(content=build_prompt(request, cleaned_text)),
-    ])
+    try:
+        result = structured_llm.invoke([
+            SystemMessage(
+                content=(
+                    "You are a precise information extraction system. "
+                    "Return only structured thesis data supported by the input."
+                )
+            ),
+            HumanMessage(content=build_prompt(request, cleaned_text)),
+        ])
+    except GenAIServiceError:
+        raise
+    except Exception as exc:
+        raise UpstreamServiceError(details={"errorType": type(exc).__name__}) from exc
 
     normalized_theses: list[ThesisProposalInput] = []
     seen_titles: set[str] = set()
 
     for thesis in result.theses:
-        if not thesis.title or not thesis.title.strip():
+        try:
+            normalized = normalize_thesis(thesis, request.sourceUrl)
+        except ExtractionError:
             continue
+        except ValidationError as exc:
+            raise ExtractionError(details={"validationErrors": exc.errors()}) from exc
 
-        normalized = normalize_thesis(thesis, request.sourceUrl)
         title_key = normalized.title.casefold()
         if title_key in seen_titles:
             continue
@@ -243,6 +331,11 @@ def health_check() -> HealthResponse:
 @app.post(
     "/internal/v1/genai-service/extract-theses",
     response_model=GenAIExtractionResponse,
+    responses={
+        422: {"model": ErrorResponse},
+        500: {"model": ErrorResponse},
+        502: {"model": ErrorResponse},
+    },
 )
 def extract_theses(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
     try:
@@ -253,10 +346,17 @@ def extract_theses(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
             len(response.theses),
         )
         return response
-    except Exception as exc:
+    except GenAIServiceError:
         logger.exception(
             "Extraction failed sourceEndpointId=%s sourceUrl=%s",
             request.sourceEndpointId,
             request.sourceUrl,
         )
-        raise HTTPException(status_code=422, detail=str(exc)) from exc
+        raise
+    except Exception as exc:
+        logger.exception(
+            "Unexpected extraction failure sourceEndpointId=%s sourceUrl=%s",
+            request.sourceEndpointId,
+            request.sourceUrl,
+        )
+        raise UpstreamServiceError(details={"errorType": type(exc).__name__}) from exc
