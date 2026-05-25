@@ -6,9 +6,14 @@ spring:
     name: scraping-service
 
 app:
-  services:
-    main-thesis: ${APP_SERVICES_MAIN_THESIS:http://localhost:8080}
-    genai: ${APP_SERVICES_GENAI:http://localhost:8000}
+  client:
+    main-thesis:
+      url: ${APP_SERVICES_MAIN_THESIS:http://localhost:8080}
+    genai:
+      url: ${APP_SERVICES_GENAI:http://localhost:8000}
+    timeouts:
+      connect-ms: ${CLIENT_CONNECT_TIMEOUT:4000}
+      read-ms: ${CLIENT_READ_TIMEOUT:10000}
   scheduling:
     scrape-cron: "0 0 * * * *"
 

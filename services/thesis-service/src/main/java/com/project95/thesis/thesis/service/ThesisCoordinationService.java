@@ -1,11 +1,11 @@
 package com.project95.thesis.thesis.service;
 
 import com.project95.thesis.management.dto.*;
+import com.project95.thesis.thesis.config.ClientProperties;
 import com.project95.thesis.thesis.domain.ThesisProposal;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -22,15 +22,15 @@ public class ThesisCoordinationService {
 
   private final ThesisManagementService thesisManagementService;
   private final RestClient restClient;
-  private final String vectorSearchServiceUrl;
+  private final ClientProperties clientProperties;
 
   public ThesisCoordinationService(
       ThesisManagementService thesisManagementService,
       RestClient restClient,
-      @Value("${app.services.vector-search:http://vector-search-service:8082}") String vectorSearchServiceUrl) {
+      ClientProperties clientProperties) {
     this.thesisManagementService = thesisManagementService;
     this.restClient = restClient;
-    this.vectorSearchServiceUrl = vectorSearchServiceUrl;
+    this.clientProperties = clientProperties;
   }
 
   public ChairThesesReplacementResponse executeScrapeIngestionPipeline(Long chairId, ChairThesesReplacementRequest request) {
@@ -79,7 +79,7 @@ public class ThesisCoordinationService {
     int vectorReplacementsCount = 0;
     try {
       ReplaceChairVectorsResponse vectorResponse = restClient.post()
-        .uri(vectorSearchServiceUrl + "/internal/v1/vector-search-service/chairs/{chairId}/index", chairId)
+        .uri(clientProperties.getVectorSearch().getUrl() + "/internal/v1/vector-search-service/chairs/{chairId}/index", chairId)
         .contentType(MediaType.APPLICATION_JSON)
         .body(vectorRequest)
         .retrieve()

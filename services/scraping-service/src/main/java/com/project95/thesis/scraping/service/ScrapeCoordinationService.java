@@ -20,23 +20,20 @@ public class ScrapeCoordinationService {
     private static final Logger log = LoggerFactory.getLogger(ScrapeCoordinationService.class);
 
     private final RestClient restClient;
-    private final String mainThesisServiceUrl;
-    private final String genAiServiceUrl;
+    private final ClientProperties clientProperties;
 
     public ScrapeCoordinationService(
             RestClient restClient,
-            @Value("${app.services.main-thesis}") String mainThesisServiceUrl,
-            @Value("${app.services.genai}") String genAiServiceUrl) {
+            ClientProperties clientProperties) {
         this.restClient = restClient;
-        this.mainThesisServiceUrl = mainThesisServiceUrl;
-        this.genAiServiceUrl = genAiServiceUrl;
+        this.clientProperties = clientProperties;
     }
 
     @Scheduled(cron = "${app.scheduling.scrape-cron}")
     public void runScrapeCycle() {
         log.info("Starting scrape cycle...");
 
-        String endpointsUrl = mainThesisServiceUrl + "/internal/v1/thesis-service/source-endpoints";
+        String endpointsUrl = clientProperties.getMainThesis().getUrl() + "/internal/v1/thesis-service/source-endpoints";
         SourceEndpointListResponse response = null;
         try {
             response = restClient.get()
@@ -83,7 +80,7 @@ public class ScrapeCoordinationService {
             genAiRequest.setSourceUrl(endpoint.getUrl());
             genAiRequest.setRawHtml(rawHtml);
             
-            String extractUrl = genAiServiceUrl + "/internal/v1/genai-service/extract-theses";
+            String extractUrl = clientProperties.getGenAi().getUrl() + "/internal/v1/genai-service/extract-theses";
             
             genAiResponse = restClient.post()
                     .uri(extractUrl)
@@ -116,7 +113,7 @@ public class ScrapeCoordinationService {
     }
 
     private void submitScrapeRun(Long chairId, ChairThesesReplacementRequest submission) {
-        String submitUrl = mainThesisServiceUrl + "/internal/v1/thesis-service/chairs/" + chairId + "/theses";
+        String submitUrl = clientProperties.getMainThesis().getUrl() + "/internal/v1/thesis-service/chairs/" + chairId + "/theses";
         try {
             restClient.put()
                     .uri(submitUrl)
