@@ -2,6 +2,7 @@ package com.project95.thesis.scraping.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import com.project95.thesis.scraping.config.ClientProperties;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -20,7 +21,12 @@ class ScrapeCoordinationServiceTest {
     void setUp() {
         RestClient.Builder restClientBuilder = RestClient.builder();
         mockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
-        service = new ScrapeCoordinationService(restClientBuilder.build(), "http://main-thesis", "http://genai");
+        
+        ClientProperties properties = new ClientProperties();
+        properties.getMainThesis().setUrl("http://main-thesis");
+        properties.getGenAi().setUrl("http://genai");
+        
+        service = new ScrapeCoordinationService(restClientBuilder.build(), properties);
     }
 
     @Test

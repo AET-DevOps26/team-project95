@@ -3,6 +3,7 @@ package com.project95.thesis.thesis.service;
 import com.project95.thesis.management.dto.ChairThesesReplacementRequest;
 import com.project95.thesis.management.dto.ChairThesesReplacementResponse;
 import com.project95.thesis.thesis.domain.ThesisProposal;
+import com.project95.thesis.thesis.config.ClientProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,7 +37,11 @@ class ThesisCoordinationServiceTest {
     void setUp() {
         RestClient.Builder restClientBuilder = RestClient.builder();
         mockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
-        service = new ThesisCoordinationService(thesisManagementService, restClientBuilder.build(), "http://vector-service");
+        
+        ClientProperties clientProperties = new ClientProperties();
+        clientProperties.getVectorSearch().setUrl("http://vector-service");
+        
+        service = new ThesisCoordinationService(thesisManagementService, restClientBuilder.build(), clientProperties);
     }
 
     @Test

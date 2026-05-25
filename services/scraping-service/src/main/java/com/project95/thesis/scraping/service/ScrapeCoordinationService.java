@@ -1,6 +1,7 @@
 package com.project95.thesis.scraping.service;
 
 import com.project95.thesis.scraping.dto.*;
+import com.project95.thesis.scraping.config.ClientProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
