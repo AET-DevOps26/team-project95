@@ -85,11 +85,16 @@ public class ThesisVectorSearchService {
                 ? List.of()
                 : values.stream()
                         .filter(value -> value != null && !ThesisVectorUtils.isBlank(String.valueOf(value)))
+                        .map(this::normalizeFilterValue)
                         .toList();
 
         if (!filteredValues.isEmpty()) {
             expressions.add(new Expression(ExpressionType.IN, new Key(metadataKey), new Value(filteredValues)));
         }
+    }
+
+    private Object normalizeFilterValue(Object value) {
+        return value instanceof String text ? text.trim() : value;
     }
 
     private VectorSearchResult toResult(Document document) {

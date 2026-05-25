@@ -8,9 +8,6 @@ public final class ThesisVectorDocumentValidator {
     }
 
     public static void validateForChair(Long chairId, VectorThesisDocument thesis) {
-        if (chairId == null) {
-            throw new IllegalArgumentException("chairId must not be null");
-        }
         if (thesis == null) {
             throw new IllegalArgumentException("Thesis document must not be null");
         }

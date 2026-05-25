@@ -18,7 +18,7 @@ public final class ThesisVectorUtils {
 
     public static void putIfPresent(Map<String, Object> metadata, String key, String value) {
         if (!isBlank(value)) {
-            metadata.put(key, value);
+            metadata.put(key, value.trim());
         }
     }
 
@@ -32,10 +32,6 @@ public final class ThesisVectorUtils {
         if (!isBlank(value)) {
             parts.add(value.trim());
         }
-    }
-
-    public static String nullableValue(String value) {
-        return value;
     }
 
     public static boolean isBlank(String value) {

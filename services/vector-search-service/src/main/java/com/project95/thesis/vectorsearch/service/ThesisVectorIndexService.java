@@ -6,15 +6,16 @@ import com.project95.thesis.vectorsearch.dto.VectorThesisDocument;
 import com.project95.thesis.vectorsearch.util.ThesisVectorDocumentValidator;
 import com.project95.thesis.vectorsearch.util.ThesisVectorMetadata;
 import com.project95.thesis.vectorsearch.util.ThesisVectorUtils;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.UUID;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ThesisVectorIndexService {
@@ -25,11 +26,16 @@ public class ThesisVectorIndexService {
         this.vectorStore = vectorStore;
     }
 
+    @Transactional
     public ReplaceChairVectorsResponse indexChairTheses(Long chairId, ReplaceChairVectorsRequest request) {
-        List<VectorThesisDocument> theses = request == null || request.getTheses() == null
-                ? List.of()
-                : request.getTheses();
+        if (chairId == null) {
+            throw new IllegalArgumentException("chairId must not be null");
+        }
+        if (request == null || request.getTheses() == null) {
+            throw new IllegalArgumentException("Replace chair vectors request and theses must not be null");
+        }
 
+        List<VectorThesisDocument> theses = request.getTheses();
         List<Document> documents = new ArrayList<>(theses.size());
         for (VectorThesisDocument thesis : theses) {
             ThesisVectorDocumentValidator.validateForChair(chairId, thesis);
@@ -61,14 +67,14 @@ public class ThesisVectorIndexService {
     private String buildContent(VectorThesisDocument thesis) {
         List<String> parts = new ArrayList<>();
         ThesisVectorUtils.addIfPresent(parts, thesis.getTitle());
-        ThesisVectorUtils.addIfPresent(parts, ThesisVectorUtils.nullableValue(thesis.getAiOverview()));
-        ThesisVectorUtils.addIfPresent(parts, ThesisVectorUtils.nullableValue(thesis.getOriginalDescription()));
-        ThesisVectorUtils.addLabelledIfPresent(parts, "Research area", ThesisVectorUtils.nullableValue(thesis.getResearchArea()));
-        ThesisVectorUtils.addLabelledIfPresent(parts, "Degree type", ThesisVectorUtils.nullableValue(thesis.getDegreeType()));
+        ThesisVectorUtils.addIfPresent(parts, thesis.getAiOverview());
+        ThesisVectorUtils.addIfPresent(parts, thesis.getOriginalDescription());
+        ThesisVectorUtils.addLabelledIfPresent(parts, "Research area", thesis.getResearchArea());
+        ThesisVectorUtils.addLabelledIfPresent(parts, "Degree type", thesis.getDegreeType());
 
-        if (thesis.getTags() != null && !thesis.getTags().isEmpty()) {
-            String tags = String.join(", ", thesis.getTags().stream().filter(tag -> !ThesisVectorUtils.isBlank(tag)).toList());
-            ThesisVectorUtils.addLabelledIfPresent(parts, "Tags", tags);
+        List<String> tags = normalizedTags(thesis);
+        if (!tags.isEmpty()) {
+            ThesisVectorUtils.addLabelledIfPresent(parts, "Tags", String.join(", ", tags));
         }
 
         return String.join("\n\n", parts);
@@ -79,13 +85,24 @@ public class ThesisVectorIndexService {
         metadata.put(ThesisVectorMetadata.THESIS_ID, thesis.getThesisId());
         metadata.put(ThesisVectorMetadata.CHAIR_ID, thesis.getChairId());
         metadata.put(ThesisVectorMetadata.TITLE, thesis.getTitle());
-        ThesisVectorUtils.putIfPresent(metadata, ThesisVectorMetadata.DEGREE_TYPE, ThesisVectorUtils.nullableValue(thesis.getDegreeType()));
-        ThesisVectorUtils.putIfPresent(metadata, ThesisVectorMetadata.RESEARCH_AREA, ThesisVectorUtils.nullableValue(thesis.getResearchArea()));
+        ThesisVectorUtils.putIfPresent(metadata, ThesisVectorMetadata.DEGREE_TYPE, thesis.getDegreeType());
+        ThesisVectorUtils.putIfPresent(metadata, ThesisVectorMetadata.RESEARCH_AREA, thesis.getResearchArea());
         metadata.put(ThesisVectorMetadata.SOURCE_URL, thesis.getSourceUrl().toString());
-        if (thesis.getTags() != null && !thesis.getTags().isEmpty()) {
-            metadata.put(ThesisVectorMetadata.TAGS, thesis.getTags());
+        List<String> tags = normalizedTags(thesis);
+        if (!tags.isEmpty()) {
+            metadata.put(ThesisVectorMetadata.TAGS, tags);
         }
         return metadata;
+    }
+
+    private List<String> normalizedTags(VectorThesisDocument thesis) {
+        if (thesis.getTags() == null) {
+            return List.of();
+        }
+        return thesis.getTags().stream()
+                .filter(tag -> !ThesisVectorUtils.isBlank(tag))
+                .map(String::trim)
+                .toList();
     }
 
 }
