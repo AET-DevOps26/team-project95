@@ -3,6 +3,8 @@
 .env.*
 !.env.example
 !.env.sample
+!.env.enc
+!.sops.yaml
 
 # OS files
 .DS_Store
