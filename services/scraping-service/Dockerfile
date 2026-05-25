@@ -9,7 +9,7 @@ COPY services/pom.xml ./pom.xml
 COPY services/scraping-service/pom.xml ./scraping-service/pom.xml
 COPY services/scraping-service/src ./scraping-service/src
 
-RUN mvn clean package -pl scraping-service -am -DskipTests
+RUN mvn -f scraping-service/pom.xml clean package -DskipTests
 
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app

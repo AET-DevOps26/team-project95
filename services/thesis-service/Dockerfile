@@ -9,7 +9,7 @@ COPY services/pom.xml ./pom.xml
 COPY services/thesis-service/pom.xml ./thesis-service/pom.xml
 COPY services/thesis-service/src ./thesis-service/src
 
-RUN mvn clean package -pl thesis-service -am -DskipTests
+RUN mvn -f thesis-service/pom.xml clean package -DskipTests
 
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
