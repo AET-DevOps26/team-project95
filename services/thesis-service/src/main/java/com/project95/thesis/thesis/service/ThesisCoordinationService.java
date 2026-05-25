@@ -92,6 +92,7 @@ public class ThesisCoordinationService {
       
     } catch (Exception e) {
       log.error("CRITICAL: Relational data updated, but vector indexing sync failed for chairId: {}. Reason: {}", chairId, e.getMessage());
+      throw new RuntimeException("Vector Search index synchronization failed.", e);
     }
 
     ChairThesesReplacementResponse response = new ChairThesesReplacementResponse();

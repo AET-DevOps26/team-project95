@@ -46,6 +46,13 @@
       <groupId>io.swagger.core.v3</groupId>
       <artifactId>swagger-annotations</artifactId>
     </dependency>
+
+    <!-- Test dependencies -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>
