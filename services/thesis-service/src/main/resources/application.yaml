@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:thesis_db}
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:postgresql://${THESIS_DB_HOST:${DB_HOST:localhost}}:${THESIS_DB_PORT:${DB_PORT:5432}}/${THESIS_DB_NAME:${DB_NAME:thesis_db}}
+    username: ${THESIS_DB_USER:${DB_USER:thesis_user}}
+    password: ${THESIS_DB_PASSWORD:${DB_PASSWORD:thesis_password}}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -13,4 +13,4 @@ spring:
 
 app:
   services:
-    vector-search: ${APP_SERVICES_VECTOR_SEARCH:http://localhost:8082}
+    vector-search: ${VECTOR_SEARCH_SERVICE_URL:${APP_SERVICES_VECTOR_SEARCH:http://localhost:8082}}

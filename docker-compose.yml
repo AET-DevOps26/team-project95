@@ -35,20 +35,64 @@ services:
     ports:
       - "8082:8082"
     environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-      OPENAI_EMBEDDING_MODEL: ${OPENAI_EMBEDDING_MODEL:-text-embedding-3-small}
-      AZURE_AI_SEARCH_ENDPOINT: ${AZURE_AI_SEARCH_ENDPOINT}
-      AZURE_AI_SEARCH_API_KEY: ${AZURE_AI_SEARCH_API_KEY}
-      AZURE_AI_SEARCH_INDEX: ${AZURE_AI_SEARCH_INDEX:-thesis-vector-index}
-      AZURE_AI_SEARCH_INITIALIZE_SCHEMA: ${AZURE_AI_SEARCH_INITIALIZE_SCHEMA:-false}
+      # Azure OpenAI embedding settings.
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-}
+      AZURE_OPENAI_EMBEDDING_DEPLOYMENT: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-text-embedding-ada-002}
+      AZURE_OPENAI_EMBEDDING_MODEL: ${AZURE_OPENAI_EMBEDDING_MODEL:-text-embedding-ada-002}
+      PGVECTOR_DIMENSIONS: ${PGVECTOR_DIMENSIONS:-1536}
+
+      # Dedicated PGvector database owned by the vector-search-service.
+      PGVECTOR_URL: jdbc:postgresql://vector-db:5432/${VECTOR_DB_NAME:-vector_search_db}
+      PGVECTOR_USERNAME: ${VECTOR_DB_USER:-vector_user}
+      PGVECTOR_PASSWORD: ${VECTOR_DB_PASSWORD:-vector_password}
+    depends_on:
+      vector-db:
+        condition: service_healthy
+
+  thesis-service:
+    build:
+      context: .
+      dockerfile: services/thesis-service/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      THESIS_DB_HOST: thesis-db
+      THESIS_DB_PORT: 5432
+      THESIS_DB_NAME: ${THESIS_DB_NAME:-thesis_db}
+      THESIS_DB_USER: ${THESIS_DB_USER:-thesis_user}
+      THESIS_DB_PASSWORD: ${THESIS_DB_PASSWORD:-thesis_password}
+      VECTOR_SEARCH_SERVICE_URL: ${VECTOR_SEARCH_SERVICE_URL:-http://vector-search-service:8082}
+    depends_on:
+      thesis-db:
+        condition: service_healthy
+      vector-search-service:
+        condition: service_started
+
+  vector-db:
+    image: pgvector/pgvector:pg16
+    container_name: vector-postgres-db
+    environment:
+      POSTGRES_DB: ${VECTOR_DB_NAME:-vector_search_db}
+      POSTGRES_USER: ${VECTOR_DB_USER:-vector_user}
+      POSTGRES_PASSWORD: ${VECTOR_DB_PASSWORD:-vector_password}
+    ports:
+      - "5433:5432"
+    volumes:
+      - vector_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   thesis-db:
     image: postgres:16-alpine
     container_name: thesis-postgres-db
     environment:
-      POSTGRES_DB: ${DB_NAME:-thesis_db}
-      POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${THESIS_DB_NAME:-thesis_db}
+      POSTGRES_USER: ${THESIS_DB_USER:-thesis_user}
+      POSTGRES_PASSWORD: ${THESIS_DB_PASSWORD:-thesis_password}
     ports:
       - "5432:5432"
     volumes:
@@ -61,3 +105,4 @@ services:
 
 volumes:
   postgres_data:
+  vector_postgres_data:
