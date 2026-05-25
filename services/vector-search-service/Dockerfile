@@ -9,7 +9,7 @@ COPY services/pom.xml ./pom.xml
 COPY services/vector-search-service/pom.xml ./vector-search-service/pom.xml
 COPY services/vector-search-service/src ./vector-search-service/src
 
-RUN mvn clean package -pl vector-search-service -am -DskipTests
+RUN mvn -f vector-search-service/pom.xml clean package -DskipTests
 
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
