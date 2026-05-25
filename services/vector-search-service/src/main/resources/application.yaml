@@ -5,19 +5,26 @@ spring:
   application:
     name: vector-search-service
 
+  datasource:
+    url: ${PGVECTOR_URL:jdbc:postgresql://localhost:5433/vector_search_db}
+    username: ${PGVECTOR_USERNAME:vector_user}
+    password: ${PGVECTOR_PASSWORD:vector_password}
+
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY:}
+      base-url: ${AZURE_OPENAI_ENDPOINT:}
+      api-key: ${AZURE_OPENAI_API_KEY:}
       embedding:
-        options:
-          model: ${OPENAI_EMBEDDING_MODEL:text-embedding-3-small}
+        deployment-name: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:text-embedding-ada-002}
+        model: ${AZURE_OPENAI_EMBEDDING_MODEL:text-embedding-ada-002}
 
     vectorstore:
-      azure:
-        url: ${AZURE_AI_SEARCH_ENDPOINT:}
-        api-key: ${AZURE_AI_SEARCH_API_KEY:}
-        index-name: ${AZURE_AI_SEARCH_INDEX:thesis-vector-index}
-        initialize-schema: ${AZURE_AI_SEARCH_INITIALIZE_SCHEMA:false}
+      pgvector:
+        initialize-schema: ${PGVECTOR_INITIALIZE_SCHEMA:true}
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: ${PGVECTOR_DIMENSIONS:1536}
+        max-document-batch-size: 10000
 
 management:
   endpoints:
