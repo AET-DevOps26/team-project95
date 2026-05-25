@@ -4,22 +4,8 @@ import scrollIcon from '/assets/icons/chevrons-down.svg';
 import FilterDropdown from '../components/FilterDropdown';
 import { getAvailableFilters } from '../api/filters';
 import type { components } from '../api';
-
-type QueryMode = 'Natural Language' | 'Filters' | 'Both';
-
-type FilterState = {
-  chairIds: number[];
-  degreeTypes: string[];
-  researchAreas: string[];
-  tags: string[];
-};
-
-const INITIAL_FILTER_STATE: FilterState = {
-  chairIds: [],
-  degreeTypes: [],
-  researchAreas: [],
-  tags: [],
-};
+import { useSearchState } from '../state/searchState';
+import { Link } from 'react-router-dom';
 
 const INITIAL_FILTERS: components['schemas']['AvailableFiltersResponse'] = {
   chairs: [
@@ -41,10 +27,16 @@ const INITIAL_FILTERS: components['schemas']['AvailableFiltersResponse'] = {
 };
 
 export default function HomePage() {
-  const [queryMode, setQueryMode] = useState<QueryMode>('Both');
-  const [naturalLanguageQuery, setNaturalLanguageQuery] = useState('');
   const [filters, setFilters] = useState<components['schemas']['AvailableFiltersResponse']>(INITIAL_FILTERS);
-  const [selectedFilters, setSelectedFilters] = useState<FilterState>(INITIAL_FILTER_STATE);
+  const {
+    queryMode,
+    setQueryMode,
+    naturalLanguageQuery,
+    setNaturalLanguageQuery,
+    selectedFilters,
+    setSelectedFilters,
+    resetSelectedFilters,
+  } = useSearchState();
   const showSearchBar = queryMode === 'Natural Language' || queryMode === 'Both';
   const showFilters = queryMode === 'Filters' || queryMode === 'Both';
 
@@ -179,7 +171,7 @@ export default function HomePage() {
             <button
               className={`${styles.resetLink} ${styles.clickableButton}`}
               type="button"
-              onClick={() => setSelectedFilters(INITIAL_FILTER_STATE)}
+              onClick={resetSelectedFilters}
             >
               Reset all
             </button>
@@ -215,6 +207,12 @@ export default function HomePage() {
               onChange={(values) => setSelectedFilters((prev) => ({ ...prev, tags: values }))}
             />
           </div>
+        </div>
+
+        <div className={styles.mockNavigationRow}>
+          <Link className={`${styles.mockThesisLink} ${styles.clickableButton}`} to="/thesis">
+            Open mock thesis page
+          </Link>
         </div>
 
         <div className={styles.emptyState}>

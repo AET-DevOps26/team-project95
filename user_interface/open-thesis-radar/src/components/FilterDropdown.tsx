@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import styles from '../style/HomePage.module.css';
 import xIcon from '/assets/icons/x.svg';
 
@@ -18,6 +18,7 @@ export default function FilterDropdown({ label, values, options, onChange }: Fil
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
   const selectedCount = values.length;
+  const menuId = useId();
   const placeholderText =
     selectedCount > 0 ? `${selectedCount} item${selectedCount > 1 ? 's' : ''} selected` : `Search ${label.toLowerCase()}...`;
 
@@ -49,6 +50,9 @@ export default function FilterDropdown({ label, values, options, onChange }: Fil
           type="text"
           value={query}
           placeholder={placeholderText}
+          aria-label={`${label} filter search`}
+          aria-expanded={isOpen}
+          aria-controls={menuId}
           onFocus={() => setIsOpen(true)}
           onBlur={() => {
             setTimeout(() => {
@@ -63,12 +67,12 @@ export default function FilterDropdown({ label, values, options, onChange }: Fil
         />
 
         {isOpen && (
-          <ul className={styles.filterMenu}>
+          <ul id={menuId} className={styles.filterMenu} role="listbox" aria-label={`${label} options`}>
             {filteredOptions.map((option) => {
               const isSelected = values.includes(option.value);
 
               return (
-                <li key={option.value}>
+                <li key={option.value} role="option" aria-selected={isSelected}>
                   <button
                     className={`${styles.filterMenuItem} ${isSelected ? styles.filterMenuItemSelected : ''}`}
                     type="button"
@@ -77,7 +81,7 @@ export default function FilterDropdown({ label, values, options, onChange }: Fil
                   >
                     <span>{option.label}</span>
                     {isSelected && (
-                      <span className={styles.filterUnselectMark}>
+                      <span className={styles.filterUnselectMark} aria-hidden="true">
                         <img src={xIcon} alt="" className={styles.filterUnselectIcon} />
                       </span>
                     )}

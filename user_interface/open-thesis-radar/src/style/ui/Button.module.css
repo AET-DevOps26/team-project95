@@ -1,0 +1,41 @@
+.buttonBase {
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  min-height: 56px;
+  padding: 0 24px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-standard), color var(--duration-fast) var(--ease-standard), border-color var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard), filter var(--duration-fast) var(--ease-standard);
+}
+
+.buttonBase:active {
+  transform: translateY(1px);
+  filter: brightness(0.96);
+}
+
+.primary {
+  background: var(--color-primary);
+  color: var(--color-surface-card);
+}
+
+.secondary {
+  background: var(--color-surface-card);
+  color: var(--color-text-main);
+  border-color: var(--color-border-soft);
+}
+
+.ghost {
+  background: transparent;
+  color: var(--color-primary);
+  min-height: auto;
+  padding: 0;
+  border-radius: var(--radius-sm);
+}
