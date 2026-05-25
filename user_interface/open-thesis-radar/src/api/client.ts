@@ -38,7 +38,7 @@ export class ApiClient {
       return undefined as TResponse;
     }
 
-    return (await response.json()) as TResponse;
+    return (await this.parseJsonResponse(response)) as TResponse;
   }
 
   private async safeParseJson(response: Response): Promise<unknown> {
@@ -60,6 +60,18 @@ export class ApiClient {
     }
 
     return `Request failed with status ${status}`;
+  }
+
+  private async parseJsonResponse(response: Response): Promise<unknown> {
+    try {
+      return await response.json();
+    } catch {
+      throw new ApiError(
+        'Expected JSON from API, but received a non-JSON response. Check that the backend or Vite proxy is running for /api requests.',
+        response.status,
+        null,
+      );
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from '../style/HomePage.module.css';
 import scrollIcon from '/assets/icons/chevrons-down.svg';
 import FilterDropdown from '../components/FilterDropdown';
@@ -28,6 +28,7 @@ const INITIAL_FILTERS: components['schemas']['AvailableFiltersResponse'] = {
 
 export default function HomePage() {
   const [filters, setFilters] = useState<components['schemas']['AvailableFiltersResponse']>(INITIAL_FILTERS);
+  const searchSectionRef = useRef<HTMLElement | null>(null);
   const {
     queryMode,
     setQueryMode,
@@ -39,6 +40,10 @@ export default function HomePage() {
   } = useSearchState();
   const showSearchBar = queryMode === 'Natural Language' || queryMode === 'Both';
   const showFilters = queryMode === 'Filters' || queryMode === 'Both';
+
+  const scrollToSearch = () => {
+    searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   useEffect(() => {
     async function loadFilters() {
@@ -89,31 +94,45 @@ export default function HomePage() {
     <main className={styles.page}>
       <header className={styles.topBar}>
         <div className={styles.topBarInner}>
-          <div className={styles.logo}>ThesisHub</div>
+          <div className={styles.logo}>Thesis Radar</div>
+          <nav className={styles.topNav} aria-label="Home page navigation">
+            <button className={styles.navButton} type="button" onClick={scrollToSearch}>
+              Search
+            </button>
+            <Link className={styles.navButton} to="/thesis">
+              Mock thesis
+            </Link>
+          </nav>
         </div>
       </header>
 
       <section className={styles.hero}>
-        <h1 className={styles.heroTitle}>Find the Right Thesis for You</h1>
-        <p className={styles.heroSubtitle}>
-          Discover open thesis topics from TUM&apos;s chairs. Use natural-language search or powerful filters to
-          find opportunities that match your interests and goals.
-        </p>
-        <div className={styles.heroActions}>
-          <button className={`${styles.primaryAction} ${styles.clickableButton}`} type="button">
-            Explore theses
-          </button>
-          <button className={`${styles.secondaryAction} ${styles.clickableButton}`} type="button">
-            How it works
-          </button>
+        <div className={styles.heroGrid}>
+          <div className={styles.heroCopy}>
+            <p className={styles.heroEyebrow}>TUM thesis discovery</p>
+            <h1 className={styles.heroTitle}>Search open theses by fit.</h1>
+            <p className={styles.heroSubtitle}>
+              Compare thesis offers across chairs, degree types, research areas, and tags without losing your filter
+              context while you inspect a topic.
+            </p>
+            <div className={styles.heroActions}>
+              <button className={`${styles.primaryAction} ${styles.clickableButton}`} type="button" onClick={scrollToSearch}>
+                Search theses
+              </button>
+              <Link className={`${styles.secondaryAction} ${styles.clickableButton}`} to="/thesis">
+                Open mock thesis
+              </Link>
+            </div>
+          </div>
         </div>
         <div className={styles.scrollHint}>
-          <div className={styles.scrollHintText}>Scroll to search</div>
-          <img src={scrollIcon} alt="Search" className={styles.scrollHintIcon} />
+          <button className={styles.scrollHintButton} type="button" onClick={scrollToSearch} aria-label="Go to search">
+            <img src={scrollIcon} alt="" className={styles.scrollHintIcon} />
+          </button>
         </div>
       </section>
 
-      <section className={styles.searchSection}>
+      <section className={styles.searchSection} ref={searchSectionRef}>
         <h2 className={styles.searchTitle}>Search Open Theses</h2>
         <p className={styles.searchSubtitle}>
           Describe what you&apos;re looking for or use filters to find the right opportunities.
@@ -207,12 +226,6 @@ export default function HomePage() {
               onChange={(values) => setSelectedFilters((prev) => ({ ...prev, tags: values }))}
             />
           </div>
-        </div>
-
-        <div className={styles.mockNavigationRow}>
-          <Link className={`${styles.mockThesisLink} ${styles.clickableButton}`} to="/thesis">
-            Open mock thesis page
-          </Link>
         </div>
 
         <div className={styles.emptyState}>

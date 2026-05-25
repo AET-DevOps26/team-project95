@@ -7,22 +7,52 @@
 .topBar {
   border-bottom: 1px solid var(--color-border-soft);
   background: var(--color-surface-card);
-  margin-bottom: 30px;
+  color: var(--color-text-main);
 }
 
 .topBarInner {
   max-width: 1200px;
   margin: 0 auto;
-  min-height: 84px;
+  min-height: 72px;
   padding: 0 24px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 24px;
 }
 
 .logo {
-  font-size: 38px;
+  color: var(--color-text-main);
+  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
+  font-size: 22px;
   font-weight: 700;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
+}
+
+.topNav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.navButton {
+  min-height: 72px;
+  padding: 0 18px;
+  border: none;
+  background: var(--color-surface-card);
+  color: var(--color-primary-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.navButton:hover {
+  background: var(--color-surface-soft);
+  color: var(--color-primary);
 }
 
 .clickableButton {
@@ -40,45 +70,84 @@
 }
 
 .hero {
+  background:
+    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px),
+    var(--color-surface-base);
+  background-size: 48px 48px;
+  color: var(--color-text-main);
+  border-bottom: 1px solid var(--color-border-soft);
+  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
+}
+
+.heroGrid {
   max-width: 1200px;
+  min-height: 500px;
   margin: 0 auto;
-  padding: 28px 24px 64px;
+  padding: 56px 24px 44px;
+  display: flex;
+  align-items: center;
+}
+
+.heroCopy {
+  max-width: 860px;
+  border-left: 1px solid var(--color-primary);
+  padding-left: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.heroEyebrow {
+  margin: 0 0 20px;
+  color: var(--color-primary);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
 }
 
 .heroTitle {
   margin: 0;
   max-width: 760px;
-  font-size: clamp(36px, 6vw, 72px);
-  line-height: 1.02;
-  letter-spacing: -0.03em;
+  color: var(--color-text-main);
+  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
+  font-size: 88px;
+  line-height: 1;
+  letter-spacing: 0;
   font-weight: 800;
 }
 
 .heroSubtitle {
-  max-width: 760px;
+  max-width: 680px;
   margin: 28px 0 0;
-  font-size: clamp(16px, 1.8vw, 27px);
-  line-height: 1.45;
   color: var(--color-text-muted);
+  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
+  font-size: 18px;
+  line-height: 1.65;
 }
 
 .heroActions {
-  margin-top: 40px;
+  margin-top: 36px;
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
+  gap: 0;
 }
 
 .primaryAction,
 .secondaryAction {
-  border-radius: var(--radius-lg);
-  min-height: 68px;
-  min-width: 230px;
+  min-height: 58px;
+  min-width: 190px;
+  padding: 0 20px;
+  border-radius: 0;
+  border: 1px solid var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
+  font-size: 15px;
   font-weight: 700;
+  text-decoration: none;
 }
 
 .primaryAction {
@@ -88,28 +157,45 @@
 
 .secondaryAction {
   background: var(--color-surface-card);
-  border: 1px solid var(--color-border-soft);
-  color: var(--color-text-main);
+  color: var(--color-primary);
+  border-left: none;
 }
 
 .scrollHint {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 28px;
   display: flex;
-  flex-direction: column;
-  align-items: center;
+  justify-content: center;
 }
 
-.scrollHintText {
-  margin-top: 72px;
-  text-align: center;
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--color-primary-strong);
+.scrollHintButton {
+  appearance: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-border-soft);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.scrollHintIcon {
+  width: 22px;
+  height: 22px;
+  display: block;
+  filter: brightness(0) saturate(100%) invert(30%) sepia(92%) saturate(3007%) hue-rotate(217deg) brightness(104%) contrast(102%);
 }
 
 .searchSection {
   border-top: 1px solid #e3eaf7;
   background: var(--color-surface-soft);
   padding: 58px 24px 72px;
+  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
 }
 
 .searchTitle {
@@ -388,27 +474,6 @@
   padding: 8px 10px;
 }
 
-.mockNavigationRow {
-  max-width: 1200px;
-  margin: 18px auto 0;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.mockThesisLink {
-  min-height: 48px;
-  padding: 0 18px;
-  border-radius: var(--radius-md);
-  background: var(--color-primary);
-  color: var(--color-surface-card);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 16px;
-  font-weight: 700;
-  text-decoration: none;
-}
-
 .emptyState {
   max-width: 1200px;
   margin: 24px auto 0;
@@ -432,6 +497,10 @@
 }
 
 @media (max-width: 1024px) {
+  .heroGrid {
+    min-height: auto;
+  }
+
   .filtersGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -448,39 +517,75 @@
 @media (max-width: 700px) {
   .topBarInner {
     min-height: 60px;
-    justify-content: center;
+    padding: 0 14px;
+    align-items: stretch;
   }
 
   .logo {
-    font-size: 28px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+  }
+
+  .topNav {
+    border-left: none;
+  }
+
+  .navButton {
+    min-height: 60px;
+    padding: 0 10px;
+    font-size: 12px;
   }
 
   .hero {
-    padding: 18px 14px 36px;
-    text-align: center;
+    text-align: left;
+  }
+
+  .heroGrid {
+    padding: 34px 14px 24px;
+    gap: 22px;
+  }
+
+  .heroCopy {
+    padding-left: 14px;
+  }
+
+  .heroEyebrow {
+    margin-bottom: 14px;
+    font-size: 12px;
+  }
+
+  .heroTitle {
+    font-size: 48px;
+    line-height: 1.02;
   }
 
   .heroSubtitle {
     margin-top: 18px;
+    font-size: 16px;
+    line-height: 1.55;
   }
 
   .heroActions {
     margin-top: 24px;
-    justify-content: center;
-    gap: 12px;
   }
 
   .primaryAction,
   .secondaryAction {
     min-height: 54px;
-    min-width: 176px;
-    border-radius: 10px;
-    font-size: 18px;
+    width: 100%;
+    min-width: 0;
+    border-left: 1px solid var(--color-primary);
+    font-size: 14px;
   }
 
-  .scrollHintText {
-    margin-top: 56px;
-    font-size: 18px;
+  .secondaryAction {
+    border-top: none;
+  }
+
+  .scrollHintButton {
+    width: 40px;
+    height: 40px;
   }
 
   .searchSection {

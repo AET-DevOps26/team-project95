@@ -1,21 +1,134 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import styles from '../style/DetailedThesisPage.module.css';
 import arrowLeftIcon from '/assets/icons/arrow-left.svg';
 import graduationCapIcon from '/assets/icons/graduation-cap.svg';
-import locationIcon from '/assets/icons/location.svg';
 import notebookIcon from '/assets/icons/notebook.svg';
 import circleQuestionMarkIcon from '/assets/icons/circle-question-mark.svg';
 import sparklesIcon from '/assets/icons/sparkles.svg';
 import fileIcon from '/assets/icons/file.svg';
 import infoIcon from '/assets/icons/info.svg';
 import externalLinkIcon from '/assets/icons/external-link.svg';
-import { useNavigate } from 'react-router-dom';
 import TopBar from '../components/ui/TopBar';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
+import { getThesisById } from '../api/theses';
+import type { components } from '../api';
+
+type ThesisProposal = components['schemas']['ThesisProposal'];
+
+const DEFAULT_THESIS_ID = 1001;
+const EMPTY_FIELD = 'Not specified';
+const SAMPLE_THESIS: ThesisProposal = {
+  id: DEFAULT_THESIS_ID,
+  chairId: 1,
+  chairName: 'Chair of Software Engineering',
+  title: 'Post-Quantum Cryptography in Intra-Vehicle Networks',
+  degreeType: 'BACHELOR',
+  researchArea: 'Networking',
+  status: 'OPEN',
+  sourceUrl: 'https://www.in.tum.de/en/open-theses/1234',
+  aiOverview:
+    'This thesis investigates secure communication for intra-vehicle networks under post-quantum threat models.',
+  originalDescription:
+    'Analyze candidate cryptographic schemes, evaluate integration constraints, and prototype a practical architecture for low-latency embedded environments.',
+  extractionConfidence: 0.93,
+  lastSeenAt: new Date().toISOString(),
+  advisors: [{ name: 'Not specified' }],
+  tags: ['Security', 'Embedded Systems'],
+};
+
+function displayValue(value: string | number | null | undefined) {
+  if (value === null || value === undefined || value === '') {
+    return EMPTY_FIELD;
+  }
+
+  return String(value);
+}
+
+function formatDateTime(value: string | null | undefined) {
+  if (!value) {
+    return EMPTY_FIELD;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return date.toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+function formatConfidence(value: number | null | undefined) {
+  if (value === null || value === undefined) {
+    return EMPTY_FIELD;
+  }
+
+  return `${Math.round(value * 100)}%`;
+}
+
+function formatAdvisors(advisors: ThesisProposal['advisors']) {
+  if (!advisors?.length) {
+    return EMPTY_FIELD;
+  }
+
+  return advisors.map((advisor) => advisor.name || advisor.email || EMPTY_FIELD).join(', ');
+}
 
 export default function DetailedThesisPage() {
   const navigate = useNavigate();
-  const sourceUrl = 'https://www.in.tum.de/en/open-theses/1234';
+  const { thesisId } = useParams();
+  const parsedThesisId = Number(thesisId ?? DEFAULT_THESIS_ID);
+  const resolvedThesisId = Number.isFinite(parsedThesisId) ? parsedThesisId : DEFAULT_THESIS_ID;
+  const [thesis, setThesis] = useState<ThesisProposal | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadThesis() {
+      setIsLoading(true);
+      setErrorMessage(null);
+
+      try {
+        const response = await getThesisById(resolvedThesisId);
+
+        if (isCurrent) {
+          setThesis(response);
+        }
+      } catch (error) {
+        if (isCurrent) {
+          if (resolvedThesisId === DEFAULT_THESIS_ID) {
+            setThesis(SAMPLE_THESIS);
+            setErrorMessage(null);
+            return;
+          }
+
+          setThesis(null);
+          setErrorMessage(error instanceof Error ? error.message : 'Failed to load thesis details.');
+        }
+      } finally {
+        if (isCurrent) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadThesis();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [resolvedThesisId]);
+
+  const tagsText = useMemo(() => (thesis?.tags?.length ? thesis.tags.join(', ') : EMPTY_FIELD), [thesis?.tags]);
+  const sourceUrl = thesis?.sourceUrl;
 
   return (
     <main className={styles.page}>
@@ -27,122 +140,141 @@ export default function DetailedThesisPage() {
           <span>Back to Results</span>
         </Button>
 
-        <Card className={styles.heroCard}>
-          <div className={styles.badge}>Open Thesis</div>
-          <h1 className={styles.title}>Post-Quantum Cryptography in Intra-Vehicle Networks</h1>
-          <p className={styles.offeredBy}>
-            Offered by <span>Chair of Software Engineering</span>
-          </p>
+        {isLoading && (
+          <Card className={`${styles.stateCard} ${styles.loadingCard}`} role="status" aria-live="polite">
+            <div className={styles.loadingSpinner} aria-hidden="true"></div>
+            <div>
+              <h1 className={styles.stateTitle}>Loading thesis details</h1>
+              <p className={styles.stateText}>Fetching thesis #{resolvedThesisId}.</p>
+              <div className={styles.loadingBars} aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+          </Card>
+        )}
 
-          <div className={styles.metaGrid}>
-            <div className={styles.metaItem}>
-              <h2 className={styles.labelWithIcon}>
-                <img src={graduationCapIcon} alt="" className={styles.inlineIcon} />
-                <span>Degree Type</span>
-              </h2>
-              <p className={styles.metaValue}>BACHELOR</p>
-            </div>
-            <div className={styles.metaItem}>
-              <h2 className={styles.labelWithIcon}>
-                <img src={notebookIcon} alt="" className={styles.inlineIcon} />
-                <span>Research Area</span>
-              </h2>
-              <p className={styles.metaValue}>Networking</p>
-            </div>
-            <div className={styles.metaItem}>
-              <h2 className={styles.labelWithIcon}>
-                <img src={locationIcon} alt="" className={styles.inlineIcon} />
-                <span>Location</span>
-              </h2>
-              <p className={styles.metaValue}>Garching bei Muenchen</p>
-            </div>
-            <div className={styles.metaItem}>
-              <h2 className={styles.labelWithIcon}>
-                <img src={circleQuestionMarkIcon} alt="" className={styles.inlineIcon} />
-                <span>Status</span>
-              </h2>
-              <p className={`${styles.metaValue} ${styles.statusAvailable}`}>Available</p>
-            </div>
-          </div>
-        </Card>
+        {!isLoading && errorMessage && (
+          <Card className={styles.stateCard}>
+            <h1 className={styles.stateTitle}>Could not load thesis</h1>
+            <p className={styles.stateText}>{errorMessage}</p>
+          </Card>
+        )}
 
-        <div className={styles.mainGrid}>
-          <div className={styles.column}>
-            <Card className={styles.sectionCard}>
-              <h2 className={styles.sectionHeading}>
-                <img src={sparklesIcon} alt="" className={styles.inlineIcon} />
-                <span>AI Overview</span>
-              </h2>
-              <p className={styles.sectionText}>
-                This thesis focuses on developing and evaluating semantic search methods to improve discovery of open
-                thesis opportunities. The goal is to go beyond keyword matching by modeling meaning and context.
+        {!isLoading && thesis && (
+          <>
+            <Card className={styles.heroCard}>
+              <div className={styles.badge}>{displayValue(thesis.status)}</div>
+              <h1 className={styles.title}>{thesis.title}</h1>
+              <p className={styles.offeredBy}>
+                Offered by <span>{displayValue(thesis.chairName)}</span>
               </p>
-              <p className={styles.sectionText}>
-                The work includes exploring semantic embedding models, building a prototype search workflow, and
-                evaluating relevance with student-facing retrieval benchmarks.
-              </p>
-            </Card>
 
-            <Card className={styles.sectionCard}>
-              <h2 className={styles.sectionHeading}>
-                <img src={fileIcon} alt="" className={styles.inlineIcon} />
-                <span>Original Description</span>
-              </h2>
-              <p className={styles.sectionText}>
-                This thesis investigates secure communication for intra-vehicle networks under post-quantum threat
-                models. The objective is to analyze candidate cryptographic schemes, evaluate integration constraints,
-                and prototype a practical architecture for low-latency embedded environments.
-              </p>
-            </Card>
-          </div>
-
-          <div className={styles.column}>
-            <Card className={styles.sectionCard}>
-              <h2 className={styles.sectionHeading}>
-                <img src={infoIcon} alt="" className={styles.inlineIcon} />
-                <span>Additional Information</span>
-              </h2>
-
-              <div className={styles.additionalGrid}>
-                <div>
-                  <h3 className={styles.detailLabel}>Chair</h3>
-                  <p className={styles.detailValue}>Chair of Software Engineering</p>
-                  <h3 className={styles.detailLabel}>Research Area (Detailed)</h3>
-                  <p className={styles.detailValue}>Artificial Intelligence</p>
-                  <h3 className={styles.detailLabel}>Degree Type</h3>
-                  <p className={styles.detailValue}>MASTER</p>
-                  <h3 className={styles.detailLabel}>Location</h3>
-                  <p className={styles.detailValue}>Garching bei Muenchen</p>
+              <div className={styles.metaGrid}>
+                <div className={styles.metaItem}>
+                  <h2 className={styles.labelWithIcon}>
+                    <img src={graduationCapIcon} alt="" className={styles.inlineIcon} />
+                    <span>Degree Type</span>
+                  </h2>
+                  <p className={styles.metaValue}>{displayValue(thesis.degreeType)}</p>
                 </div>
-                <div>
-                  <h3 className={styles.detailLabel}>Language</h3>
-                  <p className={styles.detailValue}>English</p>
-                  <h3 className={styles.detailLabel}>Application Deadline</h3>
-                  <p className={styles.detailValue}>Open</p>
-                  <h3 className={styles.detailLabel}>Source</h3>
-                  <a href={sourceUrl} target="_blank" rel="noreferrer" className={styles.detailLink}>
-                    View on TUM Website
-                  </a>
-                  <h3 className={styles.detailLabel}>Source URL</h3>
-                  <a href={sourceUrl} target="_blank" rel="noreferrer" className={styles.detailLink}>
-                    {sourceUrl}
-                  </a>
+                <div className={styles.metaItem}>
+                  <h2 className={styles.labelWithIcon}>
+                    <img src={notebookIcon} alt="" className={styles.inlineIcon} />
+                    <span>Research Area</span>
+                  </h2>
+                  <p className={styles.metaValue}>{displayValue(thesis.researchArea)}</p>
+                </div>
+                <div className={styles.metaItem}>
+                  <h2 className={styles.labelWithIcon}>
+                    <img src={infoIcon} alt="" className={styles.inlineIcon} />
+                    <span>Last Seen</span>
+                  </h2>
+                  <p className={styles.metaValue}>{formatDateTime(thesis.lastSeenAt)}</p>
+                </div>
+                <div className={styles.metaItem}>
+                  <h2 className={styles.labelWithIcon}>
+                    <img src={circleQuestionMarkIcon} alt="" className={styles.inlineIcon} />
+                    <span>Status</span>
+                  </h2>
+                  <p className={`${styles.metaValue} ${styles.statusAvailable}`}>{displayValue(thesis.status)}</p>
                 </div>
               </div>
             </Card>
-          </div>
-        </div>
 
-        <Card className={styles.ctaCard}>
-          <div>
-            <h2 className={styles.ctaTitle}>Interested in this thesis?</h2>
-            <p className={styles.ctaText}>Visit the official source to review details and apply.</p>
-          </div>
-          <Button href={sourceUrl} target="_blank" rel="noreferrer" className={styles.ctaButton}>
-            <span>Visit Source</span>
-            <img src={externalLinkIcon} alt="" className={styles.buttonIcon} />
-          </Button>
-        </Card>
+            <div className={styles.mainGrid}>
+              <div className={styles.column}>
+                <Card className={styles.sectionCard}>
+                  <h2 className={styles.sectionHeading}>
+                    <img src={sparklesIcon} alt="" className={styles.inlineIcon} />
+                    <span>AI Overview</span>
+                  </h2>
+                  <p className={styles.sectionText}>{displayValue(thesis.aiOverview)}</p>
+                </Card>
+
+                <Card className={styles.sectionCard}>
+                  <h2 className={styles.sectionHeading}>
+                    <img src={fileIcon} alt="" className={styles.inlineIcon} />
+                    <span>Original Description</span>
+                  </h2>
+                  <p className={styles.sectionText}>{displayValue(thesis.originalDescription)}</p>
+                </Card>
+              </div>
+
+              <div className={styles.column}>
+                <Card className={styles.sectionCard}>
+                  <h2 className={styles.sectionHeading}>
+                    <img src={infoIcon} alt="" className={styles.inlineIcon} />
+                    <span>Additional Information</span>
+                  </h2>
+
+                  <div className={styles.additionalGrid}>
+                    <div>
+                      <h3 className={styles.detailLabel}>Thesis ID</h3>
+                      <p className={styles.detailValue}>{thesis.id}</p>
+                      <h3 className={styles.detailLabel}>Chair</h3>
+                      <p className={styles.detailValue}>{displayValue(thesis.chairName)}</p>
+                      <h3 className={styles.detailLabel}>Chair ID</h3>
+                      <p className={styles.detailValue}>{thesis.chairId}</p>
+                      <h3 className={styles.detailLabel}>Research Area</h3>
+                      <p className={styles.detailValue}>{displayValue(thesis.researchArea)}</p>
+                      <h3 className={styles.detailLabel}>Degree Type</h3>
+                      <p className={styles.detailValue}>{displayValue(thesis.degreeType)}</p>
+                    </div>
+                    <div>
+                      <h3 className={styles.detailLabel}>Advisors</h3>
+                      <p className={styles.detailValue}>{formatAdvisors(thesis.advisors)}</p>
+                      <h3 className={styles.detailLabel}>Tags</h3>
+                      <p className={styles.detailValue}>{tagsText}</p>
+                      <h3 className={styles.detailLabel}>Extraction Confidence</h3>
+                      <p className={styles.detailValue}>{formatConfidence(thesis.extractionConfidence)}</p>
+                      <h3 className={styles.detailLabel}>Source</h3>
+                      <a href={sourceUrl} target="_blank" rel="noreferrer" className={styles.detailLink}>
+                        View source
+                      </a>
+                      <h3 className={styles.detailLabel}>Source URL</h3>
+                      <a href={sourceUrl} target="_blank" rel="noreferrer" className={styles.detailLink}>
+                        {sourceUrl}
+                      </a>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+
+            <Card className={styles.ctaCard}>
+              <div>
+                <h2 className={styles.ctaTitle}>Interested in this thesis?</h2>
+                <p className={styles.ctaText}>Visit the official source to review details and apply.</p>
+              </div>
+              <Button href={sourceUrl} target="_blank" rel="noreferrer" className={styles.ctaButton}>
+                <span>Visit Source</span>
+                <img src={externalLinkIcon} alt="" className={styles.buttonIcon} />
+              </Button>
+            </Card>
+          </>
+        )}
       </section>
     </main>
   );

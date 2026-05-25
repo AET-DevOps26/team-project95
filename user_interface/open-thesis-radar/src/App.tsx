@@ -12,7 +12,7 @@ function App() {
             element: <HomePage/>
         },
         {
-            path: "thesis",
+            path: "thesis/:thesisId?",
             element: <DetailedThesisPage/>
         },
     ])
