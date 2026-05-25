@@ -13,15 +13,14 @@ from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, Field, ValidationError
 
-
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
 logger = logging.getLogger("genai-service")
 
-MAX_INPUT_CHARS = 15000
-DEFAULT_OPENAI_MODEL = "gpt-4o-mini"
+MAX_INPUT_CHARS = 40000
+DEFAULT_OPENAI_MODEL = "gpt-5-mini"
 DEFAULT_OLLAMA_MODEL = "llama3.1"
 
 
@@ -94,7 +93,9 @@ class GenAIServiceError(Exception):
     status_code = 500
     message = "Internal server error."
 
-    def __init__(self, message: Optional[str] = None, details: Optional[dict[str, Any]] = None):
+    def __init__(self,
+                 message: Optional[str] = None,
+                 details: Optional[dict[str, Any]] = None):
         self.message = message or self.message
         self.details = details
         super().__init__(self.message)
@@ -123,20 +124,26 @@ app = FastAPI(
 
 
 @app.exception_handler(GenAIServiceError)
-async def handle_genai_service_error(_: Request, exc: GenAIServiceError) -> JSONResponse:
+async def handle_genai_service_error(_: Request,
+                                     exc: GenAIServiceError) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
-        content=ErrorResponse(message=exc.message, details=exc.details).model_dump(exclude_none=True),
+        content=ErrorResponse(
+            message=exc.message,
+            details=exc.details).model_dump(exclude_none=True),
     )
 
 
 @app.exception_handler(RequestValidationError)
-async def handle_validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
+async def handle_validation_error(_: Request,
+                                  exc: RequestValidationError) -> JSONResponse:
     return JSONResponse(
         status_code=422,
         content=ErrorResponse(
             message="Request validation failed.",
-            details={"errors": exc.errors()},
+            details={
+                "errors": exc.errors()
+            },
         ).model_dump(exclude_none=True),
     )
 
@@ -155,7 +162,8 @@ def get_required_env(name: str) -> str:
     return value
 
 
-def preprocess_input(raw_html: str, extracted_plain_text: Optional[str]) -> str:
+def preprocess_input(raw_html: str,
+                     extracted_plain_text: Optional[str]) -> str:
     if extracted_plain_text and extracted_plain_text.strip():
         text = extracted_plain_text
     else:
@@ -186,6 +194,7 @@ def get_llm():
         return ChatOpenAI(
             model=model_name,
             api_key=api_key,
+            max_completion_tokens=30000,
             temperature=0,
         )
 
@@ -210,15 +219,16 @@ You extract structured thesis proposals from scraped university chair webpages.
 Rules:
 - Extract only thesis postings that are supported by the provided content.
 - Do not invent missing facts.
+- The title should be copied exactly as is.
 - If multiple thesis postings are present, return multiple thesis objects.
-- Ignore navigation, footer, legal text, and unrelated news if possible.
-- degreeType should be BACHELOR or MASTER when clearly indicated, otherwise null.
+- Ignore navigation, footer, legal text, and unrelated news.
+- degreeType should be [BACHELOR, MASTER, PHD] when clearly indicated, otherwise null.
 - status should be OPEN unless the text clearly indicates otherwise.
 - advisors should only include explicit names, emails, or profile links from the content.
 - tags should be short topic keywords.
 - aiOverview should be a concise 1-2 sentence grounded summary.
 - sourceUrl should default to the provided source URL unless a more specific thesis link is clearly visible.
-- originalDescription should copy or lightly consolidate the relevant description from the input, not invent new details.
+- originalDescription should copy the relevant description from the input, not invent new details.
 - If no thesis posting can be identified confidently, return an empty theses list.
 
 Input metadata:
@@ -234,33 +244,42 @@ Cleaned page content:
 '''.strip()
 
 
-def normalize_thesis(thesis: DraftThesisProposalInput, source_url: str) -> ThesisProposalInput:
+def normalize_thesis(thesis: DraftThesisProposalInput,
+                     source_url: str) -> ThesisProposalInput:
     if not thesis.title or not thesis.title.strip():
-        raise ExtractionError(details={"reason": "Model returned a thesis item without a title."})
+        raise ExtractionError(
+            details={
+                "reason": "Model returned a thesis item without a title."
+            })
 
     normalized_title = thesis.title.strip()
-    normalized_degree = thesis.degreeType.strip().upper() if thesis.degreeType else None
-    if normalized_degree not in {"BACHELOR", "MASTER"}:
+    normalized_degree = thesis.degreeType.strip().upper(
+    ) if thesis.degreeType else None
+    if normalized_degree not in {"BACHELOR", "MASTER", "PHD"}:
         normalized_degree = None
 
     normalized_status = (thesis.status or "OPEN").strip().upper() or "OPEN"
-    normalized_tags = [tag.strip() for tag in thesis.tags if tag and tag.strip()]
+    normalized_tags = [
+        tag.strip() for tag in thesis.tags if tag and tag.strip()
+    ]
 
     normalized_advisors = [
         AdvisorInput(
             name=advisor.name.strip() if advisor.name else None,
             email=advisor.email.strip() if advisor.email else None,
-            profileUrl=advisor.profileUrl.strip() if advisor.profileUrl else None,
-        )
-        for advisor in thesis.advisors
+            profileUrl=advisor.profileUrl.strip()
+            if advisor.profileUrl else None,
+        ) for advisor in thesis.advisors
     ]
 
     return ThesisProposalInput(
         title=normalized_title,
         degreeType=normalized_degree,
-        originalDescription=thesis.originalDescription.strip() if thesis.originalDescription else None,
+        originalDescription=thesis.originalDescription.strip()
+        if thesis.originalDescription else None,
         aiOverview=thesis.aiOverview.strip() if thesis.aiOverview else None,
-        researchArea=thesis.researchArea.strip() if thesis.researchArea else None,
+        researchArea=thesis.researchArea.strip()
+        if thesis.researchArea else None,
         sourceUrl=(thesis.sourceUrl or source_url).strip() or source_url,
         status=normalized_status,
         advisors=normalized_advisors,
@@ -269,7 +288,8 @@ def normalize_thesis(thesis: DraftThesisProposalInput, source_url: str) -> Thesi
 
 
 def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
-    cleaned_text = preprocess_input(request.rawHtml, request.extractedPlainText)
+    cleaned_text = preprocess_input(request.rawHtml,
+                                    request.extractedPlainText)
     logger.info(
         "Extraction request sourceEndpointId=%s sourceUrl=%s rawChars=%s cleanedChars=%s",
         request.sourceEndpointId,
@@ -279,25 +299,25 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
     )
 
     if not cleaned_text:
-        return GenAIExtractionResponse(theses=[], extractionNotes="Input page was empty after preprocessing.")
+        return GenAIExtractionResponse(
+            theses=[],
+            extractionNotes="Input page was empty after preprocessing.")
 
     llm = get_llm()
     structured_llm = llm.with_structured_output(ExtractionDraftResult)
 
     try:
         result = structured_llm.invoke([
-            SystemMessage(
-                content=(
-                    "You are a precise information extraction system. "
-                    "Return only structured thesis data supported by the input."
-                )
-            ),
+            SystemMessage(content=(
+                "You are a precise information extraction system. "
+                "Return only structured thesis data supported by the input.")),
             HumanMessage(content=build_prompt(request, cleaned_text)),
         ])
     except GenAIServiceError:
         raise
     except Exception as exc:
-        raise UpstreamServiceError(details={"errorType": type(exc).__name__}) from exc
+        raise UpstreamServiceError(
+            details={"errorType": type(exc).__name__}) from exc
 
     normalized_theses: list[ThesisProposalInput] = []
     seen_titles: set[str] = set()
@@ -308,7 +328,8 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
         except ExtractionError:
             continue
         except ValidationError as exc:
-            raise ExtractionError(details={"validationErrors": exc.errors()}) from exc
+            raise ExtractionError(
+                details={"validationErrors": exc.errors()}) from exc
 
         title_key = normalized.title.casefold()
         if title_key in seen_titles:
@@ -320,7 +341,8 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
     if not notes:
         notes = f"Extracted {len(normalized_theses)} thesis proposal(s)."
 
-    return GenAIExtractionResponse(theses=normalized_theses, extractionNotes=notes)
+    return GenAIExtractionResponse(theses=normalized_theses,
+                                   extractionNotes=notes)
 
 
 @app.get("/internal/v1/health", response_model=HealthResponse)
@@ -332,9 +354,15 @@ def health_check() -> HealthResponse:
     "/internal/v1/genai-service/extract-theses",
     response_model=GenAIExtractionResponse,
     responses={
-        422: {"model": ErrorResponse},
-        500: {"model": ErrorResponse},
-        502: {"model": ErrorResponse},
+        422: {
+            "model": ErrorResponse
+        },
+        500: {
+            "model": ErrorResponse
+        },
+        502: {
+            "model": ErrorResponse
+        },
     },
 )
 def extract_theses(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
@@ -359,4 +387,5 @@ def extract_theses(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
             request.sourceEndpointId,
             request.sourceUrl,
         )
-        raise UpstreamServiceError(details={"errorType": type(exc).__name__}) from exc
+        raise UpstreamServiceError(
+            details={"errorType": type(exc).__name__}) from exc
