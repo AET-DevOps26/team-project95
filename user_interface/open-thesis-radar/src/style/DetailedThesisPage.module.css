@@ -1,12 +1,12 @@
 .page {
   min-height: 100vh;
-  background: #f8faff;
-  color: #0f1b3d;
+  background: var(--color-surface-base);
+  color: var(--color-text-main);
 }
 
 .topBar {
-  border-bottom: 1px solid #dbe5f7;
-  background: #ffffff;
+  border-bottom: 1px solid var(--color-border-soft);
+  background: var(--color-surface-card);
 }
 
 .topBarInner {
@@ -16,8 +16,6 @@
   padding: 0 24px;
   display: flex;
   align-items: center;
-  justify-content: flex-start;
-  gap: 18px;
 }
 
 .logo {
@@ -27,11 +25,11 @@
 }
 
 .clickableButton {
-  transition: filter 0.12s ease, transform 0.05s ease;
+  transition: filter var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
 }
 
 .clickableButton:active {
-  filter: brightness(0.9);
+  filter: brightness(0.95);
   transform: translateY(1px);
 }
 
@@ -55,7 +53,7 @@
 .backButton {
   color: #54658d;
   font-size: 18px;
-  margin-bottom: 40px;
+  margin-bottom: 24px;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -74,8 +72,8 @@
   min-height: 32px;
   padding: 0 12px;
   border-radius: 999px;
-  background: #ddf7ee;
-  color: #07985f;
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
   font-size: 15px;
   font-weight: 700;
 }
@@ -95,13 +93,13 @@
 }
 
 .offeredBy span {
-  color: #2a5eff;
+  color: var(--color-primary);
 }
 
 .metaGrid {
   margin-top: 34px;
   padding-bottom: 30px;
-  border-bottom: 1px solid #dbe5f7;
+  border-bottom: 1px solid var(--color-border-soft);
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 22px 20px;
@@ -123,18 +121,18 @@
 .metaItem p {
   margin: 6px 0 0;
   font-size: 21px;
-  color: #0f1b3d;
+  color: var(--color-text-main);
 }
 
 .statusAvailable {
-  color: #00a060;
+  color: var(--color-success-text);
 }
 
 .sectionCard {
   margin-top: 24px;
   border: 1px solid #dde7f8;
-  border-radius: 16px;
-  background: #ffffff;
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-card);
   padding: 24px 28px;
 }
 
@@ -165,7 +163,7 @@
 
 .inlineLink {
   margin-top: 14px;
-  color: #2a5eff;
+  color: var(--color-primary);
   font-size: 18px;
   font-weight: 700;
 }
@@ -193,14 +191,15 @@
 }
 
 .additionalGrid a {
-  color: #2a5eff;
+  color: var(--color-primary);
+  word-break: break-word;
 }
 
 .bottomCta {
   margin-top: 24px;
-  border: 1px solid #dde1fb;
-  border-radius: 16px;
-  background: #f4f2ff;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-xl);
+  background: var(--color-surface-soft);
   padding: 22px 26px;
   display: flex;
   align-items: center;
@@ -223,9 +222,9 @@
   min-height: 54px;
   min-width: 184px;
   padding: 0 20px;
-  border-radius: 10px;
-  background: #365dff;
-  color: #ffffff;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-surface-card);
   font-size: 20px;
   font-weight: 700;
   display: inline-flex;
@@ -257,33 +256,14 @@
 }
 
 @media (max-width: 700px) {
-  /* .topBarInner { */
-  /*   min-height: auto; */
-  /*   padding: 14px; */
-  /*   flex-wrap: wrap; */
-  /* } */
-  /*  */
-  /* .logo { */
-  /*   font-size: 28px; */
-  /* } */
-.topBar {
-  border-bottom: 1px solid #dbe5f7;
-  background: #ffffff;
-}
+  .topBarInner {
+    min-height: 60px;
+    justify-content: center;
+  }
 
-.topBarInner {
-  max-width: 1200px;
-  min-height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
+  .logo {
+    font-size: 28px;
+  }
 
   .content {
     padding: 22px 14px 34px;
@@ -291,7 +271,7 @@
 
   .backButton {
     font-size: 18px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
 
   .badge {
@@ -337,11 +317,6 @@
   }
 
   .sectionCard p {
-    margin-top: 10px;
-    font-size: 17px;
-  }
-
-  .inlineLink {
     margin-top: 10px;
     font-size: 17px;
   }
