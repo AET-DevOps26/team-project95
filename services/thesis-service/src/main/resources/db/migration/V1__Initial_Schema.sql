@@ -7,7 +7,7 @@ CREATE TABLE chairs (
 CREATE TABLE advisors (
     id BIGSERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255),
+    email VARCHAR(255) UNIQUE,
     profile_url VARCHAR(1024)
 );
 

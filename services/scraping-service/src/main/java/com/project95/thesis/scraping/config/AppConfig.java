@@ -12,16 +12,16 @@ import org.springframework.web.client.RestClient;
 @EnableConfigurationProperties(ClientProperties.class)
 public class AppConfig {
 
-    @Bean
-    public RestClient restClient(RestClient.Builder builder, ClientProperties properties) {
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+  @Bean
+  public RestClient restClient(RestClient.Builder builder, ClientProperties properties) {
+    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
 
-        requestFactory.setConnectTimeout(properties.getTimeouts().getConnectMs());
-        requestFactory.setReadTimeout(properties.getTimeouts().getReadMs());
+    requestFactory.setConnectTimeout(properties.getTimeouts().getConnectMs());
+    requestFactory.setReadTimeout(properties.getTimeouts().getReadMs());
 
-        return builder
-                .baseUrl(properties.getMainThesis().getUrl())
-                .requestFactory(requestFactory)
-                .build();
-    }
+    return builder
+        .baseUrl(properties.getMainThesis().getUrl())
+        .requestFactory(requestFactory)
+        .build();
+  }
 }

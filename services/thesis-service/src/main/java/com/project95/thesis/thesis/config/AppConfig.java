@@ -13,13 +13,13 @@ public class AppConfig {
   @Bean
   public RestClient restClient(RestClient.Builder builder, ClientProperties properties) {
     SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-    
+
     requestFactory.setConnectTimeout(properties.getTimeouts().getConnectMs());
     requestFactory.setReadTimeout(properties.getTimeouts().getReadMs());
-    
+
     return builder
-      .baseUrl(properties.getVectorSearch().getUrl())
-      .requestFactory(requestFactory)
-      .build();
+        .baseUrl(properties.getVectorSearch().getUrl())
+        .requestFactory(requestFactory)
+        .build();
   }
 }

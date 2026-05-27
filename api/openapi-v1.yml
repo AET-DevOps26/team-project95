@@ -175,6 +175,29 @@ paths:
               schema:
                 $ref: '#/components/schemas/SourceEndpointListResponse'
 
+  /internal/v1/thesis-service/scrape-runs:
+    post:
+      tags:
+        - Thesis Service Internal API
+      summary: Log a scrape run result
+      description: |
+        Called by the Scraping Service to record the outcome of a scrape attempt.
+        This should be called for both successful and failed runs to maintain a complete history.
+      operationId: logScrapeRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScrapeRunLogRequest'
+      responses:
+        '201':
+          description: Scrape run logged successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScrapeRunLogResponse'
+
   /internal/v1/thesis-service/chairs/{chairId}/theses:
     put:
       tags:
@@ -185,11 +208,10 @@ paths:
         GenAI extraction for one chair/source endpoint.
 
         Thesis Service behavior:
-        1. Save a new scrape run entry.
-        2. In one transaction, delete all existing thesis proposals for `chairId`
+        1. In one transaction, delete all existing thesis proposals for `chairId`
            and insert the newly extracted thesis proposals.
-        3. Commit only if the full replacement succeeds.
-        4. After relational replacement succeeds, call the Vector Search Service
+        2. Commit only if the full replacement succeeds.
+        3. After relational replacement succeeds, call the Vector Search Service
            to replace the vector index entries for the same chair.
 
         If validation or insertion fails, the old thesis data must remain unchanged.
@@ -681,6 +703,49 @@ components:
           type: string
           format: uri
           nullable: true
+
+    ScrapeRunLogRequest:
+      type: object
+      required:
+        - sourceEndpointId
+        - startedAt
+        - finishedAt
+        - status
+      properties:
+        sourceEndpointId:
+          type: integer
+          format: int64
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum:
+            - SUCCESS
+            - PARTIAL_SUCCESS
+            - FAILED
+        errorMessage:
+          type: string
+          nullable: true
+        candidatesFound:
+          type: integer
+          nullable: true
+          example: 5
+
+    ScrapeRunLogResponse:
+      type: object
+      required:
+        - id
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+        status:
+          type: string
 
     ChairThesesReplacementRequest:
       type: object
