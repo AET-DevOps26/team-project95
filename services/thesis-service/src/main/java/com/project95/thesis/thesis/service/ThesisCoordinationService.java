@@ -42,25 +42,14 @@ public class ThesisCoordinationService {
 
     log.info("Starting multi-service pipeline execution for chairId {}", chairId);
 
-    // 1. Log the scrape run result as a persisted entity
-    ScrapeRunLogRequest logRequest = new ScrapeRunLogRequest();
-    logRequest.setSourceEndpointId(request.getSourceEndpointId());
-    logRequest.setStartedAt(request.getStartedAt());
-    logRequest.setFinishedAt(request.getFinishedAt());
-    logRequest.setStatus(ScrapeRunLogRequest.StatusEnum.valueOf(request.getStatus().getValue()));
-    logRequest.setErrorMessage(request.getErrorMessage());
-    
-    int candidates = request.getTheses() != null ? request.getTheses().size() : 0;
-    logRequest.setCandidatesFound(JsonNullable.of(candidates));
-    
-    ScrapeRunLogResponse logResponse = scrapeRunService.logScrapeRun(logRequest);
-    Long trackingScrapeRunId = logResponse.getId();
-
-    // 2. Replace relational data
-    List<ThesisProposal> persistentTheses =
+    // 1. Replace relational data and log scrape run atomically
+    IngestionResult ingestionResult =
         thesisManagementService.replaceThesesInDatabase(chairId, request);
+    
+    Long trackingScrapeRunId = ingestionResult.scrapeRunId();
+    List<ThesisProposal> persistentTheses = ingestionResult.persistentTheses();
 
-    // 3. Prepare Vector Search replacement request
+    // 2. Prepare Vector Search replacement request
     ReplaceChairVectorsRequest vectorRequest = new ReplaceChairVectorsRequest();
     vectorRequest.setScrapeRunId(trackingScrapeRunId);
 
@@ -109,10 +98,7 @@ public class ThesisCoordinationService {
       ReplaceChairVectorsResponse vectorResponse =
           restClient
               .post()
-              .uri(
-                  clientProperties.getVectorSearch().getUrl()
-                      + "/internal/v1/vector-search-service/chairs/{chairId}/index",
-                  chairId)
+              .uri("/internal/v1/vector-search-service/chairs/{chairId}/index", chairId)
               .contentType(MediaType.APPLICATION_JSON)
               .body(vectorRequest)
               .retrieve()
@@ -126,9 +112,15 @@ public class ThesisCoordinationService {
     } catch (Exception e) {
       log.error(
           "CRITICAL: Relational data updated, but vector indexing sync failed for chairId: {}."
-              + " Reason: {}",
+              + " Updating scrape run to PARTIAL_SUCCESS. Reason: {}",
           chairId,
           e.getMessage());
+      
+      scrapeRunService.updateScrapeRunStatus(
+          trackingScrapeRunId, 
+          "PARTIAL_SUCCESS", 
+          "Vector sync failed: " + e.getMessage());
+          
       throw new RuntimeException("Vector Search index synchronization failed.", e);
     }
 
@@ -137,7 +129,7 @@ public class ThesisCoordinationService {
     response.setChairId(chairId);
     response.setInsertedRelationalTheses(persistentTheses.size());
     response.setReplacedVectorEntries(vectorReplacementsCount);
-    response.setDeletedRelationalTheses(persistentTheses.size());
+    response.setDeletedRelationalTheses((int) ingestionResult.deletedCount());
 
     return response;
   }

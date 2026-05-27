@@ -8,7 +8,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ThesisProposalRepository extends JpaRepository<ThesisProposal, Long> {
 
-  void deleteByChairId(Long chairId);
+  long deleteByChairId(Long chairId);
 
   List<ThesisProposal> findByStatus(String status);
+
+  List<ThesisProposal> findAllByAdvisorsId(Long advisorId);
 }

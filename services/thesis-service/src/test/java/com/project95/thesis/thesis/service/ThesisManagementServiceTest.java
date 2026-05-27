@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.*;
 
 import com.project95.thesis.management.dto.ChairThesesReplacementRequest;
+import com.project95.thesis.management.dto.ScrapeRunLogResponse;
 import com.project95.thesis.management.dto.ThesisProposalInput;
 import com.project95.thesis.thesis.domain.Chair;
 import com.project95.thesis.thesis.domain.ResearchArea;
@@ -34,6 +35,7 @@ class ThesisManagementServiceTest {
   @Mock private AdvisorRepository advisorRepository;
   @Mock private ResearchAreaRepository researchAreaRepository;
   @Mock private EntityLookupService entityLookupService;
+  @Mock private ScrapeRunService scrapeRunService;
 
   @InjectMocks private ThesisManagementService service;
 
@@ -58,6 +60,8 @@ class ThesisManagementServiceTest {
     input.setTags(List.of("AI", "Medicine"));
 
     ChairThesesReplacementRequest request = new ChairThesesReplacementRequest();
+    request.setSourceEndpointId(10L);
+    request.setStatus(ChairThesesReplacementRequest.StatusEnum.SUCCESS);
     request.setTheses(List.of(input));
 
     Tag tagAi = new Tag("AI");
@@ -67,17 +71,25 @@ class ThesisManagementServiceTest {
     // Return the items being saved
     when(thesisRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
+    ScrapeRunLogResponse logResponse = new ScrapeRunLogResponse();
+    logResponse.setId(42L);
+    when(scrapeRunService.logScrapeRun(any())).thenReturn(logResponse);
+    when(thesisRepository.deleteByChairId(chairId)).thenReturn(0L);
+
     // Act
-    List<ThesisProposal> result = service.replaceThesesInDatabase(chairId, request);
+    IngestionResult result = service.replaceThesesInDatabase(chairId, request);
 
     // Assert
-    assertThat(result).hasSize(1);
-    assertThat(result.get(0).getTitle()).isEqualTo("AI in Medicine");
-    assertThat(result.get(0).getTags()).containsExactlyInAnyOrder(tagAi, tagMed);
+    assertThat(result.persistentTheses()).hasSize(1);
+    assertThat(result.persistentTheses().get(0).getTitle()).isEqualTo("AI in Medicine");
+    assertThat(result.persistentTheses().get(0).getTags()).containsExactlyInAnyOrder(tagAi, tagMed);
+    assertThat(result.scrapeRunId()).isEqualTo(42L);
+    assertThat(result.deletedCount()).isZero();
 
     verify(entityLookupService).ensureSharedEntitiesExist(request);
     verify(thesisRepository).deleteByChairId(chairId);
     verify(thesisRepository).saveAll(anyList());
+    verify(scrapeRunService).logScrapeRun(any());
   }
 
   @Test
@@ -87,7 +99,7 @@ class ThesisManagementServiceTest {
     when(chairRepository.findById(chairId)).thenReturn(Optional.of(testChair));
 
     ThesisProposalInput input1 = new ThesisProposalInput();
-    input1.setTitle("T1");
+    input1.setTitle(" T1 "); // Add whitespace to test normalization
     input1.setSourceUrl(URI.create("http://u1"));
     input1.setTags(List.of("SharedTag"));
     input1.setResearchArea(JsonNullable.of("SharedArea"));
@@ -99,6 +111,8 @@ class ThesisManagementServiceTest {
     input2.setResearchArea(JsonNullable.of("SharedArea"));
 
     ChairThesesReplacementRequest request = new ChairThesesReplacementRequest();
+    request.setSourceEndpointId(10L);
+    request.setStatus(ChairThesesReplacementRequest.StatusEnum.SUCCESS);
     request.setTheses(List.of(input1, input2));
 
     Tag sharedTag = new Tag("SharedTag");
@@ -108,15 +122,22 @@ class ThesisManagementServiceTest {
     when(researchAreaRepository.findAllByNameIn(anySet())).thenReturn(List.of(sharedArea));
     when(thesisRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
+    ScrapeRunLogResponse logResponse = new ScrapeRunLogResponse();
+    logResponse.setId(42L);
+    when(scrapeRunService.logScrapeRun(any())).thenReturn(logResponse);
+    when(thesisRepository.deleteByChairId(chairId)).thenReturn(5L);
+
     // Act
-    List<ThesisProposal> result = service.replaceThesesInDatabase(chairId, request);
+    IngestionResult result = service.replaceThesesInDatabase(chairId, request);
 
     // Assert
-    assertThat(result).hasSize(2);
-    assertThat(result.get(0).getTags()).contains(sharedTag);
-    assertThat(result.get(1).getTags()).contains(sharedTag);
-    assertThat(result.get(0).getResearchAreas()).contains(sharedArea);
-    assertThat(result.get(1).getResearchAreas()).contains(sharedArea);
+    assertThat(result.persistentTheses()).hasSize(2);
+    assertThat(result.persistentTheses().get(0).getTitle()).isEqualTo("T1"); // Verified normalization
+    assertThat(result.persistentTheses().get(0).getTags()).contains(sharedTag);
+    assertThat(result.persistentTheses().get(1).getTags()).contains(sharedTag);
+    assertThat(result.persistentTheses().get(0).getResearchAreas()).contains(sharedArea);
+    assertThat(result.persistentTheses().get(1).getResearchAreas()).contains(sharedArea);
+    assertThat(result.deletedCount()).isEqualTo(5L);
 
     // Verify batch fetching was called with correct sets
     verify(tagRepository).findAllByNameIn(Set.of("SharedTag"));

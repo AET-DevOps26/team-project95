@@ -44,23 +44,23 @@ public class EntityLookupService {
     Set<String> tagNames = new HashSet<>();
     Set<String> areaNames = new HashSet<>();
     Map<String, AdvisorInput> advisorByEmail = new HashMap<>();
-    List<AdvisorInput> advisorsWithoutEmail = new ArrayList<>();
 
     for (ThesisProposalInput thesis : request.getTheses()) {
       if (thesis.getTags() != null) {
-        tagNames.addAll(thesis.getTags());
+        thesis.getTags().stream()
+            .map(this::normalize)
+            .filter(Objects::nonNull)
+            .forEach(tagNames::add);
       }
-      String area = unwrap(thesis.getResearchArea());
+      String area = normalize(unwrap(thesis.getResearchArea()));
       if (area != null) {
         areaNames.add(area);
       }
       if (thesis.getAdvisors() != null) {
         for (AdvisorInput adv : thesis.getAdvisors()) {
-          String email = unwrap(adv.getEmail());
+          String email = normalize(adv.getEmail());
           if (email != null) {
             advisorByEmail.put(email, adv);
-          } else {
-            advisorsWithoutEmail.add(adv);
           }
         }
       }
@@ -68,7 +68,7 @@ public class EntityLookupService {
 
     syncTags(tagNames);
     syncResearchAreas(areaNames);
-    syncAdvisors(advisorByEmail, advisorsWithoutEmail);
+    syncAdvisors(advisorByEmail);
   }
 
   private void syncTags(Set<String> names) {
@@ -82,7 +82,7 @@ public class EntityLookupService {
         try {
           tagRepository.saveAndFlush(new Tag(name));
         } catch (DataIntegrityViolationException e) {
-          // Already created by another thread, ignore
+          // Already created by another thread, ignore uniqueness violations
         }
       }
     }
@@ -99,45 +99,38 @@ public class EntityLookupService {
         try {
           researchAreaRepository.saveAndFlush(new ResearchArea(name));
         } catch (DataIntegrityViolationException e) {
-          // Already created by another thread, ignore
+          // Already created by another thread, ignore uniqueness violations
         }
       }
     }
   }
 
-  private void syncAdvisors(Map<String, AdvisorInput> byEmail, List<AdvisorInput> withoutEmail) {
-    if (!byEmail.isEmpty()) {
-      Set<String> existingEmails = advisorRepository.findAllByEmailIn(byEmail.keySet()).stream()
-          .map(Advisor::getEmail)
-          .collect(Collectors.toSet());
+  private void syncAdvisors(Map<String, AdvisorInput> byEmail) {
+    if (byEmail.isEmpty()) return;
+    
+    Set<String> existingEmails = advisorRepository.findAllByEmailIn(byEmail.keySet()).stream()
+        .map(Advisor::getEmail)
+        .collect(Collectors.toSet());
 
-      for (Map.Entry<String, AdvisorInput> entry : byEmail.entrySet()) {
-        if (!existingEmails.contains(entry.getKey())) {
-          AdvisorInput input = entry.getValue();
-          try {
-            advisorRepository.saveAndFlush(new Advisor(
-                input.getName(),
-                unwrap(input.getEmail()),
-                input.getProfileUrl() != null ? input.getProfileUrl().toString() : null
-            ));
-          } catch (DataIntegrityViolationException e) {
-            // Already created by another thread
-          }
+    for (Map.Entry<String, AdvisorInput> entry : byEmail.entrySet()) {
+      if (!existingEmails.contains(entry.getKey())) {
+        AdvisorInput input = entry.getValue();
+        try {
+          advisorRepository.saveAndFlush(new Advisor(
+              input.getName().trim(),
+              normalize(input.getEmail()),
+              input.getProfileUrl() != null ? input.getProfileUrl().toString().trim() : null
+          ));
+        } catch (DataIntegrityViolationException e) {
+          // Already created by another thread
         }
       }
     }
+  }
 
-    // For advisors without email, we don't have a unique key to de-duplicate,
-    // so we just save them. They are likely specific to this thesis or chair.
-    // However, the schema now allows NULL email, but unique constraint still exists.
-    // Postgres allows multiple NULLs in unique column.
-    for (AdvisorInput input : withoutEmail) {
-       advisorRepository.save(new Advisor(
-           input.getName(),
-           null,
-           input.getProfileUrl() != null ? input.getProfileUrl().toString() : null
-       ));
-    }
+  private String normalize(String input) {
+    if (input == null || input.isBlank()) return null;
+    return input.trim();
   }
 
   private <T> T unwrap(org.openapitools.jackson.nullable.JsonNullable<T> nullable) {

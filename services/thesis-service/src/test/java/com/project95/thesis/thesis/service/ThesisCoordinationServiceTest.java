@@ -63,15 +63,16 @@ class ThesisCoordinationServiceTest {
     scrapeRunResponse.setId(42L);
     scrapeRunResponse.setStatus("SUCCESS");
 
-    when(scrapeRunService.logScrapeRun(any())).thenReturn(scrapeRunResponse);
+    IngestionResult ingestionResult = new IngestionResult(42L, List.of(persistentThesis), 12L);
+
     when(thesisManagementService.replaceThesesInDatabase(eq(chairId), any()))
-        .thenReturn(List.of(persistentThesis));
+        .thenReturn(ingestionResult);
 
     String vectorResponseJson =
         "{\"chairId\":1,\"insertedVectorEntries\":1,\"deletedVectorEntries\":0}";
 
     mockServer
-        .expect(requestTo("http://vector-service/internal/v1/vector-search-service/chairs/1/index"))
+        .expect(requestTo("/internal/v1/vector-search-service/chairs/1/index"))
         .andExpect(method(HttpMethod.POST))
         .andRespond(withSuccess(vectorResponseJson, MediaType.APPLICATION_JSON));
 
@@ -84,6 +85,5 @@ class ThesisCoordinationServiceTest {
     assertThat(response.getReplacedVectorEntries()).isEqualTo(1);
     assertThat(response.getScrapeRunId()).isEqualTo(42L);
     mockServer.verify();
-    verify(scrapeRunService).logScrapeRun(any());
   }
 }

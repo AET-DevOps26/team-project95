@@ -62,7 +62,7 @@ class EntityLookupServiceTest {
     
     AdvisorInput adv = new AdvisorInput();
     adv.setName("Adv1");
-    adv.setEmail(JsonNullable.of("adv1@example.com"));
+    adv.setEmail("adv1@example.com");
     input.setAdvisors(List.of(adv));
     
     request.setTheses(List.of(input));

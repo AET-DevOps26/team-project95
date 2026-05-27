@@ -48,11 +48,28 @@ public class ScrapeRunService {
 
     ScrapeRun savedRun = scrapeRunRepository.save(run);
 
+    // Update the last_scraped_at timestamp on the source endpoint
+    endpoint.setLastScrapedAt(run.getFinishedAt());
+    sourceEndpointRepository.save(endpoint);
+
     ScrapeRunLogResponse response = new ScrapeRunLogResponse();
     response.setId(savedRun.getId());
     response.setStatus(savedRun.getStatus());
 
     return response;
+  }
+
+  @Transactional
+  public void updateScrapeRunStatus(Long id, String status, String errorMessage) {
+    ScrapeRun run =
+        scrapeRunRepository
+            .findById(id)
+            .orElseThrow(() -> new IllegalArgumentException("Scrape run not found with ID: " + id));
+    run.setStatus(status);
+    if (errorMessage != null) {
+      run.setErrorMessage(errorMessage);
+    }
+    scrapeRunRepository.save(run);
   }
 
   private <T> T unwrap(org.openapitools.jackson.nullable.JsonNullable<T> nullable) {

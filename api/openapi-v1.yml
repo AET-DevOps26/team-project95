@@ -674,6 +674,9 @@ components:
 
     Advisor:
       type: object
+      required:
+        - name
+        - email
       properties:
         id:
           type: integer
@@ -684,7 +687,6 @@ components:
         email:
           type: string
           format: email
-          nullable: true
         profileUrl:
           type: string
           format: uri
@@ -692,13 +694,15 @@ components:
 
     AdvisorInput:
       type: object
+      required:
+        - name
+        - email
       properties:
         name:
           type: string
         email:
           type: string
           format: email
-          nullable: true
         profileUrl:
           type: string
           format: uri

@@ -15,6 +15,7 @@ public class Advisor {
   @Column(nullable = false)
   private String name;
 
+  @Column(nullable = false, unique = true)
   private String email;
 
   @Column(name = "profile_url", length = 1024)
@@ -30,6 +31,20 @@ public class Advisor {
     this.name = name;
     this.email = email;
     this.profileUrl = profileUrl;
+  }
+
+  public void addThesisProposal(ThesisProposal proposal) {
+    this.thesisProposals.add(proposal);
+    if (!proposal.getAdvisors().contains(this)) {
+      proposal.getAdvisors().add(this);
+    }
+  }
+
+  public void removeThesisProposal(ThesisProposal proposal) {
+    this.thesisProposals.remove(proposal);
+    if (proposal.getAdvisors().contains(this)) {
+      proposal.getAdvisors().remove(this);
+    }
   }
 
   // --- Getters and Setters ---
