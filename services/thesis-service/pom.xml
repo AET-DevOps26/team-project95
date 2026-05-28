@@ -89,6 +89,7 @@
               <generatorName>spring</generatorName>
               <apiPackage>com.project95.thesis.management.api</apiPackage>
               <modelPackage>com.project95.thesis.management.dto</modelPackage>
+              <modelNameSuffix>Dto</modelNameSuffix>
               
               <!-- Filter generation -->
               <apisToGenerate>

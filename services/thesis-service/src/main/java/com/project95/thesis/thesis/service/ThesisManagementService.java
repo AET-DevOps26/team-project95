@@ -1,9 +1,9 @@
 package com.project95.thesis.thesis.service;
 
-import com.project95.thesis.management.dto.ChairThesesReplacementRequest;
-import com.project95.thesis.management.dto.ScrapeRunLogRequest;
-import com.project95.thesis.management.dto.ScrapeRunLogResponse;
-import com.project95.thesis.management.dto.ThesisProposalInput;
+import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
+import com.project95.thesis.management.dto.ScrapeRunLogRequestDto;
+import com.project95.thesis.management.dto.ScrapeRunLogResponseDto;
+import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.domain.*;
 import com.project95.thesis.thesis.repository.*;
 import org.openapitools.jackson.nullable.JsonNullable;
@@ -46,9 +46,20 @@ public class ThesisManagementService {
   }
 
   @Transactional
-  public IngestionResult replaceThesesInDatabase(Long chairId, ChairThesesReplacementRequest request) {
+  public IngestionResult replaceThesesInDatabase(Long chairId, ChairThesesReplacementRequestDto request) {
     Objects.requireNonNull(chairId, "chairId must not be null");
     Objects.requireNonNull(request, "request must not be null");
+
+    // Validate required fields up front to avoid side effects in REQUIRES_NEW ensureSharedEntitiesExist
+    if (request.getSourceEndpointId() == null) {
+      throw new IllegalArgumentException("sourceEndpointId must not be null");
+    }
+    if (request.getStartedAt() == null) {
+      throw new IllegalArgumentException("startedAt must not be null");
+    }
+    if (request.getStatus() == null) {
+      throw new IllegalArgumentException("status must not be null");
+    }
 
     log.info("Starting atomic database replacement transaction for chairId: {}", chairId);
 
@@ -67,7 +78,7 @@ public class ThesisManagementService {
       Set<String> allTagNames = new HashSet<>();
       Set<String> allAreaNames = new HashSet<>();
       Set<String> allAdvisorEmails = new HashSet<>();
-      for (ThesisProposalInput dto : request.getTheses()) {
+      for (ThesisProposalInputDto dto : request.getTheses()) {
         if (dto.getTags() != null) {
           dto.getTags().stream()
               .map(this::normalize)
@@ -92,7 +103,7 @@ public class ThesisManagementService {
       Map<String, Advisor> advisorMap = advisorRepository.findAllByEmailIn(allAdvisorEmails).stream()
           .collect(Collectors.toMap(Advisor::getEmail, a -> a));
 
-      for (ThesisProposalInput dto : request.getTheses()) {
+      for (ThesisProposalInputDto dto : request.getTheses()) {
         if (dto.getTitle() == null || dto.getTitle().isBlank()) {
           throw new IllegalArgumentException("Thesis title must not be null or empty");
         }
@@ -109,7 +120,10 @@ public class ThesisManagementService {
         thesis.setAiOverview(unwrap(dto.getAiOverview()));
         
         thesis.setSourceUrl(dto.getSourceUrl().toString());
-        thesis.setStatus(dto.getStatus() != null ? dto.getStatus() : "OPEN");
+        
+        String normalizedStatus = normalize(dto.getStatus());
+        thesis.setStatus(normalizedStatus != null ? normalizedStatus : "OPEN");
+        
         thesis.setLastSeenAt(OffsetDateTime.now());
 
         if (dto.getTags() != null) {
@@ -146,19 +160,15 @@ public class ThesisManagementService {
     }
 
     // Log the scrape run result as a persisted entity (atomic with the replacement)
-    if (request.getStatus() == null) {
-      throw new IllegalArgumentException("Replacement request status must not be null");
-    }
-
-    ScrapeRunLogRequest logRequest = new ScrapeRunLogRequest();
+    ScrapeRunLogRequestDto logRequest = new ScrapeRunLogRequestDto();
     logRequest.setSourceEndpointId(request.getSourceEndpointId());
     logRequest.setStartedAt(request.getStartedAt());
     logRequest.setFinishedAt(request.getFinishedAt());
-    logRequest.setStatus(ScrapeRunLogRequest.StatusEnum.valueOf(request.getStatus().getValue()));
+    logRequest.setStatus(ScrapeRunLogRequestDto.StatusEnum.valueOf(request.getStatus().getValue()));
     logRequest.setErrorMessage(request.getErrorMessage());
     logRequest.setCandidatesFound(JsonNullable.of(entityList.size()));
 
-    ScrapeRunLogResponse logResponse = scrapeRunService.logScrapeRun(logRequest);
+    ScrapeRunLogResponseDto logResponse = scrapeRunService.logScrapeRun(logRequest);
 
     return new IngestionResult(logResponse.getId(), entityList, deletedCount);
   }

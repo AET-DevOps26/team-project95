@@ -1,11 +1,12 @@
 package com.project95.thesis.thesis.service;
 
-import com.project95.thesis.management.dto.ScrapeRunLogRequest;
-import com.project95.thesis.management.dto.ScrapeRunLogResponse;
+import com.project95.thesis.management.dto.ScrapeRunLogRequestDto;
+import com.project95.thesis.management.dto.ScrapeRunLogResponseDto;
 import com.project95.thesis.thesis.domain.ScrapeRun;
 import com.project95.thesis.thesis.domain.SourceEndpoint;
 import com.project95.thesis.thesis.repository.ScrapeRunRepository;
 import com.project95.thesis.thesis.repository.SourceEndpointRepository;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,18 @@ public class ScrapeRunService {
   }
 
   @Transactional
-  public ScrapeRunLogResponse logScrapeRun(ScrapeRunLogRequest request) {
+  public ScrapeRunLogResponseDto logScrapeRun(ScrapeRunLogRequestDto request) {
+    Objects.requireNonNull(request, "request must not be null");
+    if (request.getSourceEndpointId() == null) {
+      throw new IllegalArgumentException("sourceEndpointId must not be null");
+    }
+    if (request.getStartedAt() == null) {
+      throw new IllegalArgumentException("startedAt must not be null");
+    }
+    if (request.getStatus() == null) {
+      throw new IllegalArgumentException("status must not be null");
+    }
+
     log.info("Logging scrape run for endpoint ID: {}", request.getSourceEndpointId());
 
     SourceEndpoint endpoint =
@@ -52,7 +64,7 @@ public class ScrapeRunService {
     endpoint.setLastScrapedAt(run.getFinishedAt());
     sourceEndpointRepository.save(endpoint);
 
-    ScrapeRunLogResponse response = new ScrapeRunLogResponse();
+    ScrapeRunLogResponseDto response = new ScrapeRunLogResponseDto();
     response.setId(savedRun.getId());
     response.setStatus(savedRun.getStatus());
 

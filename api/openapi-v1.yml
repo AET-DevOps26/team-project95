@@ -814,6 +814,10 @@ components:
         replacedVectorEntries:
           type: integer
           example: 9
+        errorMessage:
+          type: string
+          nullable: true
+          example: "Vector search sync failed: connection refused"
 
     TriggerScrapeResponse:
       type: object

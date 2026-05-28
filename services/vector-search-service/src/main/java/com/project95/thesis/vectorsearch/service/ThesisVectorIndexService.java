@@ -1,8 +1,8 @@
 package com.project95.thesis.vectorsearch.service;
 
-import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsRequest;
-import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsResponse;
-import com.project95.thesis.vectorsearch.dto.VectorThesisDocument;
+import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsRequestDto;
+import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsResponseDto;
+import com.project95.thesis.vectorsearch.dto.VectorThesisDocumentDto;
 import com.project95.thesis.vectorsearch.util.ThesisVectorDocumentValidator;
 import com.project95.thesis.vectorsearch.util.ThesisVectorMetadata;
 import com.project95.thesis.vectorsearch.util.ThesisVectorUtils;
@@ -27,8 +27,8 @@ public class ThesisVectorIndexService {
   }
 
   @Transactional
-  public ReplaceChairVectorsResponse indexChairTheses(
-      Long chairId, ReplaceChairVectorsRequest request) {
+  public ReplaceChairVectorsResponseDto indexChairTheses(
+      Long chairId, ReplaceChairVectorsRequestDto request) {
     if (chairId == null) {
       throw new IllegalArgumentException("chairId must not be null");
     }
@@ -37,9 +37,9 @@ public class ThesisVectorIndexService {
           "Replace chair vectors request and theses must not be null");
     }
 
-    List<VectorThesisDocument> theses = request.getTheses();
+    List<VectorThesisDocumentDto> theses = request.getTheses();
     List<Document> documents = new ArrayList<>(theses.size());
-    for (VectorThesisDocument thesis : theses) {
+    for (VectorThesisDocumentDto thesis : theses) {
       ThesisVectorDocumentValidator.validateForChair(chairId, thesis);
       documents.add(toDocument(thesis));
     }
@@ -51,10 +51,10 @@ public class ThesisVectorIndexService {
     }
 
     // Spring AI VectorStore#delete(filter) does not expose the number of deleted rows.
-    return new ReplaceChairVectorsResponse(chairId, 0, documents.size());
+    return new ReplaceChairVectorsResponseDto(chairId, 0, documents.size());
   }
 
-  private Document toDocument(VectorThesisDocument thesis) {
+  private Document toDocument(VectorThesisDocumentDto thesis) {
     return new Document(
         documentId(thesis.getThesisId()), buildContent(thesis), buildMetadata(thesis));
   }
@@ -64,7 +64,7 @@ public class ThesisVectorIndexService {
         .toString();
   }
 
-  private String buildContent(VectorThesisDocument thesis) {
+  private String buildContent(VectorThesisDocumentDto thesis) {
     List<String> parts = new ArrayList<>();
     ThesisVectorUtils.addIfPresent(parts, thesis.getTitle());
     ThesisVectorUtils.addIfPresent(parts, thesis.getAiOverview());
@@ -80,7 +80,7 @@ public class ThesisVectorIndexService {
     return String.join("\n\n", parts);
   }
 
-  private Map<String, Object> buildMetadata(VectorThesisDocument thesis) {
+  private Map<String, Object> buildMetadata(VectorThesisDocumentDto thesis) {
     Map<String, Object> metadata = new LinkedHashMap<>();
     metadata.put(ThesisVectorMetadata.THESIS_ID, thesis.getThesisId());
     metadata.put(ThesisVectorMetadata.CHAIR_ID, thesis.getChairId());
@@ -97,7 +97,7 @@ public class ThesisVectorIndexService {
     return metadata;
   }
 
-  private List<String> normalizedTags(VectorThesisDocument thesis) {
+  private List<String> normalizedTags(VectorThesisDocumentDto thesis) {
     if (thesis.getTags() == null) {
       return List.of();
     }

@@ -63,6 +63,7 @@
               <generatorName>spring</generatorName>
               <apiPackage>com.project95.thesis.scraping.api</apiPackage>
               <modelPackage>com.project95.thesis.scraping.dto</modelPackage>
+              <modelNameSuffix>Dto</modelNameSuffix>
               <configOptions>
                 <interfaceOnly>true</interfaceOnly>
                 <useSpringBoot3>true</useSpringBoot3>

@@ -1,12 +1,12 @@
 package com.project95.thesis.vectorsearch.util;
 
-import com.project95.thesis.vectorsearch.dto.VectorThesisDocument;
+import com.project95.thesis.vectorsearch.dto.VectorThesisDocumentDto;
 
 public final class ThesisVectorDocumentValidator {
 
   private ThesisVectorDocumentValidator() {}
 
-  public static void validateForChair(Long chairId, VectorThesisDocument thesis) {
+  public static void validateForChair(Long chairId, VectorThesisDocumentDto thesis) {
     if (thesis == null) {
       throw new IllegalArgumentException("Thesis document must not be null");
     }

@@ -1,6 +1,6 @@
 package com.project95.thesis.scraping.controller;
 
-import com.project95.thesis.scraping.dto.TriggerScrapeResponse;
+import com.project95.thesis.scraping.dto.TriggerScrapeResponseDto;
 import com.project95.thesis.scraping.service.ScrapeCoordinationService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
@@ -25,10 +25,11 @@ public class ScrapeController {
   }
 
   @PostMapping(value = "/scrape", produces = "application/json")
-  public ResponseEntity<TriggerScrapeResponse> triggerScrape() {
+  public ResponseEntity<TriggerScrapeResponseDto> triggerScrape() {
     taskExecutor.execute(scrapeCoordinationService::runScrapeCycle);
 
-    TriggerScrapeResponse response = new TriggerScrapeResponse(true).message("Scrape run started.");
+    TriggerScrapeResponseDto response =
+        new TriggerScrapeResponseDto(true).message("Scrape run started.");
     return ResponseEntity.status(HttpStatus.ACCEPTED).body(response);
   }
 }

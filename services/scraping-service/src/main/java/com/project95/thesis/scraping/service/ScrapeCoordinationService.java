@@ -30,10 +30,10 @@ public class ScrapeCoordinationService {
 
     String endpointsUrl =
         clientProperties.getMainThesis().getUrl() + "/internal/v1/thesis-service/source-endpoints";
-    SourceEndpointListResponse response = null;
+    SourceEndpointListResponseDto response = null;
     try {
       response =
-          restClient.get().uri(endpointsUrl).retrieve().body(SourceEndpointListResponse.class);
+          restClient.get().uri(endpointsUrl).retrieve().body(SourceEndpointListResponseDto.class);
     } catch (Exception e) {
       log.error("Failed to fetch source endpoints from Main Thesis Service", e);
       return;
@@ -44,18 +44,18 @@ public class ScrapeCoordinationService {
       return;
     }
 
-    for (SourceEndpoint endpoint : response.getEndpoints()) {
+    for (SourceEndpointDto endpoint : response.getEndpoints()) {
       processEndpoint(endpoint);
     }
 
     log.info("Scrape cycle completed.");
   }
 
-  private void processEndpoint(SourceEndpoint endpoint) {
+  private void processEndpoint(SourceEndpointDto endpoint) {
     log.info("Scraping endpoint: {} (Chair: {})", endpoint.getUrl(), endpoint.getChairName());
 
     OffsetDateTime startedAt = OffsetDateTime.now(ZoneOffset.UTC);
-    GenAIExtractionResponse genAiResponse = null;
+    GenAIExtractionResponseDto genAiResponse = null;
 
     try {
       String rawHtml = restClient.get().uri(endpoint.getUrl()).retrieve().body(String.class);
@@ -64,7 +64,7 @@ public class ScrapeCoordinationService {
         throw new RuntimeException("Received empty HTML from source URL");
       }
 
-      GenAIExtractionRequest genAiRequest = new GenAIExtractionRequest();
+      GenAIExtractionRequestDto genAiRequest = new GenAIExtractionRequestDto();
       genAiRequest.setSourceEndpointId(endpoint.getId());
       genAiRequest.setChairId(endpoint.getChairId());
       genAiRequest.setChairName(JsonNullable.of(endpoint.getChairName()));
@@ -80,7 +80,7 @@ public class ScrapeCoordinationService {
               .uri(extractUrl)
               .body(genAiRequest)
               .retrieve()
-              .body(GenAIExtractionResponse.class);
+              .body(GenAIExtractionResponseDto.class);
 
       if (genAiResponse == null || genAiResponse.getTheses() == null) {
         throw new RuntimeException("GenAI extraction returned null response");
@@ -89,11 +89,11 @@ public class ScrapeCoordinationService {
       OffsetDateTime finishedAt = OffsetDateTime.now(ZoneOffset.UTC);
 
       // Replace Theses (Main Thesis Service will now log the successful scrape run)
-      ChairThesesReplacementRequest requestBody = new ChairThesesReplacementRequest();
+      ChairThesesReplacementRequestDto requestBody = new ChairThesesReplacementRequestDto();
       requestBody.setSourceEndpointId(endpoint.getId());
       requestBody.setStartedAt(startedAt);
       requestBody.setFinishedAt(finishedAt);
-      requestBody.setStatus(ChairThesesReplacementRequest.StatusEnum.SUCCESS);
+      requestBody.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
       requestBody.setTheses(genAiResponse.getTheses());
 
       submitThesesReplacement(endpoint.getChairId(), requestBody);
@@ -108,7 +108,7 @@ public class ScrapeCoordinationService {
           endpoint.getId(),
           startedAt,
           finishedAt,
-          ScrapeRunLogRequest.StatusEnum.FAILED,
+          ScrapeRunLogRequestDto.StatusEnum.FAILED,
           e.getMessage(),
           0);
     }
@@ -118,10 +118,10 @@ public class ScrapeCoordinationService {
       Long endpointId,
       OffsetDateTime startedAt,
       OffsetDateTime finishedAt,
-      ScrapeRunLogRequest.StatusEnum status,
+      ScrapeRunLogRequestDto.StatusEnum status,
       String error,
       Integer candidates) {
-    ScrapeRunLogRequest logRequest = new ScrapeRunLogRequest();
+    ScrapeRunLogRequestDto logRequest = new ScrapeRunLogRequestDto();
     logRequest.setSourceEndpointId(endpointId);
     logRequest.setStartedAt(startedAt);
     logRequest.setFinishedAt(finishedAt);
@@ -139,7 +139,7 @@ public class ScrapeCoordinationService {
     }
   }
 
-  private void submitThesesReplacement(Long chairId, ChairThesesReplacementRequest submission) {
+  private void submitThesesReplacement(Long chairId, ChairThesesReplacementRequestDto submission) {
     String submitUrl =
         clientProperties.getMainThesis().getUrl()
             + "/internal/v1/thesis-service/chairs/"
@@ -150,6 +150,8 @@ public class ScrapeCoordinationService {
       log.info("Successfully submitted theses replacement for chairId: {}", chairId);
     } catch (Exception e) {
       log.error("Failed to submit theses replacement for chairId: {}", chairId, e);
+      if (e instanceof RuntimeException re) throw re;
+      throw new RuntimeException("Submission failed", e);
     }
   }
 }

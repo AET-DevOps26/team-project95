@@ -1,9 +1,9 @@
 package com.project95.thesis.vectorsearch.service;
 
-import com.project95.thesis.vectorsearch.dto.VectorSearchFilters;
-import com.project95.thesis.vectorsearch.dto.VectorSearchRequest;
-import com.project95.thesis.vectorsearch.dto.VectorSearchResponse;
-import com.project95.thesis.vectorsearch.dto.VectorSearchResult;
+import com.project95.thesis.vectorsearch.dto.VectorSearchFiltersDto;
+import com.project95.thesis.vectorsearch.dto.VectorSearchRequestDto;
+import com.project95.thesis.vectorsearch.dto.VectorSearchResponseDto;
+import com.project95.thesis.vectorsearch.dto.VectorSearchResultDto;
 import com.project95.thesis.vectorsearch.util.ThesisVectorMetadata;
 import com.project95.thesis.vectorsearch.util.ThesisVectorUtils;
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ public class ThesisVectorSearchService {
     this.vectorStore = vectorStore;
   }
 
-  public VectorSearchResponse semanticSearch(VectorSearchRequest request) {
+  public VectorSearchResponseDto semanticSearch(VectorSearchRequestDto request) {
     if (request == null || ThesisVectorUtils.isBlank(request.getQuery())) {
       throw new IllegalArgumentException("Search query must not be blank");
     }
@@ -46,10 +46,12 @@ public class ThesisVectorSearchService {
     }
 
     List<Document> documents = vectorStore.similaritySearch(searchRequest.build());
-    List<VectorSearchResult> results =
+    List<VectorSearchResultDto> results =
         documents == null ? List.of() : documents.stream().map(this::toResult).toList();
 
-    return new VectorSearchResponse(results);
+    VectorSearchResponseDto response = new VectorSearchResponseDto();
+    response.setResults(results);
+    return response;
   }
 
   private int resolveLimit(Integer limit) {
@@ -59,7 +61,7 @@ public class ThesisVectorSearchService {
     return Math.max(1, Math.min(MAX_LIMIT, limit));
   }
 
-  private Expression buildFilterExpression(VectorSearchFilters filters) {
+  private Expression buildFilterExpression(VectorSearchFiltersDto filters) {
     if (filters == null) {
       return null;
     }
@@ -99,13 +101,17 @@ public class ThesisVectorSearchService {
     return value instanceof String text ? text.trim() : value;
   }
 
-  private VectorSearchResult toResult(Document document) {
+  private VectorSearchResultDto toResult(Document document) {
     Map<String, Object> metadata = document.getMetadata();
     Long thesisId = toLong(metadata.get(ThesisVectorMetadata.THESIS_ID));
     Long chairId = toLong(metadata.get(ThesisVectorMetadata.CHAIR_ID));
     Float score = document.getScore() == null ? 0.0F : document.getScore().floatValue();
 
-    return new VectorSearchResult(thesisId, score).chairId(chairId);
+    VectorSearchResultDto result = new VectorSearchResultDto();
+    result.setThesisId(thesisId);
+    result.setChairId(chairId);
+    result.setScore(score);
+    return result;
   }
 
   private Long toLong(Object value) {

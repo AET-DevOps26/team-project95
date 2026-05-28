@@ -35,8 +35,8 @@ public class ThesisCoordinationService {
     this.clientProperties = clientProperties;
   }
 
-  public ChairThesesReplacementResponse executeScrapeIngestionPipeline(
-      Long chairId, ChairThesesReplacementRequest request) {
+  public ChairThesesReplacementResponseDto executeScrapeIngestionPipeline(
+      Long chairId, ChairThesesReplacementRequestDto request) {
     Objects.requireNonNull(chairId, "chairId must not be null");
     Objects.requireNonNull(request, "request must not be null");
 
@@ -50,14 +50,14 @@ public class ThesisCoordinationService {
     List<ThesisProposal> persistentTheses = ingestionResult.persistentTheses();
 
     // 2. Prepare Vector Search replacement request
-    ReplaceChairVectorsRequest vectorRequest = new ReplaceChairVectorsRequest();
+    ReplaceChairVectorsRequestDto vectorRequest = new ReplaceChairVectorsRequestDto();
     vectorRequest.setScrapeRunId(trackingScrapeRunId);
 
-    List<VectorThesisDocument> vectorDocs =
+    List<VectorThesisDocumentDto> vectorDocs =
         persistentTheses.stream()
             .map(
                 entity -> {
-                  VectorThesisDocument doc = new VectorThesisDocument();
+                  VectorThesisDocumentDto doc = new VectorThesisDocumentDto();
                   doc.setThesisId(entity.getId());
                   doc.setChairId(chairId);
                   doc.setTitle(entity.getTitle());
@@ -94,15 +94,22 @@ public class ThesisCoordinationService {
     vectorRequest.setTheses(vectorDocs);
 
     int vectorReplacementsCount = 0;
+    String vectorSyncError = null;
     try {
-      ReplaceChairVectorsResponse vectorResponse =
+      String vectorSyncUrl =
+          clientProperties.getVectorSearch().getUrl()
+              + "/internal/v1/vector-search-service/chairs/"
+              + chairId
+              + "/index";
+
+      ReplaceChairVectorsResponseDto vectorResponse =
           restClient
               .post()
-              .uri("/internal/v1/vector-search-service/chairs/{chairId}/index", chairId)
+              .uri(vectorSyncUrl)
               .contentType(MediaType.APPLICATION_JSON)
               .body(vectorRequest)
               .retrieve()
-              .body(ReplaceChairVectorsResponse.class);
+              .body(ReplaceChairVectorsResponseDto.class);
 
       if (vectorResponse != null && vectorResponse.getInsertedVectorEntries() != null) {
         vectorReplacementsCount = vectorResponse.getInsertedVectorEntries();
@@ -115,21 +122,21 @@ public class ThesisCoordinationService {
               + " Updating scrape run to PARTIAL_SUCCESS. Reason: {}",
           chairId,
           e.getMessage());
-      
-      scrapeRunService.updateScrapeRunStatus(
-          trackingScrapeRunId, 
-          "PARTIAL_SUCCESS", 
-          "Vector sync failed: " + e.getMessage());
-          
-      throw new RuntimeException("Vector Search index synchronization failed.", e);
+
+      vectorSyncError = "Vector sync failed: " + e.getMessage();
+      scrapeRunService.updateScrapeRunStatus(trackingScrapeRunId, "PARTIAL_SUCCESS", vectorSyncError);
     }
 
-    ChairThesesReplacementResponse response = new ChairThesesReplacementResponse();
+    ChairThesesReplacementResponseDto response = new ChairThesesReplacementResponseDto();
     response.setScrapeRunId(trackingScrapeRunId);
     response.setChairId(chairId);
     response.setInsertedRelationalTheses(persistentTheses.size());
     response.setReplacedVectorEntries(vectorReplacementsCount);
     response.setDeletedRelationalTheses((int) ingestionResult.deletedCount());
+
+    if (vectorSyncError != null) {
+      response.setErrorMessage(JsonNullable.of(vectorSyncError));
+    }
 
     return response;
   }

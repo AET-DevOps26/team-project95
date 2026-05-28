@@ -9,9 +9,9 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import com.project95.thesis.management.dto.ChairThesesReplacementRequest;
-import com.project95.thesis.management.dto.ChairThesesReplacementResponse;
-import com.project95.thesis.management.dto.ScrapeRunLogResponse;
+import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
+import com.project95.thesis.management.dto.ChairThesesReplacementResponseDto;
+import com.project95.thesis.management.dto.ScrapeRunLogResponseDto;
 import com.project95.thesis.thesis.config.ClientProperties;
 import com.project95.thesis.thesis.domain.ThesisProposal;
 import java.util.List;
@@ -36,11 +36,11 @@ class ThesisCoordinationServiceTest {
 
   @BeforeEach
   void setUp() {
-    RestClient.Builder restClientBuilder = RestClient.builder();
-    mockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
-
     ClientProperties clientProperties = new ClientProperties();
     clientProperties.getVectorSearch().setUrl("http://vector-service");
+
+    RestClient.Builder restClientBuilder = RestClient.builder().baseUrl(clientProperties.getVectorSearch().getUrl());
+    mockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
 
     service =
         new ThesisCoordinationService(
@@ -51,15 +51,15 @@ class ThesisCoordinationServiceTest {
   void executeScrapeIngestionPipeline_CallsVectorService() {
     // Arrange
     Long chairId = 1L;
-    ChairThesesReplacementRequest request = new ChairThesesReplacementRequest();
+    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
     request.setSourceEndpointId(10L);
-    request.setStatus(ChairThesesReplacementRequest.StatusEnum.SUCCESS);
+    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
 
     ThesisProposal persistentThesis = new ThesisProposal();
     persistentThesis.setId(100L);
     persistentThesis.setTitle("Vector Sync Test");
 
-    ScrapeRunLogResponse scrapeRunResponse = new ScrapeRunLogResponse();
+    ScrapeRunLogResponseDto scrapeRunResponse = new ScrapeRunLogResponseDto();
     scrapeRunResponse.setId(42L);
     scrapeRunResponse.setStatus("SUCCESS");
 
@@ -72,12 +72,12 @@ class ThesisCoordinationServiceTest {
         "{\"chairId\":1,\"insertedVectorEntries\":1,\"deletedVectorEntries\":0}";
 
     mockServer
-        .expect(requestTo("/internal/v1/vector-search-service/chairs/1/index"))
+        .expect(requestTo("http://vector-service/internal/v1/vector-search-service/chairs/1/index"))
         .andExpect(method(HttpMethod.POST))
         .andRespond(withSuccess(vectorResponseJson, MediaType.APPLICATION_JSON));
 
     // Act
-    ChairThesesReplacementResponse response =
+    ChairThesesReplacementResponseDto response =
         service.executeScrapeIngestionPipeline(chairId, request);
 
     // Assert

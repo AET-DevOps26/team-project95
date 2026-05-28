@@ -1,12 +1,16 @@
 package com.project95.thesis.thesis.controller;
 
-import com.project95.thesis.management.dto.ChairThesesReplacementRequest;
-import com.project95.thesis.management.dto.ChairThesesReplacementResponse;
-import com.project95.thesis.management.dto.ScrapeRunLogRequest;
-import com.project95.thesis.management.dto.ScrapeRunLogResponse;
+import com.project95.thesis.management.dto.SourceEndpointDto;
+import com.project95.thesis.management.dto.*;
+import com.project95.thesis.thesis.domain.SourceEndpoint;
+import com.project95.thesis.thesis.repository.SourceEndpointRepository;
 import com.project95.thesis.thesis.service.ScrapeRunService;
 import com.project95.thesis.thesis.service.ThesisCoordinationService;
+import org.openapitools.jackson.nullable.JsonNullable;
+import java.net.URI;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -17,29 +21,60 @@ public class ThesisFrontendController {
 
   private final ThesisCoordinationService thesisCoordinationService;
   private final ScrapeRunService scrapeRunService;
+  private final SourceEndpointRepository sourceEndpointRepository;
 
   public ThesisFrontendController(
-      ThesisCoordinationService thesisCoordinationService, ScrapeRunService scrapeRunService) {
+      ThesisCoordinationService thesisCoordinationService,
+      ScrapeRunService scrapeRunService,
+      SourceEndpointRepository sourceEndpointRepository) {
     this.thesisCoordinationService = thesisCoordinationService;
     this.scrapeRunService = scrapeRunService;
+    this.sourceEndpointRepository = sourceEndpointRepository;
+  }
+
+  @GetMapping("/source-endpoints")
+  public ResponseEntity<SourceEndpointListResponseDto> listSourceEndpoints() {
+    List<SourceEndpoint> entities =
+        sourceEndpointRepository.findAll();
+
+    List<SourceEndpointDto> dtos =
+        entities.stream().map(this::mapToSourceEndpointDto).collect(Collectors.toList());
+
+    SourceEndpointListResponseDto response = new SourceEndpointListResponseDto();
+    response.setEndpoints(dtos);
+    return ResponseEntity.ok(response);
+  }
+
+  private SourceEndpointDto mapToSourceEndpointDto(
+      SourceEndpoint entity) {
+    SourceEndpointDto dto = new SourceEndpointDto();
+    dto.setId(entity.getId());
+    dto.setChairId(entity.getChair().getId());
+    dto.setChairName(entity.getChair().getName());
+    if (entity.getUrl() != null) {
+      dto.setUrl(URI.create(entity.getUrl()));
+    }
+    dto.setStatus(entity.getStatus());
+    dto.setLastScrapedAt(JsonNullable.of(entity.getLastScrapedAt()));
+    return dto;
   }
 
   @PostMapping("/scrape-runs")
-  public ResponseEntity<ScrapeRunLogResponse> logScrapeRun(
-      @RequestBody ScrapeRunLogRequest request) {
+  public ResponseEntity<ScrapeRunLogResponseDto> logScrapeRun(
+      @RequestBody ScrapeRunLogRequestDto request) {
     Objects.requireNonNull(request, "request payload must not be null");
-    ScrapeRunLogResponse response = scrapeRunService.logScrapeRun(request);
+    ScrapeRunLogResponseDto response = scrapeRunService.logScrapeRun(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
   @PutMapping("/chairs/{chairId}/theses")
-  public ResponseEntity<ChairThesesReplacementResponse> replaceChairTheses(
-      @PathVariable("chairId") Long chairId, @RequestBody ChairThesesReplacementRequest request) {
+  public ResponseEntity<ChairThesesReplacementResponseDto> replaceChairTheses(
+      @PathVariable("chairId") Long chairId, @RequestBody ChairThesesReplacementRequestDto request) {
 
     Objects.requireNonNull(chairId, "chairId must not be null");
     Objects.requireNonNull(request, "request payload must not be null");
 
-    ChairThesesReplacementResponse response =
+    ChairThesesReplacementResponseDto response =
         thesisCoordinationService.executeScrapeIngestionPipeline(chairId, request);
     return ResponseEntity.ok(response);
   }

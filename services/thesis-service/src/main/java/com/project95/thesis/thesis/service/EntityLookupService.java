@@ -1,8 +1,8 @@
 package com.project95.thesis.thesis.service;
 
-import com.project95.thesis.management.dto.AdvisorInput;
-import com.project95.thesis.management.dto.ChairThesesReplacementRequest;
-import com.project95.thesis.management.dto.ThesisProposalInput;
+import com.project95.thesis.management.dto.AdvisorInputDto;
+import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
+import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.domain.Advisor;
 import com.project95.thesis.thesis.domain.ResearchArea;
 import com.project95.thesis.thesis.domain.Tag;
@@ -40,12 +40,12 @@ public class EntityLookupService {
    * entities visible to other concurrent requests.
    */
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void ensureSharedEntitiesExist(ChairThesesReplacementRequest request) {
+  public void ensureSharedEntitiesExist(ChairThesesReplacementRequestDto request) {
     Set<String> tagNames = new HashSet<>();
     Set<String> areaNames = new HashSet<>();
-    Map<String, AdvisorInput> advisorByEmail = new HashMap<>();
+    Map<String, AdvisorInputDto> advisorByEmail = new HashMap<>();
 
-    for (ThesisProposalInput thesis : request.getTheses()) {
+    for (ThesisProposalInputDto thesis : request.getTheses()) {
       if (thesis.getTags() != null) {
         thesis.getTags().stream()
             .map(this::normalize)
@@ -57,7 +57,7 @@ public class EntityLookupService {
         areaNames.add(area);
       }
       if (thesis.getAdvisors() != null) {
-        for (AdvisorInput adv : thesis.getAdvisors()) {
+        for (AdvisorInputDto adv : thesis.getAdvisors()) {
           String email = normalize(adv.getEmail());
           if (email != null) {
             advisorByEmail.put(email, adv);
@@ -105,16 +105,19 @@ public class EntityLookupService {
     }
   }
 
-  private void syncAdvisors(Map<String, AdvisorInput> byEmail) {
+  private void syncAdvisors(Map<String, AdvisorInputDto> byEmail) {
     if (byEmail.isEmpty()) return;
     
     Set<String> existingEmails = advisorRepository.findAllByEmailIn(byEmail.keySet()).stream()
         .map(Advisor::getEmail)
         .collect(Collectors.toSet());
 
-    for (Map.Entry<String, AdvisorInput> entry : byEmail.entrySet()) {
+    for (Map.Entry<String, AdvisorInputDto> entry : byEmail.entrySet()) {
       if (!existingEmails.contains(entry.getKey())) {
-        AdvisorInput input = entry.getValue();
+        AdvisorInputDto input = entry.getValue();
+        if (input.getName() == null || input.getName().isBlank()) {
+          continue; // Skip advisors without a valid name
+        }
         try {
           advisorRepository.saveAndFlush(new Advisor(
               input.getName().trim(),

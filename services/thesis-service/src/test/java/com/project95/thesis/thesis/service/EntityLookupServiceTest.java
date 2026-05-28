@@ -3,9 +3,9 @@ package com.project95.thesis.thesis.service;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-import com.project95.thesis.management.dto.AdvisorInput;
-import com.project95.thesis.management.dto.ChairThesesReplacementRequest;
-import com.project95.thesis.management.dto.ThesisProposalInput;
+import com.project95.thesis.management.dto.AdvisorInputDto;
+import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
+import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.domain.Advisor;
 import com.project95.thesis.thesis.domain.ResearchArea;
 import com.project95.thesis.thesis.domain.Tag;
@@ -34,8 +34,8 @@ class EntityLookupServiceTest {
   @Test
   void ensureSharedEntitiesExist_HandlesRaceCondition() {
     // Arrange
-    ChairThesesReplacementRequest request = new ChairThesesReplacementRequest();
-    ThesisProposalInput input = new ThesisProposalInput();
+    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
+    ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTags(List.of("NewTag"));
     request.setTheses(List.of(input));
 
@@ -55,12 +55,12 @@ class EntityLookupServiceTest {
   @Test
   void ensureSharedEntitiesExist_SavesNewEntities() {
     // Arrange
-    ChairThesesReplacementRequest request = new ChairThesesReplacementRequest();
-    ThesisProposalInput input = new ThesisProposalInput();
+    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
+    ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTags(List.of("T1"));
     input.setResearchArea(JsonNullable.of("A1"));
     
-    AdvisorInput adv = new AdvisorInput();
+    AdvisorInputDto adv = new AdvisorInputDto();
     adv.setName("Adv1");
     adv.setEmail("adv1@example.com");
     input.setAdvisors(List.of(adv));

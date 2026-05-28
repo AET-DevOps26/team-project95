@@ -1,18 +1,18 @@
 package com.project95.thesis.vectorsearch.api;
 
-import com.project95.thesis.vectorsearch.dto.ChairThesesReplacementRequest;
-import com.project95.thesis.vectorsearch.dto.ChairThesesReplacementResponse;
-import com.project95.thesis.vectorsearch.dto.GenAIExtractionRequest;
-import com.project95.thesis.vectorsearch.dto.GenAIExtractionResponse;
-import com.project95.thesis.vectorsearch.dto.HealthResponse;
-import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsRequest;
-import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsResponse;
-import com.project95.thesis.vectorsearch.dto.ScrapeRunLogRequest;
-import com.project95.thesis.vectorsearch.dto.ScrapeRunLogResponse;
-import com.project95.thesis.vectorsearch.dto.SourceEndpointListResponse;
-import com.project95.thesis.vectorsearch.dto.TriggerScrapeResponse;
-import com.project95.thesis.vectorsearch.dto.VectorSearchRequest;
-import com.project95.thesis.vectorsearch.dto.VectorSearchResponse;
+import com.project95.thesis.vectorsearch.dto.ChairThesesReplacementRequestDto;
+import com.project95.thesis.vectorsearch.dto.ChairThesesReplacementResponseDto;
+import com.project95.thesis.vectorsearch.dto.GenAIExtractionRequestDto;
+import com.project95.thesis.vectorsearch.dto.GenAIExtractionResponseDto;
+import com.project95.thesis.vectorsearch.dto.HealthResponseDto;
+import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsRequestDto;
+import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsResponseDto;
+import com.project95.thesis.vectorsearch.dto.ScrapeRunLogRequestDto;
+import com.project95.thesis.vectorsearch.dto.ScrapeRunLogResponseDto;
+import com.project95.thesis.vectorsearch.dto.SourceEndpointListResponseDto;
+import com.project95.thesis.vectorsearch.dto.TriggerScrapeResponseDto;
+import com.project95.thesis.vectorsearch.dto.VectorSearchRequestDto;
+import com.project95.thesis.vectorsearch.dto.VectorSearchResponseDto;
 import com.project95.thesis.vectorsearch.service.ThesisVectorIndexService;
 import com.project95.thesis.vectorsearch.service.ThesisVectorSearchService;
 import org.springframework.http.HttpStatus;
@@ -33,48 +33,48 @@ public class VectorSearchController implements InternalApi {
   }
 
   @Override
-  public ResponseEntity<VectorSearchResponse> semanticSearch(
-      VectorSearchRequest vectorSearchRequest) {
+  public ResponseEntity<VectorSearchResponseDto> semanticSearch(
+      VectorSearchRequestDto vectorSearchRequest) {
     return ResponseEntity.ok(thesisVectorSearchService.semanticSearch(vectorSearchRequest));
   }
 
   @Override
-  public ResponseEntity<ReplaceChairVectorsResponse> indexChairTheses(
-      Long chairId, ReplaceChairVectorsRequest replaceChairVectorsRequest) {
+  public ResponseEntity<ReplaceChairVectorsResponseDto> indexChairTheses(
+      Long chairId, ReplaceChairVectorsRequestDto replaceChairVectorsRequest) {
     return ResponseEntity.ok(
         thesisVectorIndexService.indexChairTheses(chairId, replaceChairVectorsRequest));
   }
 
   @Override
-  public ResponseEntity<ScrapeRunLogResponse> logScrapeRun(
-      ScrapeRunLogRequest scrapeRunLogRequest) {
+  public ResponseEntity<ScrapeRunLogResponseDto> logScrapeRun(
+      ScrapeRunLogRequestDto scrapeRunLogRequest) {
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
   }
 
   @Override
-  public ResponseEntity<HealthResponse> healthCheck() {
-    return ResponseEntity.ok(new HealthResponse("UP").service("vector-search-service"));
+  public ResponseEntity<HealthResponseDto> healthCheck() {
+    return ResponseEntity.ok(new HealthResponseDto("UP").service("vector-search-service"));
   }
 
   @Override
-  public ResponseEntity<GenAIExtractionResponse> extractThesesFromRawContent(
-      GenAIExtractionRequest genAIExtractionRequest) {
+  public ResponseEntity<GenAIExtractionResponseDto> extractThesesFromRawContent(
+      GenAIExtractionRequestDto genAIExtractionRequest) {
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
   }
 
   @Override
-  public ResponseEntity<SourceEndpointListResponse> listSourceEndpointsForScraping() {
+  public ResponseEntity<SourceEndpointListResponseDto> listSourceEndpointsForScraping() {
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
   }
 
   @Override
-  public ResponseEntity<ChairThesesReplacementResponse> replaceChairTheses(
-      Long chairId, ChairThesesReplacementRequest chairThesesReplacementRequest) {
+  public ResponseEntity<ChairThesesReplacementResponseDto> replaceChairTheses(
+      Long chairId, ChairThesesReplacementRequestDto chairThesesReplacementRequest) {
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
   }
 
   @Override
-  public ResponseEntity<TriggerScrapeResponse> triggerScrape() {
+  public ResponseEntity<TriggerScrapeResponseDto> triggerScrape() {
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
   }
 }

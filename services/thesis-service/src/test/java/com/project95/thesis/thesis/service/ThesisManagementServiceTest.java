@@ -6,15 +6,16 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.*;
 
-import com.project95.thesis.management.dto.ChairThesesReplacementRequest;
-import com.project95.thesis.management.dto.ScrapeRunLogResponse;
-import com.project95.thesis.management.dto.ThesisProposalInput;
+import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
+import com.project95.thesis.management.dto.ScrapeRunLogResponseDto;
+import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.domain.Chair;
 import com.project95.thesis.thesis.domain.ResearchArea;
 import com.project95.thesis.thesis.domain.Tag;
 import com.project95.thesis.thesis.domain.ThesisProposal;
 import com.project95.thesis.thesis.repository.*;
 import java.net.URI;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -53,15 +54,17 @@ class ThesisManagementServiceTest {
     Long chairId = 1L;
     when(chairRepository.findById(chairId)).thenReturn(Optional.of(testChair));
 
-    ThesisProposalInput input = new ThesisProposalInput();
+    ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTitle("AI in Medicine");
     input.setSourceUrl(URI.create("http://example.com/thesis"));
     input.setDegreeType(JsonNullable.of("MASTER"));
     input.setTags(List.of("AI", "Medicine"));
 
-    ChairThesesReplacementRequest request = new ChairThesesReplacementRequest();
+    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
     request.setSourceEndpointId(10L);
-    request.setStatus(ChairThesesReplacementRequest.StatusEnum.SUCCESS);
+    request.setStartedAt(OffsetDateTime.now());
+    request.setFinishedAt(OffsetDateTime.now());
+    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
     request.setTheses(List.of(input));
 
     Tag tagAi = new Tag("AI");
@@ -71,7 +74,7 @@ class ThesisManagementServiceTest {
     // Return the items being saved
     when(thesisRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
-    ScrapeRunLogResponse logResponse = new ScrapeRunLogResponse();
+    ScrapeRunLogResponseDto logResponse = new ScrapeRunLogResponseDto();
     logResponse.setId(42L);
     when(scrapeRunService.logScrapeRun(any())).thenReturn(logResponse);
     when(thesisRepository.deleteByChairId(chairId)).thenReturn(0L);
@@ -98,21 +101,23 @@ class ThesisManagementServiceTest {
     Long chairId = 1L;
     when(chairRepository.findById(chairId)).thenReturn(Optional.of(testChair));
 
-    ThesisProposalInput input1 = new ThesisProposalInput();
+    ThesisProposalInputDto input1 = new ThesisProposalInputDto();
     input1.setTitle(" T1 "); // Add whitespace to test normalization
     input1.setSourceUrl(URI.create("http://u1"));
     input1.setTags(List.of("SharedTag"));
     input1.setResearchArea(JsonNullable.of("SharedArea"));
 
-    ThesisProposalInput input2 = new ThesisProposalInput();
+    ThesisProposalInputDto input2 = new ThesisProposalInputDto();
     input2.setTitle("T2");
     input2.setSourceUrl(URI.create("http://u2"));
     input2.setTags(List.of("SharedTag"));
     input2.setResearchArea(JsonNullable.of("SharedArea"));
 
-    ChairThesesReplacementRequest request = new ChairThesesReplacementRequest();
+    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
     request.setSourceEndpointId(10L);
-    request.setStatus(ChairThesesReplacementRequest.StatusEnum.SUCCESS);
+    request.setStartedAt(OffsetDateTime.now());
+    request.setFinishedAt(OffsetDateTime.now());
+    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
     request.setTheses(List.of(input1, input2));
 
     Tag sharedTag = new Tag("SharedTag");
@@ -122,7 +127,7 @@ class ThesisManagementServiceTest {
     when(researchAreaRepository.findAllByNameIn(anySet())).thenReturn(List.of(sharedArea));
     when(thesisRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
-    ScrapeRunLogResponse logResponse = new ScrapeRunLogResponse();
+    ScrapeRunLogResponseDto logResponse = new ScrapeRunLogResponseDto();
     logResponse.setId(42L);
     when(scrapeRunService.logScrapeRun(any())).thenReturn(logResponse);
     when(thesisRepository.deleteByChairId(chairId)).thenReturn(5L);
@@ -149,7 +154,11 @@ class ThesisManagementServiceTest {
     // Arrange
     Long chairId = 99L;
     when(chairRepository.findById(chairId)).thenReturn(Optional.empty());
-    ChairThesesReplacementRequest request = new ChairThesesReplacementRequest();
+    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
+    request.setSourceEndpointId(10L);
+    request.setStartedAt(OffsetDateTime.now());
+    request.setFinishedAt(OffsetDateTime.now());
+    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
 
     // Act & Assert
     assertThrows(
@@ -163,10 +172,14 @@ class ThesisManagementServiceTest {
     Long chairId = 1L;
     when(chairRepository.findById(chairId)).thenReturn(Optional.of(testChair));
 
-    ThesisProposalInput input = new ThesisProposalInput();
+    ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setSourceUrl(URI.create("http://example.com/thesis"));
 
-    ChairThesesReplacementRequest request = new ChairThesesReplacementRequest();
+    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
+    request.setSourceEndpointId(10L);
+    request.setStartedAt(OffsetDateTime.now());
+    request.setFinishedAt(OffsetDateTime.now());
+    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
     request.setTheses(List.of(input));
 
     // Act & Assert
@@ -180,10 +193,14 @@ class ThesisManagementServiceTest {
     Long chairId = 1L;
     when(chairRepository.findById(chairId)).thenReturn(Optional.of(testChair));
 
-    ThesisProposalInput input = new ThesisProposalInput();
+    ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTitle("AI in Medicine");
 
-    ChairThesesReplacementRequest request = new ChairThesesReplacementRequest();
+    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
+    request.setSourceEndpointId(10L);
+    request.setStartedAt(OffsetDateTime.now());
+    request.setFinishedAt(OffsetDateTime.now());
+    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
     request.setTheses(List.of(input));
 
     // Act & Assert
