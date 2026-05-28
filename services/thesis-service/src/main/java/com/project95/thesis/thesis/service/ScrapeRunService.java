@@ -35,6 +35,9 @@ public class ScrapeRunService {
     if (request.getStartedAt() == null) {
       throw new IllegalArgumentException("startedAt must not be null");
     }
+    if (request.getFinishedAt() == null) {
+      throw new IllegalArgumentException("finishedAt must not be null");
+    }
     if (request.getStatus() == null) {
       throw new IllegalArgumentException("status must not be null");
     }
@@ -61,8 +64,10 @@ public class ScrapeRunService {
     ScrapeRun savedRun = scrapeRunRepository.save(run);
 
     // Update the last_scraped_at timestamp on the source endpoint
-    endpoint.setLastScrapedAt(run.getFinishedAt());
-    sourceEndpointRepository.save(endpoint);
+    if (run.getFinishedAt() != null) {
+      endpoint.setLastScrapedAt(run.getFinishedAt());
+      sourceEndpointRepository.save(endpoint);
+    }
 
     ScrapeRunLogResponseDto response = new ScrapeRunLogResponseDto();
     response.setId(savedRun.getId());

@@ -58,10 +58,14 @@ public class EntityLookupService {
       }
       if (thesis.getAdvisors() != null) {
         for (AdvisorInputDto adv : thesis.getAdvisors()) {
-          String email = normalize(adv.getEmail());
-          if (email != null) {
-            advisorByEmail.put(email, adv);
+          if (adv.getName() == null || adv.getName().isBlank()) {
+            throw new IllegalArgumentException("Advisor name must not be null or empty");
           }
+          if (adv.getEmail() == null || adv.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Advisor email must not be null or empty");
+          }
+          String email = normalize(adv.getEmail());
+          advisorByEmail.put(email, adv);
         }
       }
     }

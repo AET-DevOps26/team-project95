@@ -154,11 +154,17 @@ class ThesisManagementServiceTest {
     // Arrange
     Long chairId = 99L;
     when(chairRepository.findById(chairId)).thenReturn(Optional.empty());
+
+    ThesisProposalInputDto input = new ThesisProposalInputDto();
+    input.setTitle("Valid Title");
+    input.setSourceUrl(URI.create("http://example.com"));
+
     ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
     request.setSourceEndpointId(10L);
     request.setStartedAt(OffsetDateTime.now());
     request.setFinishedAt(OffsetDateTime.now());
     request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
+    request.setTheses(List.of(input));
 
     // Act & Assert
     assertThrows(
@@ -167,10 +173,25 @@ class ThesisManagementServiceTest {
   }
 
   @Test
+  void replaceThesesInDatabase_ThrowsIfThesesMissing() {
+    // Arrange
+    Long chairId = 1L;
+    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
+    request.setSourceEndpointId(10L);
+    request.setStartedAt(OffsetDateTime.now());
+    request.setFinishedAt(OffsetDateTime.now());
+    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
+    request.setTheses(List.of());
+
+    // Act & Assert
+    assertThrows(
+        IllegalArgumentException.class, () -> service.replaceThesesInDatabase(chairId, request));
+  }
+
+  @Test
   void replaceThesesInDatabase_ThrowsIfTitleMissing() {
     // Arrange
     Long chairId = 1L;
-    when(chairRepository.findById(chairId)).thenReturn(Optional.of(testChair));
 
     ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setSourceUrl(URI.create("http://example.com/thesis"));
@@ -191,7 +212,6 @@ class ThesisManagementServiceTest {
   void replaceThesesInDatabase_ThrowsIfSourceUrlMissing() {
     // Arrange
     Long chairId = 1L;
-    when(chairRepository.findById(chairId)).thenReturn(Optional.of(testChair));
 
     ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTitle("AI in Medicine");

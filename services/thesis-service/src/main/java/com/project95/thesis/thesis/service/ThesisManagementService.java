@@ -1,5 +1,6 @@
 package com.project95.thesis.thesis.service;
 
+import com.project95.thesis.management.dto.AdvisorInputDto;
 import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
 import com.project95.thesis.management.dto.ScrapeRunLogRequestDto;
 import com.project95.thesis.management.dto.ScrapeRunLogResponseDto;
@@ -50,15 +51,43 @@ public class ThesisManagementService {
     Objects.requireNonNull(chairId, "chairId must not be null");
     Objects.requireNonNull(request, "request must not be null");
 
-    // Validate required fields up front to avoid side effects in REQUIRES_NEW ensureSharedEntitiesExist
+    // 1. Validate required root fields up front
     if (request.getSourceEndpointId() == null) {
       throw new IllegalArgumentException("sourceEndpointId must not be null");
     }
     if (request.getStartedAt() == null) {
       throw new IllegalArgumentException("startedAt must not be null");
     }
+    if (request.getFinishedAt() == null) {
+      throw new IllegalArgumentException("finishedAt must not be null");
+    }
     if (request.getStatus() == null) {
       throw new IllegalArgumentException("status must not be null");
+    }
+
+    // 2. Reject empty/null theses to prevent accidental data wipe
+    if (request.getTheses() == null || request.getTheses().isEmpty()) {
+      throw new IllegalArgumentException("Theses list must not be null or empty");
+    }
+
+    // 3. Pre-validate all theses and advisors BEFORE side-effect-heavy ensureSharedEntitiesExist
+    for (ThesisProposalInputDto dto : request.getTheses()) {
+      if (dto.getTitle() == null || dto.getTitle().isBlank()) {
+        throw new IllegalArgumentException("Thesis title must not be null or empty");
+      }
+      if (dto.getSourceUrl() == null) {
+        throw new IllegalArgumentException("Thesis source URL must not be null");
+      }
+      if (dto.getAdvisors() != null) {
+        for (AdvisorInputDto adv : dto.getAdvisors()) {
+          if (adv.getName() == null || adv.getName().isBlank()) {
+            throw new IllegalArgumentException("Advisor name must not be null or empty");
+          }
+          if (adv.getEmail() == null || adv.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Advisor email must not be null or empty");
+          }
+        }
+      }
     }
 
     log.info("Starting atomic database replacement transaction for chairId: {}", chairId);
@@ -66,98 +95,90 @@ public class ThesisManagementService {
     Chair chair = chairRepository.findById(chairId)
       .orElseThrow(() -> new IllegalArgumentException("Chair not found with ID: " + chairId));
 
+    // 4. Perform side-effect-heavy shared entity synchronization
+    entityLookupService.ensureSharedEntitiesExist(request);
+
+    // 5. Atomic deletion and replacement
     long deletedCount = thesisRepository.deleteByChairId(chairId);
     thesisRepository.flush();
 
     List<ThesisProposal> entityList = new ArrayList<>();
-    if (request.getTheses() != null && !request.getTheses().isEmpty()) {
-      // 1. Ensure all shared entities exist (handles race conditions with REQUIRES_NEW)
-      entityLookupService.ensureSharedEntitiesExist(request);
-
-      // 2. Pre-fetch all shared entities for this transaction to avoid N+1
-      Set<String> allTagNames = new HashSet<>();
-      Set<String> allAreaNames = new HashSet<>();
-      Set<String> allAdvisorEmails = new HashSet<>();
-      for (ThesisProposalInputDto dto : request.getTheses()) {
-        if (dto.getTags() != null) {
-          dto.getTags().stream()
-              .map(this::normalize)
-              .filter(Objects::nonNull)
-              .forEach(allTagNames::add);
-        }
-        String area = normalize(unwrap(dto.getResearchArea()));
-        if (area != null) allAreaNames.add(area);
-        
-        if (dto.getAdvisors() != null) {
-          dto.getAdvisors().forEach(a -> {
-            String email = normalize(a.getEmail());
-            if (email != null) allAdvisorEmails.add(email);
-          });
-        }
-      }
-
-      Map<String, Tag> tagMap = tagRepository.findAllByNameIn(allTagNames).stream()
-          .collect(Collectors.toMap(Tag::getName, t -> t));
-      Map<String, ResearchArea> areaMap = researchAreaRepository.findAllByNameIn(allAreaNames).stream()
-          .collect(Collectors.toMap(ResearchArea::getName, a -> a));
-      Map<String, Advisor> advisorMap = advisorRepository.findAllByEmailIn(allAdvisorEmails).stream()
-          .collect(Collectors.toMap(Advisor::getEmail, a -> a));
-
-      for (ThesisProposalInputDto dto : request.getTheses()) {
-        if (dto.getTitle() == null || dto.getTitle().isBlank()) {
-          throw new IllegalArgumentException("Thesis title must not be null or empty");
-        }
-        if (dto.getSourceUrl() == null) {
-          throw new IllegalArgumentException("Thesis source URL must not be null");
-        }
-
-        ThesisProposal thesis = new ThesisProposal();
-        thesis.setChair(chair);
-        thesis.setTitle(dto.getTitle().trim());
-        
-        thesis.setDegreeType(normalize(unwrap(dto.getDegreeType())));
-        thesis.setOriginalDescription(unwrap(dto.getOriginalDescription()));
-        thesis.setAiOverview(unwrap(dto.getAiOverview()));
-        
-        thesis.setSourceUrl(dto.getSourceUrl().toString());
-        
-        String normalizedStatus = normalize(dto.getStatus());
-        thesis.setStatus(normalizedStatus != null ? normalizedStatus : "OPEN");
-        
-        thesis.setLastSeenAt(OffsetDateTime.now());
-
-        if (dto.getTags() != null) {
-          Set<Tag> managedTags = dto.getTags().stream()
+    // 2. Pre-fetch all shared entities for this transaction to avoid N+1
+    Set<String> allTagNames = new HashSet<>();
+    Set<String> allAreaNames = new HashSet<>();
+    Set<String> allAdvisorEmails = new HashSet<>();
+    for (ThesisProposalInputDto dto : request.getTheses()) {
+      if (dto.getTags() != null) {
+        dto.getTags().stream()
             .map(this::normalize)
-            .map(tagMap::get)
             .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
-          thesis.setTags(managedTags);
-        }
-
-        if (dto.getAdvisors() != null) {
-          Set<Advisor> managedAdvisors = dto.getAdvisors().stream()
-            .map(advDto -> {
-              String email = normalize(advDto.getEmail());
-              return (email != null) ? advisorMap.get(email) : null;
-            })
-            .filter(Objects::nonNull)
-            .collect(Collectors.toSet());
-          thesis.setAdvisors(managedAdvisors);
-        }
-
-        String researchAreaStr = normalize(unwrap(dto.getResearchArea()));
-        if (researchAreaStr != null) {
-          ResearchArea managedArea = areaMap.get(researchAreaStr);
-          if (managedArea != null) {
-            thesis.setResearchAreas(new HashSet<>(Collections.singletonList(managedArea)));
-          }
-        }
-
-        entityList.add(thesis);
+            .forEach(allTagNames::add);
       }
-      entityList = thesisRepository.saveAll(entityList);
+      String area = normalize(unwrap(dto.getResearchArea()));
+      if (area != null) allAreaNames.add(area);
+      
+      if (dto.getAdvisors() != null) {
+        dto.getAdvisors().forEach(a -> {
+          String email = normalize(a.getEmail());
+          if (email != null) allAdvisorEmails.add(email);
+        });
+      }
     }
+
+    Map<String, Tag> tagMap = tagRepository.findAllByNameIn(allTagNames).stream()
+        .collect(Collectors.toMap(Tag::getName, t -> t));
+    Map<String, ResearchArea> areaMap = researchAreaRepository.findAllByNameIn(allAreaNames).stream()
+        .collect(Collectors.toMap(ResearchArea::getName, a -> a));
+    Map<String, Advisor> advisorMap = advisorRepository.findAllByEmailIn(allAdvisorEmails).stream()
+        .collect(Collectors.toMap(Advisor::getEmail, a -> a));
+
+    for (ThesisProposalInputDto dto : request.getTheses()) {
+      ThesisProposal thesis = new ThesisProposal();
+      thesis.setChair(chair);
+      thesis.setTitle(dto.getTitle().trim());
+      
+      thesis.setDegreeType(normalize(unwrap(dto.getDegreeType())));
+      thesis.setOriginalDescription(unwrap(dto.getOriginalDescription()));
+      thesis.setAiOverview(unwrap(dto.getAiOverview()));
+      
+      thesis.setSourceUrl(dto.getSourceUrl().toString());
+      
+      String normalizedStatus = normalize(dto.getStatus());
+      thesis.setStatus(normalizedStatus != null ? normalizedStatus : "OPEN");
+      
+      thesis.setLastSeenAt(OffsetDateTime.now());
+
+      if (dto.getTags() != null) {
+        Set<Tag> managedTags = dto.getTags().stream()
+          .map(this::normalize)
+          .map(tagMap::get)
+          .filter(Objects::nonNull)
+          .collect(Collectors.toSet());
+        thesis.setTags(managedTags);
+      }
+
+      if (dto.getAdvisors() != null) {
+        Set<Advisor> managedAdvisors = dto.getAdvisors().stream()
+          .map(advDto -> {
+            String email = normalize(advDto.getEmail());
+            return (email != null) ? advisorMap.get(email) : null;
+          })
+          .filter(Objects::nonNull)
+          .collect(Collectors.toSet());
+        thesis.setAdvisors(managedAdvisors);
+      }
+
+      String researchAreaStr = normalize(unwrap(dto.getResearchArea()));
+      if (researchAreaStr != null) {
+        ResearchArea managedArea = areaMap.get(researchAreaStr);
+        if (managedArea != null) {
+          thesis.setResearchAreas(new HashSet<>(Collections.singletonList(managedArea)));
+        }
+      }
+
+      entityList.add(thesis);
+    }
+    entityList = thesisRepository.saveAll(entityList);
 
     // Log the scrape run result as a persisted entity (atomic with the replacement)
     ScrapeRunLogRequestDto logRequest = new ScrapeRunLogRequestDto();
