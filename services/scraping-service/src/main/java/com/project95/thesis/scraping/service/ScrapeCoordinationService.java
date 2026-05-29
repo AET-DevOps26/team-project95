@@ -19,7 +19,6 @@ public class ScrapeCoordinationService {
   private final RestClient thesisServiceClient;
   private final RestClient genAiServiceClient;
   private final RestClient scrapingClient;
-  private final ClientProperties clientProperties;
 
   public ScrapeCoordinationService(
       @Qualifier("thesisServiceClient") RestClient thesisServiceClient,
@@ -29,7 +28,6 @@ public class ScrapeCoordinationService {
     this.thesisServiceClient = thesisServiceClient;
     this.genAiServiceClient = genAiServiceClient;
     this.scrapingClient = scrapingClient;
-    this.clientProperties = clientProperties;
   }
 
   @Scheduled(cron = "${app.scheduling.scrape-cron}")

@@ -1,7 +1,6 @@
 package com.project95.thesis.thesis.service;
 
 import com.project95.thesis.management.dto.*;
-import com.project95.thesis.thesis.config.ClientProperties;
 import com.project95.thesis.thesis.domain.ThesisProposal;
 import java.net.URI;
 import java.util.List;
@@ -33,10 +32,12 @@ public class ThesisCoordinationService {
     Objects.requireNonNull(chairId, "chairId must not be null");
     Objects.requireNonNull(request, "request payload must not be null");
 
+    int candidateCount = request.getTheses() == null ? 0 : request.getTheses().size();
+
     log.info(
         "Executing Scrape Ingestion Pipeline for chairId: {}. Candidate count: {}",
         chairId,
-        request.getTheses().size());
+        candidateCount);
 
     // 1. Transactional Database Update (Relational)
     IngestionResult ingestionResult =
