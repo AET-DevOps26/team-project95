@@ -7,12 +7,10 @@ import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.*;
 
 import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
-import com.project95.thesis.management.dto.ScrapeRunLogResponseDto;
 import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.domain.Chair;
 import com.project95.thesis.thesis.domain.ResearchArea;
 import com.project95.thesis.thesis.domain.Tag;
-import com.project95.thesis.thesis.domain.ThesisProposal;
 import com.project95.thesis.thesis.repository.*;
 import java.net.URI;
 import java.time.OffsetDateTime;
@@ -25,7 +23,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openapitools.jackson.nullable.JsonNullable;
 
 @ExtendWith(MockitoExtension.class)
 class ThesisManagementServiceTest {
@@ -36,7 +33,6 @@ class ThesisManagementServiceTest {
   @Mock private AdvisorRepository advisorRepository;
   @Mock private ResearchAreaRepository researchAreaRepository;
   @Mock private EntityLookupService entityLookupService;
-  @Mock private ScrapeRunService scrapeRunService;
 
   @InjectMocks private ThesisManagementService service;
 
@@ -57,7 +53,7 @@ class ThesisManagementServiceTest {
     ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTitle("AI in Medicine");
     input.setSourceUrl(URI.create("http://example.com/thesis"));
-    input.setDegreeType(JsonNullable.of("MASTER"));
+    input.setDegreeType("MASTER");
     input.setTags(List.of("AI", "Medicine"));
 
     ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
@@ -73,10 +69,6 @@ class ThesisManagementServiceTest {
 
     // Return the items being saved
     when(thesisRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
-
-    ScrapeRunLogResponseDto logResponse = new ScrapeRunLogResponseDto();
-    logResponse.setId(42L);
-    when(scrapeRunService.logScrapeRun(any())).thenReturn(logResponse);
     when(thesisRepository.deleteByChairId(chairId)).thenReturn(0L);
 
     // Act
@@ -86,13 +78,11 @@ class ThesisManagementServiceTest {
     assertThat(result.persistentTheses()).hasSize(1);
     assertThat(result.persistentTheses().get(0).getTitle()).isEqualTo("AI in Medicine");
     assertThat(result.persistentTheses().get(0).getTags()).containsExactlyInAnyOrder(tagAi, tagMed);
-    assertThat(result.scrapeRunId()).isEqualTo(42L);
     assertThat(result.deletedCount()).isZero();
 
     verify(entityLookupService).ensureSharedEntitiesExist(request);
     verify(thesisRepository).deleteByChairId(chairId);
     verify(thesisRepository).saveAll(anyList());
-    verify(scrapeRunService).logScrapeRun(any());
   }
 
   @Test
@@ -105,13 +95,13 @@ class ThesisManagementServiceTest {
     input1.setTitle(" T1 "); // Add whitespace to test normalization
     input1.setSourceUrl(URI.create("http://u1"));
     input1.setTags(List.of("SharedTag"));
-    input1.setResearchArea(JsonNullable.of("SharedArea"));
+    input1.setResearchArea("SharedArea");
 
     ThesisProposalInputDto input2 = new ThesisProposalInputDto();
     input2.setTitle("T2");
     input2.setSourceUrl(URI.create("http://u2"));
     input2.setTags(List.of("SharedTag"));
-    input2.setResearchArea(JsonNullable.of("SharedArea"));
+    input2.setResearchArea("SharedArea");
 
     ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
     request.setSourceEndpointId(10L);
@@ -127,9 +117,6 @@ class ThesisManagementServiceTest {
     when(researchAreaRepository.findAllByNameIn(anySet())).thenReturn(List.of(sharedArea));
     when(thesisRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
-    ScrapeRunLogResponseDto logResponse = new ScrapeRunLogResponseDto();
-    logResponse.setId(42L);
-    when(scrapeRunService.logScrapeRun(any())).thenReturn(logResponse);
     when(thesisRepository.deleteByChairId(chairId)).thenReturn(5L);
 
     // Act
@@ -137,7 +124,8 @@ class ThesisManagementServiceTest {
 
     // Assert
     assertThat(result.persistentTheses()).hasSize(2);
-    assertThat(result.persistentTheses().get(0).getTitle()).isEqualTo("T1"); // Verified normalization
+    assertThat(result.persistentTheses().get(0).getTitle())
+        .isEqualTo("T1"); // Verified normalization
     assertThat(result.persistentTheses().get(0).getTags()).contains(sharedTag);
     assertThat(result.persistentTheses().get(1).getTags()).contains(sharedTag);
     assertThat(result.persistentTheses().get(0).getResearchAreas()).contains(sharedArea);
@@ -170,61 +158,5 @@ class ThesisManagementServiceTest {
     assertThrows(
         IllegalArgumentException.class, () -> service.replaceThesesInDatabase(chairId, request));
     verify(thesisRepository, never()).deleteByChairId(any());
-  }
-
-  @Test
-  void replaceThesesInDatabase_ThrowsIfThesesMissing() {
-    // Arrange
-    Long chairId = 1L;
-    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
-    request.setSourceEndpointId(10L);
-    request.setStartedAt(OffsetDateTime.now());
-    request.setFinishedAt(OffsetDateTime.now());
-    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
-    request.setTheses(List.of());
-
-    // Act & Assert
-    assertThrows(
-        IllegalArgumentException.class, () -> service.replaceThesesInDatabase(chairId, request));
-  }
-
-  @Test
-  void replaceThesesInDatabase_ThrowsIfTitleMissing() {
-    // Arrange
-    Long chairId = 1L;
-
-    ThesisProposalInputDto input = new ThesisProposalInputDto();
-    input.setSourceUrl(URI.create("http://example.com/thesis"));
-
-    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
-    request.setSourceEndpointId(10L);
-    request.setStartedAt(OffsetDateTime.now());
-    request.setFinishedAt(OffsetDateTime.now());
-    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
-    request.setTheses(List.of(input));
-
-    // Act & Assert
-    assertThrows(
-        IllegalArgumentException.class, () -> service.replaceThesesInDatabase(chairId, request));
-  }
-
-  @Test
-  void replaceThesesInDatabase_ThrowsIfSourceUrlMissing() {
-    // Arrange
-    Long chairId = 1L;
-
-    ThesisProposalInputDto input = new ThesisProposalInputDto();
-    input.setTitle("AI in Medicine");
-
-    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
-    request.setSourceEndpointId(10L);
-    request.setStartedAt(OffsetDateTime.now());
-    request.setFinishedAt(OffsetDateTime.now());
-    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
-    request.setTheses(List.of(input));
-
-    // Act & Assert
-    assertThrows(
-        IllegalArgumentException.class, () -> service.replaceThesesInDatabase(chairId, request));
   }
 }

@@ -3,7 +3,6 @@ package com.project95.thesis.thesis.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -11,8 +10,6 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
 import com.project95.thesis.management.dto.ChairThesesReplacementResponseDto;
-import com.project95.thesis.management.dto.ScrapeRunLogResponseDto;
-import com.project95.thesis.thesis.config.ClientProperties;
 import com.project95.thesis.thesis.domain.ThesisProposal;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -29,22 +26,16 @@ import org.springframework.web.client.RestClient;
 class ThesisCoordinationServiceTest {
 
   @Mock private ThesisManagementService thesisManagementService;
-  @Mock private ScrapeRunService scrapeRunService;
 
   private MockRestServiceServer mockServer;
   private ThesisCoordinationService service;
 
   @BeforeEach
   void setUp() {
-    ClientProperties clientProperties = new ClientProperties();
-    clientProperties.getVectorSearch().setUrl("http://vector-service");
-
-    RestClient.Builder restClientBuilder = RestClient.builder().baseUrl(clientProperties.getVectorSearch().getUrl());
+    RestClient.Builder restClientBuilder = RestClient.builder().baseUrl("http://vector-service");
     mockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
 
-    service =
-        new ThesisCoordinationService(
-            thesisManagementService, scrapeRunService, restClientBuilder.build(), clientProperties);
+    service = new ThesisCoordinationService(thesisManagementService, restClientBuilder.build());
   }
 
   @Test
@@ -59,11 +50,7 @@ class ThesisCoordinationServiceTest {
     persistentThesis.setId(100L);
     persistentThesis.setTitle("Vector Sync Test");
 
-    ScrapeRunLogResponseDto scrapeRunResponse = new ScrapeRunLogResponseDto();
-    scrapeRunResponse.setId(42L);
-    scrapeRunResponse.setStatus("SUCCESS");
-
-    IngestionResult ingestionResult = new IngestionResult(42L, List.of(persistentThesis), 12L);
+    IngestionResult ingestionResult = new IngestionResult(List.of(persistentThesis), 12L);
 
     when(thesisManagementService.replaceThesesInDatabase(eq(chairId), any()))
         .thenReturn(ingestionResult);
@@ -83,7 +70,6 @@ class ThesisCoordinationServiceTest {
     // Assert
     assertThat(response.getInsertedRelationalTheses()).isEqualTo(1);
     assertThat(response.getReplacedVectorEntries()).isEqualTo(1);
-    assertThat(response.getScrapeRunId()).isEqualTo(42L);
     mockServer.verify();
   }
 }

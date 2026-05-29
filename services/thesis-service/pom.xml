@@ -106,7 +106,9 @@
                 <interfaceOnly>true</interfaceOnly>
                 <useSpringBoot3>true</useSpringBoot3>
                 <useJakartaEe>true</useJakartaEe>
+                <useBeanValidation>true</useBeanValidation>
                 <skipDefaultInterface>true</skipDefaultInterface>
+                <openApiNullable>false</openApiNullable>
               </configOptions>
             </configuration>
           </execution>

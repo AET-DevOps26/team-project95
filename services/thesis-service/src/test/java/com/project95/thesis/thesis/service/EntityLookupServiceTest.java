@@ -6,9 +6,6 @@ import static org.mockito.Mockito.*;
 import com.project95.thesis.management.dto.AdvisorInputDto;
 import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
 import com.project95.thesis.management.dto.ThesisProposalInputDto;
-import com.project95.thesis.thesis.domain.Advisor;
-import com.project95.thesis.thesis.domain.ResearchArea;
-import com.project95.thesis.thesis.domain.Tag;
 import com.project95.thesis.thesis.repository.AdvisorRepository;
 import com.project95.thesis.thesis.repository.ResearchAreaRepository;
 import com.project95.thesis.thesis.repository.TagRepository;
@@ -19,8 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.openapitools.jackson.nullable.JsonNullable;
-import org.springframework.dao.DataIntegrityViolationException;
 
 @ExtendWith(MockitoExtension.class)
 class EntityLookupServiceTest {
@@ -32,39 +27,18 @@ class EntityLookupServiceTest {
   @InjectMocks private EntityLookupService service;
 
   @Test
-  void ensureSharedEntitiesExist_HandlesRaceCondition() {
-    // Arrange
-    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
-    ThesisProposalInputDto input = new ThesisProposalInputDto();
-    input.setTags(List.of("NewTag"));
-    request.setTheses(List.of(input));
-
-    // Simulate tag does not exist initially
-    when(tagRepository.findAllByNameIn(any())).thenReturn(Collections.emptyList());
-    // Simulate another thread inserts it between findAll and save
-    when(tagRepository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("Duplicate"));
-
-    // Act
-    service.ensureSharedEntitiesExist(request);
-
-    // Assert
-    verify(tagRepository).saveAndFlush(any(Tag.class));
-    // Should not throw exception
-  }
-
-  @Test
   void ensureSharedEntitiesExist_SavesNewEntities() {
     // Arrange
     ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
     ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTags(List.of("T1"));
-    input.setResearchArea(JsonNullable.of("A1"));
-    
+    input.setResearchArea("A1");
+
     AdvisorInputDto adv = new AdvisorInputDto();
     adv.setName("Adv1");
     adv.setEmail("adv1@example.com");
     input.setAdvisors(List.of(adv));
-    
+
     request.setTheses(List.of(input));
 
     when(tagRepository.findAllByNameIn(any())).thenReturn(Collections.emptyList());
@@ -75,8 +49,8 @@ class EntityLookupServiceTest {
     service.ensureSharedEntitiesExist(request);
 
     // Assert
-    verify(tagRepository).saveAndFlush(any(Tag.class));
-    verify(researchAreaRepository).saveAndFlush(any(ResearchArea.class));
-    verify(advisorRepository).saveAndFlush(any(Advisor.class));
+    verify(tagRepository).saveAll(anyList());
+    verify(researchAreaRepository).saveAll(anyList());
+    verify(advisorRepository).saveAll(anyList());
   }
 }

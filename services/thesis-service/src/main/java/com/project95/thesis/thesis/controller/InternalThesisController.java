@@ -1,12 +1,12 @@
 package com.project95.thesis.thesis.controller;
 
-import com.project95.thesis.management.dto.SourceEndpointDto;
 import com.project95.thesis.management.dto.*;
+import com.project95.thesis.management.dto.SourceEndpointDto;
 import com.project95.thesis.thesis.domain.SourceEndpoint;
 import com.project95.thesis.thesis.repository.SourceEndpointRepository;
 import com.project95.thesis.thesis.service.ScrapeRunService;
 import com.project95.thesis.thesis.service.ThesisCoordinationService;
-import org.openapitools.jackson.nullable.JsonNullable;
+import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import java.util.Objects;
@@ -17,13 +17,13 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/internal/v1/thesis-service")
-public class ThesisFrontendController {
+public class InternalThesisController {
 
   private final ThesisCoordinationService thesisCoordinationService;
   private final ScrapeRunService scrapeRunService;
   private final SourceEndpointRepository sourceEndpointRepository;
 
-  public ThesisFrontendController(
+  public InternalThesisController(
       ThesisCoordinationService thesisCoordinationService,
       ScrapeRunService scrapeRunService,
       SourceEndpointRepository sourceEndpointRepository) {
@@ -34,8 +34,7 @@ public class ThesisFrontendController {
 
   @GetMapping("/source-endpoints")
   public ResponseEntity<SourceEndpointListResponseDto> listSourceEndpoints() {
-    List<SourceEndpoint> entities =
-        sourceEndpointRepository.findAll();
+    List<SourceEndpoint> entities = sourceEndpointRepository.findAllWithChairEagerly();
 
     List<SourceEndpointDto> dtos =
         entities.stream().map(this::mapToSourceEndpointDto).collect(Collectors.toList());
@@ -45,8 +44,7 @@ public class ThesisFrontendController {
     return ResponseEntity.ok(response);
   }
 
-  private SourceEndpointDto mapToSourceEndpointDto(
-      SourceEndpoint entity) {
+  private SourceEndpointDto mapToSourceEndpointDto(SourceEndpoint entity) {
     SourceEndpointDto dto = new SourceEndpointDto();
     dto.setId(entity.getId());
     dto.setChairId(entity.getChair().getId());
@@ -55,13 +53,13 @@ public class ThesisFrontendController {
       dto.setUrl(URI.create(entity.getUrl()));
     }
     dto.setStatus(entity.getStatus());
-    dto.setLastScrapedAt(JsonNullable.of(entity.getLastScrapedAt()));
+    dto.setLastScrapedAt(entity.getLastScrapedAt());
     return dto;
   }
 
   @PostMapping("/scrape-runs")
   public ResponseEntity<ScrapeRunLogResponseDto> logScrapeRun(
-      @RequestBody ScrapeRunLogRequestDto request) {
+      @Valid @RequestBody ScrapeRunLogRequestDto request) {
     Objects.requireNonNull(request, "request payload must not be null");
     ScrapeRunLogResponseDto response = scrapeRunService.logScrapeRun(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -69,7 +67,8 @@ public class ThesisFrontendController {
 
   @PutMapping("/chairs/{chairId}/theses")
   public ResponseEntity<ChairThesesReplacementResponseDto> replaceChairTheses(
-      @PathVariable("chairId") Long chairId, @RequestBody ChairThesesReplacementRequestDto request) {
+      @PathVariable("chairId") Long chairId,
+      @Valid @RequestBody ChairThesesReplacementRequestDto request) {
 
     Objects.requireNonNull(chairId, "chairId must not be null");
     Objects.requireNonNull(request, "request payload must not be null");

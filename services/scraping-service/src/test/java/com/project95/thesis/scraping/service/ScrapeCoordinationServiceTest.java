@@ -1,62 +1,80 @@
 package com.project95.thesis.scraping.service;
 
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
+
+import com.project95.thesis.scraping.config.ClientProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import com.project95.thesis.scraping.config.ClientProperties;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestClient;
 
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-
 class ScrapeCoordinationServiceTest {
 
-    private MockRestServiceServer mockServer;
-    private ScrapeCoordinationService service;
+  private MockRestServiceServer mockServer;
+  private ScrapeCoordinationService service;
 
-    @BeforeEach
-    void setUp() {
-        RestClient.Builder restClientBuilder = RestClient.builder();
-        mockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
-        
-        ClientProperties properties = new ClientProperties();
-        properties.getMainThesis().setUrl("http://main-thesis");
-        properties.getGenAi().setUrl("http://genai");
-        
-        service = new ScrapeCoordinationService(restClientBuilder.build(), properties);
-    }
+  @BeforeEach
+  void setUp() {
+    RestClient.Builder restClientBuilder = RestClient.builder();
+    mockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
 
-    @Test
-    void runScrapeCycle_FullPipelineSuccess() {
-        // 1. Mock the endpoints fetch from Main Thesis Service
-        String endpointsJson = "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI Chair\",\"url\":\"http://chair.example.com/theses\"}]}";
-        mockServer.expect(requestTo("http://main-thesis/internal/v1/thesis-service/source-endpoints"))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess(endpointsJson, MediaType.APPLICATION_JSON));
+    ClientProperties properties = new ClientProperties();
+    properties.getMainThesis().setUrl("http://main-thesis");
+    properties.getGenAi().setUrl("http://genai");
 
-        // 2. Mock fetching the raw HTML from the external website
-        mockServer.expect(requestTo("http://chair.example.com/theses"))
-                .andExpect(method(HttpMethod.GET))
-                .andRespond(withSuccess("<html><h1>AI Thesis</h1></html>", MediaType.TEXT_HTML));
+    RestClient mockedClient = restClientBuilder.build();
 
-        // 3. Mock the GenAI Python Service extraction POST request
-        String genAiJson = "{\"theses\":[{\"title\":\"AI Thesis\",\"sourceUrl\":\"http://chair.example.com/theses\"}]}";
-        mockServer.expect(requestTo("http://genai/internal/v1/genai-service/extract-theses"))
-                .andExpect(method(HttpMethod.POST))
-                .andRespond(withSuccess(genAiJson, MediaType.APPLICATION_JSON));
+    service = new ScrapeCoordinationService(mockedClient, mockedClient, mockedClient, properties);
+  }
 
-        // 4. Mock the final submission PUT request back to the Main Thesis Service
-        mockServer.expect(requestTo("http://main-thesis/internal/v1/thesis-service/chairs/10/theses"))
-                .andExpect(method(HttpMethod.PUT))
-                .andRespond(withSuccess());
+  @Test
+  void runScrapeCycle_FullPipelineSuccess() {
+    // 1. Mock the endpoints fetch from Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
 
-        // Act
-        service.runScrapeCycle();
+    // 2. Mock fetching the raw HTML from the external website
+    mockServer
+        .expect(requestTo("http://chair.example.com/theses"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("<html><h1>AI Thesis</h1></html>", MediaType.TEXT_HTML));
 
-        // Assert - ensures all the mocked server endpoints were hit in the exact order requested
-        mockServer.verify();
-    }
+    // 3. Mock the GenAI Python Service extraction POST request
+    mockServer
+        .expect(requestTo("/internal/v1/genai-service/extract-theses"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            withSuccess(
+                "{\"theses\":[{\"title\":\"AI"
+                    + " Thesis\",\"sourceUrl\":\"http://chair.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // 4. Mock the final submission PUT request back to the Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/chairs/10/theses"))
+        .andExpect(method(HttpMethod.PUT))
+        .andRespond(withSuccess());
+
+    // 5. Mock the final SUCCESS logging
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/scrape-runs"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withSuccess());
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert - ensures all the mocked server endpoints were hit in the exact order requested
+    mockServer.verify();
+  }
 }

@@ -1,5 +1,8 @@
 package com.project95.thesis.thesis.service;
 
+import static com.project95.thesis.thesis.utils.Utils.normalize;
+import static com.project95.thesis.thesis.utils.Utils.unwrap;
+
 import com.project95.thesis.management.dto.AdvisorInputDto;
 import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
 import com.project95.thesis.management.dto.ThesisProposalInputDto;
@@ -9,13 +12,11 @@ import com.project95.thesis.thesis.domain.Tag;
 import com.project95.thesis.thesis.repository.AdvisorRepository;
 import com.project95.thesis.thesis.repository.ResearchAreaRepository;
 import com.project95.thesis.thesis.repository.TagRepository;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.project95.thesis.thesis.utils.Utils;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EntityLookupService {
@@ -34,12 +35,10 @@ public class EntityLookupService {
   }
 
   /**
-   * Synchronizes shared entities (Tags, Research Areas, Advisors) with the database.
-   * Uses REQUIRES_NEW to ensure that unique constraint violations during creation
-   * do not roll back the main thesis replacement transaction, and to make these
-   * entities visible to other concurrent requests.
+   * Synchronizes shared entities (Tags, Research Areas, Advisors) with the database. Performs batch
+   * inserts for improved performance.
    */
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Transactional
   public void ensureSharedEntitiesExist(ChairThesesReplacementRequestDto request) {
     Set<String> tagNames = new HashSet<>();
     Set<String> areaNames = new HashSet<>();
@@ -48,7 +47,7 @@ public class EntityLookupService {
     for (ThesisProposalInputDto thesis : request.getTheses()) {
       if (thesis.getTags() != null) {
         thesis.getTags().stream()
-            .map(this::normalize)
+            .map(Utils::normalize)
             .filter(Objects::nonNull)
             .forEach(tagNames::add);
       }
@@ -58,14 +57,10 @@ public class EntityLookupService {
       }
       if (thesis.getAdvisors() != null) {
         for (AdvisorInputDto adv : thesis.getAdvisors()) {
-          if (adv.getName() == null || adv.getName().isBlank()) {
-            throw new IllegalArgumentException("Advisor name must not be null or empty");
-          }
-          if (adv.getEmail() == null || adv.getEmail().isBlank()) {
-            throw new IllegalArgumentException("Advisor email must not be null or empty");
-          }
           String email = normalize(adv.getEmail());
-          advisorByEmail.put(email, adv);
+          if (email != null && !email.isBlank()) {
+            advisorByEmail.put(email, adv);
+          }
         }
       }
     }
@@ -77,70 +72,63 @@ public class EntityLookupService {
 
   private void syncTags(Set<String> names) {
     if (names.isEmpty()) return;
-    Set<String> existing = tagRepository.findAllByNameIn(names).stream()
-        .map(Tag::getName)
-        .collect(Collectors.toSet());
+    Set<String> existing =
+        tagRepository.findAllByNameIn(names).stream().map(Tag::getName).collect(Collectors.toSet());
 
-    for (String name : names) {
-      if (!existing.contains(name)) {
-        try {
-          tagRepository.saveAndFlush(new Tag(name));
-        } catch (DataIntegrityViolationException e) {
-          // Already created by another thread, ignore uniqueness violations
-        }
-      }
+    List<Tag> newEntities =
+        names.stream()
+            .filter(name -> !existing.contains(name))
+            .map(Tag::new)
+            .collect(Collectors.toList());
+
+    if (!newEntities.isEmpty()) {
+      tagRepository.saveAll(newEntities);
     }
   }
 
   private void syncResearchAreas(Set<String> names) {
     if (names.isEmpty()) return;
-    Set<String> existing = researchAreaRepository.findAllByNameIn(names).stream()
-        .map(ResearchArea::getName)
-        .collect(Collectors.toSet());
+    Set<String> existing =
+        researchAreaRepository.findAllByNameIn(names).stream()
+            .map(ResearchArea::getName)
+            .collect(Collectors.toSet());
 
-    for (String name : names) {
-      if (!existing.contains(name)) {
-        try {
-          researchAreaRepository.saveAndFlush(new ResearchArea(name));
-        } catch (DataIntegrityViolationException e) {
-          // Already created by another thread, ignore uniqueness violations
-        }
-      }
+    List<ResearchArea> newEntities =
+        names.stream()
+            .filter(name -> !existing.contains(name))
+            .map(ResearchArea::new)
+            .collect(Collectors.toList());
+
+    if (!newEntities.isEmpty()) {
+      researchAreaRepository.saveAll(newEntities);
     }
   }
 
   private void syncAdvisors(Map<String, AdvisorInputDto> byEmail) {
     if (byEmail.isEmpty()) return;
-    
-    Set<String> existingEmails = advisorRepository.findAllByEmailIn(byEmail.keySet()).stream()
-        .map(Advisor::getEmail)
-        .collect(Collectors.toSet());
 
-    for (Map.Entry<String, AdvisorInputDto> entry : byEmail.entrySet()) {
-      if (!existingEmails.contains(entry.getKey())) {
-        AdvisorInputDto input = entry.getValue();
-        if (input.getName() == null || input.getName().isBlank()) {
-          continue; // Skip advisors without a valid name
-        }
-        try {
-          advisorRepository.saveAndFlush(new Advisor(
-              input.getName().trim(),
-              normalize(input.getEmail()),
-              input.getProfileUrl() != null ? input.getProfileUrl().toString().trim() : null
-          ));
-        } catch (DataIntegrityViolationException e) {
-          // Already created by another thread
-        }
-      }
+    Set<String> existingEmails =
+        advisorRepository.findAllByEmailIn(byEmail.keySet()).stream()
+            .map(Advisor::getEmail)
+            .collect(Collectors.toSet());
+
+    List<Advisor> newEntities =
+        byEmail.entrySet().stream()
+            .filter(entry -> !existingEmails.contains(entry.getKey()))
+            .map(
+                entry -> {
+                  AdvisorInputDto input = entry.getValue();
+                  return new Advisor(
+                      input.getName().trim(),
+                      normalize(input.getEmail()),
+                      input.getProfileUrl() != null
+                          ? input.getProfileUrl().toString().trim()
+                          : null);
+                })
+            .collect(Collectors.toList());
+
+    if (!newEntities.isEmpty()) {
+      advisorRepository.saveAll(newEntities);
     }
-  }
-
-  private String normalize(String input) {
-    if (input == null || input.isBlank()) return null;
-    return input.trim();
-  }
-
-  private <T> T unwrap(org.openapitools.jackson.nullable.JsonNullable<T> nullable) {
-    return (nullable != null && nullable.isPresent()) ? nullable.get() : null;
   }
 }

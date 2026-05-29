@@ -1,5 +1,7 @@
 package com.project95.thesis.thesis.service;
 
+import static com.project95.thesis.thesis.utils.Utils.unwrap;
+
 import com.project95.thesis.management.dto.ScrapeRunLogRequestDto;
 import com.project95.thesis.management.dto.ScrapeRunLogResponseDto;
 import com.project95.thesis.thesis.domain.ScrapeRun;
@@ -87,9 +89,5 @@ public class ScrapeRunService {
       run.setErrorMessage(errorMessage);
     }
     scrapeRunRepository.save(run);
-  }
-
-  private <T> T unwrap(org.openapitools.jackson.nullable.JsonNullable<T> nullable) {
-    return (nullable != null && nullable.isPresent()) ? nullable.get() : null;
   }
 }
