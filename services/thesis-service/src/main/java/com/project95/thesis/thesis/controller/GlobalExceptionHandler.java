@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
   public ResponseEntity<ErrorResponseDto> handleGeneralException(Exception ex) {
     log.error("Unhandled exception occurred", ex);
     ErrorResponseDto errorResponse = new ErrorResponseDto();
-    errorResponse.setMessage("An unexpected error occurred: " + ex.getMessage());
+    errorResponse.setMessage("An internal server error occurred. Please try again later.");
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
   }
 }

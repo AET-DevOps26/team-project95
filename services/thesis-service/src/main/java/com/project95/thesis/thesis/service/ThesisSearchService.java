@@ -47,31 +47,46 @@ public class ThesisSearchService {
         );
 
         List<Long> vectorMatchIds = null;
+        boolean vectorServiceFailed = false;
+
         if (request.getNaturalLanguageQuery() != null && !request.getNaturalLanguageQuery().isBlank()) {
             vectorMatchIds = callVectorSearch(request);
-            if (vectorMatchIds.isEmpty()) {
+            if (vectorMatchIds == null) {
+                log.warn("Vector search failed. Falling back to relational search only.");
+                vectorServiceFailed = true;
+            } else if (vectorMatchIds.isEmpty()) {
+                // Vector search succeeded but found nothing - strict match policy
                 return emptyResponse(pageable);
             }
         }
 
         Specification<ThesisProposal> spec = buildSpecification(request.getFilters(), vectorMatchIds);
         
-        // If we have vector match IDs, we want to preserve their order (ranking)
+        // If we have vector match IDs, we must ensure ranking is preserved
         if (vectorMatchIds != null && !vectorMatchIds.isEmpty()) {
-            final List<Long> orderedIds = vectorMatchIds;
-            Page<ThesisProposal> page = thesisRepository.findAll(spec, pageable);
+            // Fetch ALL matching candidates from DB (capped by vector service limit, e.g. 200)
+            List<ThesisProposal> allCandidates = thesisRepository.findAll(spec);
             
-            // Re-order the results from the DB to match the vector search ranking
-            List<ThesisProposal> orderedResults = new ArrayList<>(page.getContent());
-            orderedResults.sort((a, b) -> {
+            // Re-order based on vector search relevance
+            final List<Long> orderedIds = vectorMatchIds;
+            allCandidates.sort((a, b) -> {
                 int indexA = orderedIds.indexOf(a.getId());
                 int indexB = orderedIds.indexOf(b.getId());
                 return Integer.compare(indexA, indexB);
             });
+
+            // Manual pagination for the ranked list
+            int start = (int) pageable.getOffset();
+            int end = Math.min((start + pageable.getPageSize()), allCandidates.size());
             
-            return mapToResponseDto(new PageImpl<>(orderedResults, pageable, page.getTotalElements()));
+            List<ThesisProposal> pagedList = (start < allCandidates.size()) 
+                ? allCandidates.subList(start, end) 
+                : Collections.emptyList();
+
+            return mapToResponseDto(new PageImpl<>(pagedList, pageable, allCandidates.size()));
         }
 
+        // Standard relational pagination
         Page<ThesisProposal> page = thesisRepository.findAll(spec, pageable);
         return mapToResponseDto(page);
     }
@@ -85,6 +100,9 @@ public class ThesisSearchService {
         return response;
     }
 
+    /**
+     * @return List of IDs on success, empty list for zero matches, or null on service failure.
+     */
     private List<Long> callVectorSearch(SearchThesesRequestDto request) {
         VectorSearchRequestDto vectorRequest = new VectorSearchRequestDto();
         vectorRequest.setQuery(request.getNaturalLanguageQuery());
@@ -110,14 +128,18 @@ public class ThesisSearchService {
                         .map(VectorSearchResultDto::getThesisId)
                         .collect(Collectors.toList());
             }
+            return new ArrayList<>();
         } catch (Exception e) {
             log.error("Failed to call vector search service", e);
+            return null; // Signal failure to allow fallback
         }
-        return new ArrayList<>();
     }
 
     private Specification<ThesisProposal> buildSpecification(ThesisSearchFiltersDto filters, List<Long> includeIds) {
         return (root, query, cb) -> {
+            // Ensure distinct results to prevent duplicates from many-to-many joins
+            query.distinct(true);
+            
             List<Predicate> predicates = new ArrayList<>();
 
             if (includeIds != null && !includeIds.isEmpty()) {
