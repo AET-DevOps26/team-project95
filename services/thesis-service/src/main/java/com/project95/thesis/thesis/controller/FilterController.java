@@ -62,6 +62,9 @@ public class FilterController {
     ChairDto dto = new ChairDto();
     dto.setId(entity.getId());
     dto.setName(entity.getName());
+    if (entity.getWebsiteUrl() != null) {
+      dto.setWebsiteUrl(java.net.URI.create(entity.getWebsiteUrl()));
+    }
     return dto;
   }
 }

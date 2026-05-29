@@ -18,9 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.project95.thesis.thesis.utils.Utils.unwrap;
@@ -47,13 +45,11 @@ public class ThesisSearchService {
         );
 
         List<Long> vectorMatchIds = null;
-        boolean vectorServiceFailed = false;
 
         if (request.getNaturalLanguageQuery() != null && !request.getNaturalLanguageQuery().isBlank()) {
             vectorMatchIds = callVectorSearch(request);
             if (vectorMatchIds == null) {
                 log.warn("Vector search failed. Falling back to relational search only.");
-                vectorServiceFailed = true;
             } else if (vectorMatchIds.isEmpty()) {
                 // Vector search succeeded but found nothing - strict match policy
                 return emptyResponse(pageable);
@@ -67,13 +63,14 @@ public class ThesisSearchService {
             // Fetch ALL matching candidates from DB (capped by vector service limit, e.g. 200)
             List<ThesisProposal> allCandidates = thesisRepository.findAll(spec);
             
+            // Build rank map for O(1) lookup during sort
+            final Map<Long, Integer> rankMap = new HashMap<>();
+            for (int i = 0; i < vectorMatchIds.size(); i++) {
+                rankMap.put(vectorMatchIds.get(i), i);
+            }
+
             // Re-order based on vector search relevance
-            final List<Long> orderedIds = vectorMatchIds;
-            allCandidates.sort((a, b) -> {
-                int indexA = orderedIds.indexOf(a.getId());
-                int indexB = orderedIds.indexOf(b.getId());
-                return Integer.compare(indexA, indexB);
-            });
+            allCandidates.sort(Comparator.comparingInt(t -> rankMap.getOrDefault(t.getId(), Integer.MAX_VALUE)));
 
             // Manual pagination for the ranked list
             int start = (int) pageable.getOffset();
@@ -177,9 +174,37 @@ public class ThesisSearchService {
         dto.setChairId(entity.getChair().getId());
         dto.setChairName(entity.getChair().getName());
         dto.setDegreeType(entity.getDegreeType());
+        dto.setOriginalDescription(entity.getOriginalDescription());
         dto.setAiOverview(entity.getAiOverview());
-        dto.setStatus(entity.getStatus());
         dto.setSourceUrl(URI.create(entity.getSourceUrl()));
+        dto.setStatus(entity.getStatus());
+        dto.setLastSeenAt(entity.getLastSeenAt());
+
+        if (!entity.getAdvisors().isEmpty()) {
+            dto.setAdvisors(
+                    entity.getAdvisors().stream()
+                            .map(
+                                    a -> {
+                                        com.project95.thesis.management.dto.AdvisorDto advDto =
+                                                new com.project95.thesis.management.dto.AdvisorDto();
+                                        advDto.setName(a.getName());
+                                        advDto.setEmail(a.getEmail());
+                                        if (a.getProfileUrl() != null) {
+                                            advDto.setProfileUrl(URI.create(a.getProfileUrl()));
+                                        }
+                                        return advDto;
+                                    })
+                            .collect(Collectors.toList()));
+        }
+
+        if (!entity.getTags().isEmpty()) {
+            dto.setTags(entity.getTags().stream().map(t -> t.getName()).collect(Collectors.toList()));
+        }
+
+        if (!entity.getResearchAreas().isEmpty()) {
+            dto.setResearchArea(entity.getResearchAreas().iterator().next().getName());
+        }
+
         return dto;
     }
 

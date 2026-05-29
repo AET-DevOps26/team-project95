@@ -47,6 +47,13 @@ public class ThesisManagementService {
       Long chairId, ChairThesesReplacementRequestDto request) {
     log.info("Starting atomic database replacement transaction for chairId: {}", chairId);
 
+    if (chairId == null) {
+      throw new IllegalArgumentException("chairId must not be null");
+    }
+    if (request == null || request.getTheses() == null) {
+      throw new IllegalArgumentException("Replacement request and theses list must not be null");
+    }
+
     Chair chair =
         chairRepository
             .findById(chairId)
@@ -103,7 +110,12 @@ public class ThesisManagementService {
     for (ThesisProposalInputDto dto : request.getTheses()) {
       ThesisProposal thesis = new ThesisProposal();
       thesis.setChair(chair);
-      thesis.setTitle(dto.getTitle().trim());
+
+      String title = normalize(dto.getTitle());
+      if (title == null) {
+        throw new IllegalArgumentException("Thesis title must not be blank");
+      }
+      thesis.setTitle(title);
 
       thesis.setDegreeType(normalize(unwrap(dto.getDegreeType())));
       thesis.setOriginalDescription(unwrap(dto.getOriginalDescription()));
