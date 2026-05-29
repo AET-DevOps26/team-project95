@@ -791,7 +791,6 @@ components:
     ChairThesesReplacementResponse:
       type: object
       required:
-        - scrapeRunId
         - chairId
         - deletedRelationalTheses
         - insertedRelationalTheses
@@ -800,6 +799,7 @@ components:
         scrapeRunId:
           type: integer
           format: int64
+          nullable: true
           example: 42
         chairId:
           type: integer
@@ -943,12 +943,12 @@ components:
     ReplaceChairVectorsRequest:
       type: object
       required:
-        - scrapeRunId
         - theses
       properties:
         scrapeRunId:
           type: integer
           format: int64
+          nullable: true
         theses:
           type: array
           items:
