@@ -2,6 +2,7 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import './App.css'
 import HomePage from './pages/HomePage'
 import DetailedThesisPage from './pages/DetailedThesisPage'
+import { SearchStateProvider } from './state/searchState'
 
 function App() {
 
@@ -11,13 +12,15 @@ function App() {
             element: <HomePage/>
         },
         {
-            path: "thesis",
+            path: "thesis/:thesisId?",
             element: <DetailedThesisPage/>
         },
     ])
 
     return (
-        <RouterProvider router={router}/>
+        <SearchStateProvider>
+            <RouterProvider router={router}/>
+        </SearchStateProvider>
     )
 }
 

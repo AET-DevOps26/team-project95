@@ -14,9 +14,39 @@
   font-display: swap;
 }
 
+:root {
+  --color-primary: #1861ff;
+  --color-primary-strong: #1140a1;
+  --color-text-main: #081533;
+  --color-text-muted: #42537a;
+  --color-surface-base: #f9fbff;
+  --color-surface-soft: #f6f9ff;
+  --color-surface-card: #ffffff;
+  --color-border-soft: #d5e0f4;
+  --color-border-strong: #8faeea;
+  --color-success-bg: #ddf7ee;
+  --color-success-text: #07985f;
+  --shadow-overlay-soft: 0 6px 18px rgba(20, 46, 98, 0.12);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-standard: 250ms;
+}
+
 :root,
 body {
-  font-family: "Nunito", sans-serif;
+  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  color: var(--color-text-main);
+  background: var(--color-surface-base);
+}
+
+body {
+  margin: 0;
 }
 
 input,
@@ -24,4 +54,20 @@ textarea,
 select,
 button {
   font: inherit;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-border-strong);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }

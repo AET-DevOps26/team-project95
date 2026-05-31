@@ -1,65 +1,28 @@
 .page {
   min-height: 100vh;
-  background: #f8faff;
-  color: #0f1b3d;
-}
-
-.topBar {
-  border-bottom: 1px solid #dbe5f7;
-  background: #ffffff;
-}
-
-.topBarInner {
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: 84px;
-  padding: 0 24px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 18px;
-}
-
-.logo {
-  font-size: 38px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
-.clickableButton {
-  transition: filter 0.12s ease, transform 0.05s ease;
-}
-
-.clickableButton:active {
-  filter: brightness(0.9);
-  transform: translateY(1px);
-}
-
-.backButton,
-.inlineLink,
-.visitSourceButton {
-  appearance: none;
-  -webkit-appearance: none;
-  border: none;
-  background: transparent;
-  font: inherit;
-  cursor: pointer;
+  background:
+    linear-gradient(var(--color-border-soft) 1px, transparent 1px),
+    linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px),
+    var(--color-surface-base);
+  background-size: 48px 48px;
+  color: var(--color-text-main);
+  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
 }
 
 .content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 24px 64px;
+  padding: 36px 24px 64px;
 }
 
 .backButton {
-  color: #54658d;
-  font-size: 18px;
-  margin-bottom: 40px;
+  margin-bottom: 18px;
+  min-height: 0;
+  font-size: 14px;
+  color: var(--color-primary);
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 0;
 }
 
 .backIcon {
@@ -68,170 +31,234 @@
   display: block;
 }
 
+.stateCard {
+  border-color: var(--color-primary);
+  border-radius: 0;
+  padding: 28px;
+}
+
+.loadingCard {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.loadingSpinner {
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--color-border-soft);
+  border-top-color: var(--color-primary);
+  border-radius: 999px;
+  flex: 0 0 auto;
+  animation: spin 800ms linear infinite;
+}
+
+.stateTitle {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.stateText {
+  margin: 10px 0 0;
+  color: var(--color-text-muted);
+  font-size: 16px;
+}
+
+.loadingBars {
+  margin-top: 18px;
+  display: grid;
+  gap: 8px;
+  width: min(520px, 70vw);
+}
+
+.loadingBars span {
+  height: 10px;
+  border: 1px solid var(--color-border-soft);
+  background: linear-gradient(90deg, var(--color-surface-soft), var(--color-surface-card), var(--color-surface-soft));
+  background-size: 200% 100%;
+  animation: loadingBar 1.1s ease-in-out infinite;
+}
+
+.loadingBars span:nth-child(2) {
+  width: 78%;
+}
+
+.loadingBars span:nth-child(3) {
+  width: 56%;
+}
+
+.heroCard {
+  border-color: var(--color-primary);
+  border-radius: 0;
+  padding: 28px;
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
   min-height: 32px;
   padding: 0 12px;
-  border-radius: 999px;
-  background: #ddf7ee;
-  color: #07985f;
-  font-size: 15px;
+  border: 1px solid var(--color-success-text);
+  border-radius: 0;
+  background: var(--color-surface-card);
+  color: var(--color-success-text);
+  font-size: 14px;
   font-weight: 700;
 }
 
 .title {
-  margin: 16px 0 0;
-  max-width: 760px;
-  font-size: clamp(36px, 6vw, 72px);
-  line-height: 1.08;
-  letter-spacing: -0.02em;
+  margin: 14px 0 0;
+  max-width: 900px;
+  font-size: 64px;
+  line-height: 1.05;
+  letter-spacing: 0;
 }
 
 .offeredBy {
-  margin: 14px 0 0;
-  font-size: 20px;
-  color: #4f6189;
+  margin: 12px 0 0;
+  font-size: 18px;
+  color: var(--color-text-muted);
 }
 
 .offeredBy span {
-  color: #2a5eff;
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 .metaGrid {
-  margin-top: 34px;
-  padding-bottom: 30px;
-  border-bottom: 1px solid #dbe5f7;
+  margin-top: 24px;
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 22px 20px;
+  gap: 16px;
 }
 
-.metaItem h3 {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 700;
-  color: #223459;
+.metaItem {
+  border: 1px solid var(--color-border-soft);
+  border-radius: 0;
+  padding: 14px;
+  background: var(--color-surface-card);
 }
 
 .labelWithIcon {
+  margin: 0;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-}
-
-.metaItem p {
-  margin: 6px 0 0;
-  font-size: 21px;
-  color: #0f1b3d;
-}
-
-.statusAvailable {
-  color: #00a060;
-}
-
-.sectionCard {
-  margin-top: 24px;
-  border: 1px solid #dde7f8;
-  border-radius: 16px;
-  background: #ffffff;
-  padding: 24px 28px;
-}
-
-.sectionCard h2 {
-  margin: 0;
-  font-size: 30px;
-}
-
-.sectionHeading {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-text-muted);
 }
 
 .inlineIcon {
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
   display: block;
-  flex: 0 0 auto;
 }
 
-.sectionCard p {
-  margin: 14px 0 0;
-  font-size: 18px;
-  line-height: 1.5;
-  color: #1d2c4f;
-}
-
-.inlineLink {
-  margin-top: 14px;
-  color: #2a5eff;
+.metaValue {
+  margin: 6px 0 0;
   font-size: 18px;
   font-weight: 700;
+}
+
+.statusAvailable {
+  color: var(--color-success-text);
+}
+
+.mainGrid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1.25fr 0.85fr;
+  gap: 16px;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sectionCard {
+  border-color: var(--color-primary);
+  border-radius: 0;
+  padding: 22px 24px;
+}
+
+.sectionHeading {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.sectionText {
+  margin: 12px 0 0;
+  font-size: 17px;
+  color: var(--color-text-muted);
+  line-height: 1.6;
 }
 
 .additionalGrid {
-  margin-top: 16px;
+  margin-top: 10px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 30px;
+  gap: 18px;
 }
 
-.additionalGrid h3 {
-  margin: 16px 0 0;
-  font-size: 17px;
-  color: #4c5f88;
+.detailLabel {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  font-weight: 700;
 }
 
-.additionalGrid p,
-.additionalGrid a {
+.detailValue,
+.detailLink {
   display: block;
-  margin: 6px 0 0;
-  font-size: 20px;
-  color: #122248;
+  margin: 4px 0 0;
+  color: var(--color-text-main);
   text-decoration: none;
+  font-size: 17px;
 }
 
-.additionalGrid a {
-  color: #2a5eff;
+.detailLink {
+  color: var(--color-primary);
+  word-break: break-word;
 }
 
-.bottomCta {
-  margin-top: 24px;
-  border: 1px solid #dde1fb;
-  border-radius: 16px;
-  background: #f4f2ff;
-  padding: 22px 26px;
+.ctaCard {
+  margin-top: 16px;
+  border-color: var(--color-primary);
+  border-radius: 0;
+  padding: 20px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
+  gap: 20px;
+  background: var(--color-surface-card);
 }
 
-.bottomCta h2 {
+.ctaTitle {
   margin: 0;
-  font-size: 31px;
+  font-size: 28px;
+  font-weight: 800;
 }
 
-.bottomCta p {
+.ctaText {
   margin: 8px 0 0;
-  font-size: 18px;
-  color: #24355a;
+  font-size: 17px;
+  color: var(--color-text-muted);
 }
 
-.visitSourceButton {
-  min-height: 54px;
-  min-width: 184px;
-  padding: 0 20px;
-  border-radius: 10px;
-  background: #365dff;
-  color: #ffffff;
-  font-size: 20px;
-  font-weight: 700;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+.ctaButton {
+  min-width: 180px;
+  border-radius: 0;
+  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
 }
 
 .buttonIcon {
@@ -240,145 +267,71 @@
   display: block;
 }
 
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes loadingBar {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
 @media (max-width: 1024px) {
   .metaGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .additionalGrid {
+  .mainGrid {
     grid-template-columns: 1fr;
-    gap: 14px;
   }
 
-  .bottomCta {
+  .additionalGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .ctaCard {
     flex-direction: column;
     align-items: flex-start;
   }
 }
 
 @media (max-width: 700px) {
-  /* .topBarInner { */
-  /*   min-height: auto; */
-  /*   padding: 14px; */
-  /*   flex-wrap: wrap; */
-  /* } */
-  /*  */
-  /* .logo { */
-  /*   font-size: 28px; */
-  /* } */
-.topBar {
-  border-bottom: 1px solid #dbe5f7;
-  background: #ffffff;
-}
-
-.topBarInner {
-  max-width: 1200px;
-  min-height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.logo {
-  font-size: 28px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-}
-
   .content {
-    padding: 22px 14px 34px;
+    padding: 20px 14px 40px;
   }
 
-  .backButton {
-    font-size: 18px;
-    margin-bottom: 24px;
-  }
-
-  .badge {
-    min-height: 30px;
-    font-size: 16px;
-    padding: 0 12px;
-  }
-
-  .title {
-    margin-top: 12px;
-    font-size: 36px;
-  }
-
-  .offeredBy {
-    margin-top: 12px;
-    font-size: 19px;
-  }
-
-  .metaGrid {
-    margin-top: 22px;
-    padding-bottom: 24px;
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .metaItem h3 {
-    font-size: 17px;
-  }
-
-  .metaItem p {
-    font-size: 20px;
-    margin-top: 4px;
-  }
-
-  .sectionCard {
-    margin-top: 16px;
-    border-radius: 10px;
+  .heroCard,
+  .sectionCard,
+  .ctaCard,
+  .stateCard {
     padding: 16px;
   }
 
-  .sectionCard h2 {
+  .loadingCard {
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: 38px;
+  }
+
+  .metaGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .sectionHeading {
+    font-size: 22px;
+  }
+
+  .ctaTitle {
     font-size: 24px;
-  }
-
-  .sectionCard p {
-    margin-top: 10px;
-    font-size: 17px;
-  }
-
-  .inlineLink {
-    margin-top: 10px;
-    font-size: 17px;
-  }
-
-  .additionalGrid {
-    margin-top: 8px;
-    gap: 10px;
-  }
-
-  .additionalGrid h3 {
-    margin-top: 10px;
-    font-size: 16px;
-  }
-
-  .additionalGrid p,
-  .additionalGrid a {
-    font-size: 18px;
-  }
-
-  .bottomCta {
-    margin-top: 16px;
-    border-radius: 10px;
-    padding: 14px;
-    gap: 14px;
-  }
-
-  .bottomCta h2 {
-    font-size: 21px;
-  }
-
-  .bottomCta p {
-    font-size: 16px;
-  }
-
-  .visitSourceButton {
-    width: 100%;
-    min-height: 48px;
-    font-size: 18px;
   }
 }

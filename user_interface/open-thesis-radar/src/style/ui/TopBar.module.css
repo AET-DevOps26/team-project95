@@ -1,0 +1,31 @@
+.topBar {
+  border-bottom: 1px solid var(--color-border-soft);
+  background: var(--color-surface-card);
+}
+
+.topBarInner {
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: 84px;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+@media (max-width: 700px) {
+  .topBarInner {
+    min-height: 64px;
+    justify-content: center;
+    padding: 0 14px;
+  }
+
+  .logo {
+    font-size: 28px;
+  }
+}
