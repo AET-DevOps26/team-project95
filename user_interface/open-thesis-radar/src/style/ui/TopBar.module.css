@@ -2,9 +2,29 @@
   position: sticky;
   top: 0;
   z-index: 20;
+  overflow: hidden;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border-soft), transparent 15%);
-  background: color-mix(in srgb, var(--color-surface-card), transparent 8%);
+  background:
+    linear-gradient(90deg, rgba(24, 97, 255, 0.08), transparent 28%, rgba(127, 165, 232, 0.12)),
+    color-mix(in srgb, var(--color-surface-blue-soft), transparent 8%);
   backdrop-filter: blur(16px);
+}
+
+.topBar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(24, 97, 255, 0.16) 20%, var(--color-primary) 48%, rgba(24, 97, 255, 0.16) 76%, transparent 100%),
+    linear-gradient(90deg, transparent, rgba(24, 97, 255, 0.22), transparent);
+  background-size: 34% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  animation: radarSweep 3.8s var(--ease-in-out) infinite;
+  opacity: 0.85;
+  pointer-events: none;
 }
 
 .topBarInner {
@@ -20,6 +40,11 @@
   font-size: 34px;
   font-weight: 900;
   letter-spacing: -0.04em;
+}
+
+@keyframes radarSweep {
+  0% { background-position: -36% 0, 0 0; }
+  48%, 100% { background-position: 136% 0, 0 0; }
 }
 
 @media (max-width: 700px) {

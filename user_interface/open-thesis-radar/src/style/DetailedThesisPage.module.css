@@ -1,11 +1,12 @@
 .page {
   min-height: 100vh;
   background:
-    radial-gradient(circle at 18% 0%, rgba(24, 97, 255, 0.10), transparent 28rem),
+    radial-gradient(circle at 18% 0%, rgba(24, 97, 255, 0.16), transparent 28rem),
+    radial-gradient(circle at 88% 20%, rgba(143, 174, 234, 0.24), transparent 26rem),
     linear-gradient(var(--color-border-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px),
-    var(--color-surface-base);
-  background-size: auto, 56px 56px, 56px 56px, auto;
+    linear-gradient(180deg, #eaf2ff 0%, #dceaff 48%, #edf4ff 100%);
+  background-size: auto, auto, 56px 56px, 56px 56px, auto;
   color: var(--color-text-main);
 }
 
@@ -49,6 +50,7 @@
 
 .stateCard {
   border-color: var(--color-border-soft);
+  background: linear-gradient(135deg, #fbfdff 0%, #edf4ff 100%);
   padding: 28px;
 }
 
@@ -102,6 +104,9 @@
 
 .heroCard {
   border-color: color-mix(in srgb, var(--color-primary), var(--color-border-soft) 55%);
+  background:
+    radial-gradient(circle at 94% 12%, rgba(24, 97, 255, 0.10), transparent 18rem),
+    linear-gradient(135deg, #fbfdff 0%, #f2f7ff 54%, #e7f0ff 100%);
   padding: 30px;
   box-shadow: 0 16px 38px rgba(42, 70, 126, 0.10);
 }
@@ -150,7 +155,7 @@
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-md);
   padding: 14px;
-  background: var(--color-surface-card);
+  background: linear-gradient(180deg, #fbfdff 0%, #f3f8ff 100%);
   transition: transform 180ms var(--ease-out), border-color 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
 }
 
@@ -199,6 +204,7 @@
 
 .sectionCard {
   border-color: var(--color-border-soft);
+  background: linear-gradient(180deg, #fbfdff 0%, #f4f8ff 100%);
   padding: 22px 24px;
   box-shadow: 0 10px 28px rgba(42, 70, 126, 0.07);
   transition: transform 180ms var(--ease-out), border-color 180ms var(--ease-out), box-shadow 180ms var(--ease-out);
@@ -270,7 +276,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  background: linear-gradient(135deg, var(--color-surface-card), #f3f7ff);
+  background: linear-gradient(135deg, #f8fbff 0%, #e7f0ff 100%);
   box-shadow: 0 16px 38px rgba(42, 70, 126, 0.10);
 }
 

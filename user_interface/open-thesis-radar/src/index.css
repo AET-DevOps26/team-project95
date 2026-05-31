@@ -11,11 +11,13 @@
   --color-primary-strong: #1140a1;
   --color-text-main: #081533;
   --color-text-muted: #42537a;
-  --color-surface-base: #f9fbff;
-  --color-surface-soft: #f6f9ff;
-  --color-surface-card: #ffffff;
-  --color-border-soft: #d5e0f4;
-  --color-border-strong: #8faeea;
+  --color-surface-base: #edf4ff;
+  --color-surface-soft: #e6f0ff;
+  --color-surface-card: #fbfdff;
+  --color-surface-blue: #dceaff;
+  --color-surface-blue-soft: #f2f7ff;
+  --color-border-soft: #c6d8f4;
+  --color-border-strong: #7fa5e8;
   --color-success-bg: #ddf7ee;
   --color-success-text: #07985f;
   --shadow-overlay-soft: 0 6px 18px rgba(20, 46, 98, 0.12);

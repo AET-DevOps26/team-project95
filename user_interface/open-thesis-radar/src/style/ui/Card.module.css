@@ -1,5 +1,5 @@
 .card {
   border: 1px solid var(--color-border-soft);
   border-radius: var(--radius-xl);
-  background: var(--color-surface-card);
+  background: linear-gradient(180deg, #fbfdff 0%, #f4f8ff 100%);
 }
