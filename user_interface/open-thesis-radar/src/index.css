@@ -1,16 +1,8 @@
 @font-face {
-  font-family: "Nunito";
-  src: url("/assets/fonts/Nunito-VariableFont_wght.ttf") format("truetype");
-  font-weight: 200 1000;
+  font-family: "Manrope";
+  src: url("/assets/fonts/Manrope-VariableFont_wght.ttf") format("truetype");
+  font-weight: 200 800;
   font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Nunito";
-  src: url("/assets/fonts/Nunito-Italic-VariableFont_wght.ttf") format("truetype");
-  font-weight: 200 1000;
-  font-style: italic;
   font-display: swap;
 }
 
@@ -19,11 +11,13 @@
   --color-primary-strong: #1140a1;
   --color-text-main: #081533;
   --color-text-muted: #42537a;
-  --color-surface-base: #f9fbff;
-  --color-surface-soft: #f6f9ff;
-  --color-surface-card: #ffffff;
-  --color-border-soft: #d5e0f4;
-  --color-border-strong: #8faeea;
+  --color-surface-base: #edf4ff;
+  --color-surface-soft: #e6f0ff;
+  --color-surface-card: #fbfdff;
+  --color-surface-blue: #dceaff;
+  --color-surface-blue-soft: #f2f7ff;
+  --color-border-soft: #c6d8f4;
+  --color-border-strong: #7fa5e8;
   --color-success-bg: #ddf7ee;
   --color-success-text: #07985f;
   --shadow-overlay-soft: 0 6px 18px rgba(20, 46, 98, 0.12);
@@ -34,19 +28,25 @@
   --radius-xl: 16px;
 
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --duration-fast: 150ms;
   --duration-standard: 250ms;
 }
 
 :root,
 body {
-  font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
   color: var(--color-text-main);
   background: var(--color-surface-base);
 }
 
 body {
   margin: 0;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 input,

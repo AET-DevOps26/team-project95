@@ -180,6 +180,15 @@ export default function HomePage() {
               </Link>
             </div>
           </div>
+
+          <div className={styles.heroRadar} aria-hidden="true">
+            <div className={styles.radarPulse}></div>
+            <span className={`${styles.radarPoint} ${styles.radarPointOne}`}></span>
+            <span className={`${styles.radarPoint} ${styles.radarPointTwo}`}></span>
+            <span className={`${styles.radarPoint} ${styles.radarPointThree}`}></span>
+            <span className={`${styles.radarPoint} ${styles.radarPointFour}`}></span>
+            <span className={`${styles.radarPoint} ${styles.radarPointFive}`}></span>
+          </div>
         </div>
         <div className={styles.scrollHint}>
           <button className={styles.scrollHintButton} type="button" onClick={scrollToSearch} aria-label="Go to search">

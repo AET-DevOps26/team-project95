@@ -1,13 +1,40 @@
 .page {
   min-height: 100vh;
   color: var(--color-text-main);
-  background: var(--color-surface-base);
+  background:
+    radial-gradient(circle at 18% 2%, rgba(24, 97, 255, 0.18), transparent 34rem),
+    radial-gradient(circle at 88% 28%, rgba(127, 165, 232, 0.22), transparent 30rem),
+    linear-gradient(180deg, #eaf2ff 0%, #dfeaff 48%, #edf4ff 100%);
 }
 
 .topBar {
-  border-bottom: 1px solid var(--color-border-soft);
-  background: var(--color-surface-card);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  overflow: hidden;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-soft), transparent 15%);
+  background:
+    linear-gradient(90deg, rgba(24, 97, 255, 0.08), transparent 28%, rgba(127, 165, 232, 0.12)),
+    color-mix(in srgb, var(--color-surface-blue-soft), transparent 8%);
+  backdrop-filter: blur(16px);
   color: var(--color-text-main);
+}
+
+.topBar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background:
+    linear-gradient(90deg, transparent 0%, rgba(24, 97, 255, 0.16) 20%, var(--color-primary) 48%, rgba(24, 97, 255, 0.16) 76%, transparent 100%),
+    linear-gradient(90deg, transparent, rgba(24, 97, 255, 0.22), transparent);
+  background-size: 34% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  animation: radarSweep 3.8s var(--ease-in-out) infinite;
+  opacity: 0.85;
+  pointer-events: none;
 }
 
 .topBarInner {
@@ -23,36 +50,38 @@
 
 .logo {
   color: var(--color-text-main);
-  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
   font-size: 22px;
-  font-weight: 700;
-  letter-spacing: 0;
+  font-weight: 850;
+  letter-spacing: -0.03em;
 }
 
 .topNav {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 6px;
 }
 
 .navButton {
-  min-height: 72px;
-  padding: 0 18px;
+  min-height: 44px;
+  padding: 0 14px;
   border: none;
-  background: var(--color-surface-card);
+  border-radius: var(--radius-md);
+  background: transparent;
   color: var(--color-primary-strong);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
-  font-size: 14px;
+  font-size: 15px;
+  font-weight: 750;
   text-decoration: none;
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
 }
 
 .navButton:hover {
   background: var(--color-surface-soft);
   color: var(--color-primary);
+  transform: translateY(-1px);
 }
 
 .clickableButton {
@@ -61,107 +90,244 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: filter var(--duration-fast) var(--ease-standard), transform var(--duration-fast) var(--ease-standard);
+  transition: filter var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 }
 
 .clickableButton:active {
-  filter: brightness(0.95);
-  transform: translateY(1px);
+  filter: brightness(0.96);
+  transform: translateY(1px) scale(0.99);
 }
 
 .hero {
+  position: relative;
+  overflow: hidden;
   background:
+    radial-gradient(circle at 78% 20%, rgba(24, 97, 255, 0.18), transparent 22rem),
+    radial-gradient(circle at 18% 86%, rgba(143, 174, 234, 0.28), transparent 24rem),
     linear-gradient(var(--color-border-soft) 1px, transparent 1px),
     linear-gradient(90deg, var(--color-border-soft) 1px, transparent 1px),
-    var(--color-surface-base);
-  background-size: 48px 48px;
+    linear-gradient(135deg, #eaf2ff 0%, #f7fbff 46%, #dfeaff 100%);
+  background-size: auto, auto, 56px 56px, 56px 56px, auto;
   color: var(--color-text-main);
   border-bottom: 1px solid var(--color-border-soft);
-  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: auto 8% 10% auto;
+  width: 24rem;
+  height: 24rem;
+  border-radius: 999px;
+  background: rgba(24, 97, 255, 0.08);
+  filter: blur(18px);
+  transform: translate3d(0, 0, 0);
+  animation: radarDrift 9s var(--ease-in-out) infinite alternate;
+  pointer-events: none;
 }
 
 .heroGrid {
+  position: relative;
+  z-index: 1;
   max-width: 1200px;
   min-height: 500px;
   margin: 0 auto;
   padding: 56px 24px 44px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 48px;
 }
 
 .heroCopy {
   max-width: 860px;
-  border-left: 1px solid var(--color-primary);
   padding-left: 24px;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  animation: contentRise 520ms var(--ease-out) both;
 }
 
 .heroEyebrow {
   margin: 0 0 20px;
   color: var(--color-primary);
   font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 0;
+  font-weight: 800;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .heroTitle {
   margin: 0;
-  max-width: 760px;
+  max-width: 780px;
   color: var(--color-text-main);
-  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
-  font-size: 88px;
-  line-height: 1;
-  letter-spacing: 0;
-  font-weight: 800;
+  font-size: clamp(48px, 8vw, 88px);
+  line-height: 0.96;
+  letter-spacing: -0.06em;
+  font-weight: 900;
 }
 
 .heroSubtitle {
-  max-width: 680px;
+  max-width: 690px;
   margin: 28px 0 0;
   color: var(--color-text-muted);
-  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
-  font-size: 18px;
+  font-size: 19px;
   line-height: 1.65;
+}
+
+.heroRadar {
+  position: relative;
+  width: clamp(250px, 27vw, 360px);
+  aspect-ratio: 1;
+  flex: 0 0 auto;
+  border: 1px solid rgba(24, 97, 255, 0.34);
+  border-radius: 999px;
+  background:
+    radial-gradient(circle, rgba(24, 97, 255, 0.10) 0 2px, transparent 3px),
+    radial-gradient(circle, transparent 0 36%, rgba(24, 97, 255, 0.10) 36.5% 37%, transparent 37.5%),
+    radial-gradient(circle, transparent 0 62%, rgba(24, 97, 255, 0.13) 62.5% 63%, transparent 63.5%),
+    linear-gradient(rgba(24, 97, 255, 0.16) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 97, 255, 0.16) 1px, transparent 1px),
+    radial-gradient(circle at center, rgba(251, 253, 255, 0.92), rgba(220, 234, 255, 0.66));
+  background-size: auto, auto, auto, 100% 50%, 50% 100%, auto;
+  box-shadow:
+    inset 0 0 0 1px rgba(251, 253, 255, 0.70),
+    inset 0 0 42px rgba(24, 97, 255, 0.11),
+    0 24px 60px rgba(42, 70, 126, 0.16);
+  overflow: hidden;
+  animation: radarFloat 6s var(--ease-in-out) infinite alternate;
+}
+
+.heroRadar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: conic-gradient(from -20deg, rgba(127, 165, 232, 0.24) 0deg, rgba(143, 174, 234, 0.10) 20deg, transparent 58deg, transparent 360deg);
+  clip-path: circle(50% at 50% 50%);
+  mask-image: radial-gradient(circle, transparent 0 7%, #000 8% 82%, transparent 83% 100%);
+  transform-origin: 50% 50%;
+  animation: radarRotate 6.8s linear infinite;
+}
+
+.heroRadar::after {
+  content: "";
+  position: absolute;
+  inset: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 18px rgba(24, 97, 255, 0.65);
+  transform: translate(-50%, -50%);
+}
+
+.radarPulse {
+  position: absolute;
+  inset: 50%;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(24, 97, 255, 0.48);
+  border-radius: 999px;
+  transform: translate(-50%, -50%) scale(1);
+  animation: radarPulse 4.4s var(--ease-out) infinite;
+}
+
+.radarPoint {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  box-shadow: 0 0 0 4px rgba(24, 97, 255, 0.10), 0 0 18px rgba(24, 97, 255, 0.62);
+  animation: radarPing 4.4s var(--ease-in-out) infinite;
+}
+
+.radarPointOne {
+  left: 61%;
+  top: 26%;
+  animation-delay: 120ms;
+}
+
+.radarPointTwo {
+  left: 32%;
+  top: 38%;
+  width: 9px;
+  height: 9px;
+  animation-delay: 620ms;
+}
+
+.radarPointThree {
+  left: 70%;
+  top: 61%;
+  width: 13px;
+  height: 13px;
+  animation-delay: 980ms;
+}
+
+.radarPointFour {
+  left: 43%;
+  top: 70%;
+  width: 8px;
+  height: 8px;
+  animation-delay: 1.35s;
+}
+
+.radarPointFive {
+  left: 82%;
+  top: 43%;
+  width: 7px;
+  height: 7px;
+  animation-delay: 1.8s;
 }
 
 .heroActions {
   margin-top: 36px;
   display: flex;
   flex-wrap: wrap;
-  gap: 0;
+  gap: 12px;
 }
 
 .primaryAction,
 .secondaryAction {
   min-height: 58px;
   min-width: 190px;
-  padding: 0 20px;
-  border-radius: 0;
+  padding: 0 22px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--color-primary);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 16px;
+  font-weight: 800;
   text-decoration: none;
 }
 
 .primaryAction {
   background: var(--color-primary);
   color: var(--color-surface-card);
+  box-shadow: 0 14px 28px rgba(24, 97, 255, 0.22);
+}
+
+.primaryAction:hover,
+.searchButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 34px rgba(24, 97, 255, 0.26);
 }
 
 .secondaryAction {
   background: var(--color-surface-card);
   color: var(--color-primary);
-  border-left: none;
+}
+
+.secondaryAction:hover {
+  transform: translateY(-2px);
+  background: #eef4ff;
 }
 
 .scrollHint {
+  position: relative;
+  z-index: 1;
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px 28px;
@@ -176,12 +342,14 @@
   padding: 0;
   border: 1px solid var(--color-border-soft);
   border-radius: 999px;
-  background: transparent;
+  background: var(--color-surface-card);
   color: var(--color-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 8px 22px rgba(42, 70, 126, 0.10);
+  animation: hintFloat 1.8s var(--ease-in-out) infinite;
 }
 
 .scrollHintIcon {
@@ -192,26 +360,28 @@
 }
 
 .searchSection {
-  border-top: 1px solid #e3eaf7;
-  background: var(--color-surface-soft);
+  border-top: 1px solid #d2e0f5;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(24, 97, 255, 0.10), transparent 26rem),
+    linear-gradient(180deg, #e1edff 0%, #edf4ff 56%, #dceaff 100%);
   padding: 58px 24px 72px;
-  font-family: "IBM Plex Mono", "JetBrains Mono", "Berkeley Mono", monospace;
 }
 
 .searchTitle {
   margin: 0;
   text-align: center;
-  font-size: clamp(27px, 3.3vw, 46px);
-  font-weight: 800;
-  letter-spacing: -0.02em;
+  font-size: clamp(30px, 3.3vw, 46px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
 }
 
 .searchSubtitle {
   margin: 12px auto 0;
-  max-width: 900px;
+  max-width: 780px;
   text-align: center;
   color: var(--color-text-muted);
-  font-size: clamp(15px, 1.6vw, 23px);
+  font-size: clamp(16px, 1.6vw, 21px);
+  line-height: 1.55;
 }
 
 .modeTabs {
@@ -222,29 +392,46 @@
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1px solid var(--color-border-soft);
-  background: var(--color-surface-card);
+  background: linear-gradient(180deg, #fbfdff 0%, #f1f6ff 100%);
+  box-shadow: 0 10px 28px rgba(42, 70, 126, 0.08);
 }
 
 .tab,
 .activeTab {
-  min-height: 72px;
+  min-height: 64px;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 18px;
+  font-weight: 800;
   border-left: 1px solid var(--color-border-soft);
 }
 
 .activeTab {
   color: var(--color-primary);
-  border-bottom: 3px solid var(--color-primary);
-  background: var(--color-surface-card);
+  background: #f5f8ff;
+}
+
+.activeTab::after {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 999px 999px 0 0;
+  background: var(--color-primary);
+  animation: tabSlide 180ms var(--ease-out) both;
 }
 
 .tab {
   color: #344568;
   background: var(--color-surface-card);
+}
+
+.tab:hover {
+  background: var(--color-surface-soft);
 }
 
 .modeTabs > button:first-child {
@@ -254,23 +441,25 @@
 .searchBarBlock {
   max-width: 1200px;
   margin: 22px auto 0;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--color-border-soft);
-  background: var(--color-surface-card);
+  background: linear-gradient(135deg, #fbfdff 0%, #edf4ff 100%);
   padding: 16px;
   display: flex;
   gap: 16px;
+  box-shadow: 0 14px 36px rgba(42, 70, 126, 0.08);
 }
 
 .searchInput {
   flex: 1;
   min-height: 76px;
   border-radius: var(--radius-md);
-  border: 1px solid #dce6f7;
-  background: var(--color-surface-card);
+  border: 1px solid #d4e1f5;
+  background: #fbfdff;
   padding: 0 24px;
   color: var(--color-text-main);
   font-size: 19px;
+  transition: border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out);
 }
 
 .searchInput::placeholder {
@@ -280,6 +469,7 @@
 .searchInput:focus {
   outline: none;
   border-color: var(--color-border-strong);
+  box-shadow: 0 0 0 4px rgba(24, 97, 255, 0.10);
 }
 
 .searchButton {
@@ -292,17 +482,18 @@
   align-items: center;
   justify-content: center;
   font-size: 22px;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .filtersCard {
   max-width: 1200px;
   margin: 22px auto 0;
   border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-card);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, #fbfdff 0%, #f0f6ff 52%, #e8f1ff 100%);
   padding: 24px;
   position: relative;
+  box-shadow: 0 14px 36px rgba(42, 70, 126, 0.07);
 }
 
 .filtersCard.animatedSection {
@@ -310,21 +501,23 @@
 }
 
 .animatedSection {
-  transition: opacity var(--duration-standard) var(--ease-standard), transform var(--duration-standard) var(--ease-standard), max-height var(--duration-standard) var(--ease-standard), margin-top var(--duration-standard) var(--ease-standard);
+  transition: opacity var(--duration-standard) var(--ease-out), transform var(--duration-standard) var(--ease-out), max-height var(--duration-standard) var(--ease-out), margin-top var(--duration-standard) var(--ease-out), filter var(--duration-standard) var(--ease-out);
   transform-origin: top center;
   overflow: hidden;
 }
 
 .isVisible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
+  filter: blur(0);
   max-height: 1200px;
   pointer-events: auto;
 }
 
 .isHidden {
   opacity: 0;
-  transform: translateY(-6px);
+  transform: translateY(-8px) scale(0.985);
+  filter: blur(2px);
   max-height: 0;
   margin-top: 0;
   pointer-events: none;
@@ -339,12 +532,18 @@
 .filtersTitle {
   margin: 0;
   font-size: 27px;
+  letter-spacing: -0.03em;
 }
 
 .resetLink {
+  border-radius: var(--radius-sm);
   color: var(--color-primary);
-  font-size: 19px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.resetLink:hover {
+  background: #eef4ff;
 }
 
 .filtersGrid {
@@ -356,8 +555,8 @@
 
 .filterBox {
   min-height: 84px;
-  border-radius: 10px;
-  border: 1px solid #d7e2f5;
+  border-radius: var(--radius-md);
+  border: 1px solid #d2e0f5;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -365,12 +564,19 @@
   padding: 10px 14px;
   font-size: 16px;
   color: #2f4066;
-  background: var(--color-surface-card);
+  background: linear-gradient(180deg, #fbfdff 0%, #f5f9ff 100%);
+  transition: transform var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.filterBox:focus-within {
+  transform: translateY(-1px);
+  border-color: var(--color-border-strong);
+  box-shadow: 0 10px 22px rgba(42, 70, 126, 0.09);
 }
 
 .filterLabel {
   font-size: 14px;
-  font-weight: 700;
+  font-weight: 800;
   color: #3b4f7c;
 }
 
@@ -384,23 +590,25 @@
   box-sizing: border-box;
   min-height: 40px;
   border-radius: var(--radius-sm);
-  border: 1px solid #d7e2f5;
-  background: var(--color-surface-card);
+  border: 1px solid #d2e0f5;
+  background: #fbfdff;
   color: #253760;
   padding: 0 10px;
   font-size: 15px;
+  transition: border-color var(--duration-fast) var(--ease-out), background-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 
 .filterInput:focus {
   outline: none;
   border-color: var(--color-border-strong);
+  box-shadow: 0 0 0 3px rgba(24, 97, 255, 0.10);
 }
 
 .filterInputSelected {
   border-color: #2f63d8;
   background: #eef4ff;
   color: #1c3f8f;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .filterInputSelected::placeholder {
@@ -410,7 +618,7 @@
 
 .filterMenu {
   list-style: none;
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   padding: 6px;
   position: absolute;
   left: 0;
@@ -418,10 +626,12 @@
   z-index: 2000;
   max-height: 220px;
   overflow-y: auto;
-  border: 1px solid #d7e2f5;
-  border-radius: var(--radius-sm);
-  background: var(--color-surface-card);
+  border: 1px solid #d2e0f5;
+  border-radius: var(--radius-md);
+  background: #fbfdff;
   box-shadow: var(--shadow-overlay-soft);
+  transform-origin: top center;
+  animation: menuOpen 160ms var(--ease-out) both;
 }
 
 .filterMenuItem {
@@ -436,18 +646,20 @@
   font-size: 14px;
   line-height: 1.3;
   padding: 8px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
 }
 
 .filterMenuItem:hover {
   background: #edf3ff;
+  transform: translateX(2px);
 }
 
 .filterMenuItemSelected {
   background: #dfeaff;
   color: var(--color-primary-strong);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .filterUnselectMark {
@@ -457,9 +669,7 @@
   width: 20px;
   height: 20px;
   border-radius: 999px;
-  /* background: #2f63d8; */
   color: #fff;
-
 }
 
 .filterUnselectIcon {
@@ -487,6 +697,7 @@
   margin: 0;
   font-size: 30px;
   color: var(--color-text-main);
+  letter-spacing: -0.03em;
 }
 
 .resultsMeta {
@@ -503,7 +714,8 @@
   background: #fff1f1;
   color: #9c2424;
   padding: 14px 16px;
-  font-weight: 700;
+  font-weight: 800;
+  animation: contentRise 220ms var(--ease-out) both;
 }
 
 .resultsGrid {
@@ -517,18 +729,24 @@
 .resultCard {
   min-height: 300px;
   border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-card);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(180deg, #fbfdff 0%, #f4f8ff 100%);
   color: var(--color-text-main);
   padding: 22px;
   text-decoration: none;
   box-shadow: 0 12px 28px rgba(42, 70, 126, 0.08);
-  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+  transition: transform 180ms var(--ease-out), box-shadow 180ms var(--ease-out), border-color 180ms var(--ease-out), background-color 180ms var(--ease-out);
+  animation: cardIn 300ms var(--ease-out) both;
 }
 
 .resultCard:hover {
+  transform: translateY(-5px);
+  border-color: var(--color-border-strong);
+  box-shadow: 0 20px 42px rgba(42, 70, 126, 0.15);
+}
+
+.resultCard:focus-visible {
   transform: translateY(-3px);
-  box-shadow: 0 18px 36px rgba(42, 70, 126, 0.14);
 }
 
 .resultTopline {
@@ -537,7 +755,7 @@
   gap: 12px;
   color: var(--color-primary);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 900;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -546,12 +764,13 @@
   margin: 18px 0 0;
   font-size: 23px;
   line-height: 1.15;
+  letter-spacing: -0.025em;
 }
 
 .resultChair {
   margin: 12px 0 0;
   color: #40547e;
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .resultSummary {
@@ -573,7 +792,12 @@
   color: var(--color-primary-strong);
   padding: 7px 10px;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 800;
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.resultCard:hover .resultTag {
+  transform: translateY(-1px);
 }
 
 .emptyState {
@@ -581,188 +805,127 @@
   margin: 24px auto 0;
   padding: 56px 24px;
   border: 1px solid var(--color-border-soft);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface-card);
+  border-radius: var(--radius-xl);
+  background: linear-gradient(135deg, #fbfdff 0%, #edf4ff 100%);
   text-align: center;
+  animation: contentRise 260ms var(--ease-out) both;
 }
 
 .emptyTitle {
   margin: 10px 0 0;
   font-size: 39px;
+  letter-spacing: -0.04em;
 }
 
 .emptyText {
   margin: 10px auto 0;
-  max-width: 920px;
+  max-width: 720px;
   font-size: 20px;
+  line-height: 1.5;
   color: #53668f;
 }
 
-@media (max-width: 1024px) {
-  .heroGrid {
-    min-height: auto;
+@keyframes contentRise {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cardIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes menuOpen {
+  from { opacity: 0; transform: translateY(-4px) scaleY(0.98); }
+  to { opacity: 1; transform: translateY(0) scaleY(1); }
+}
+
+@keyframes tabSlide {
+  from { transform: scaleX(0.35); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+@keyframes hintFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+
+@keyframes radarDrift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(-20px, 14px, 0) scale(1.08); }
+}
+
+@keyframes radarSweep {
+  0% { background-position: -36% 0, 0 0; }
+  48%, 100% { background-position: 136% 0, 0 0; }
+}
+
+@keyframes radarFloat {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-8px, 10px, 0); }
+}
+
+@keyframes radarRotate {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes radarPulse {
+  0% { opacity: 0.72; transform: translate(-50%, -50%) scale(1); }
+  72%, 100% { opacity: 0; transform: translate(-50%, -50%) scale(24); }
+}
+
+@keyframes radarPing {
+  0%, 58%, 100% {
+    opacity: 0.72;
+    transform: scale(1);
+    box-shadow: 0 0 0 4px rgba(24, 97, 255, 0.10), 0 0 18px rgba(24, 97, 255, 0.50);
   }
 
-  .filtersGrid,
-  .resultsGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .searchBarBlock {
-    flex-direction: column;
-  }
-
-  .searchButton {
-    width: 100%;
+  64% {
+    opacity: 1;
+    transform: scale(1.45);
+    box-shadow: 0 0 0 10px rgba(24, 97, 255, 0.13), 0 0 30px rgba(24, 97, 255, 0.82);
   }
 }
 
-@media (max-width: 700px) {
-  .topBarInner {
-    min-height: 60px;
-    padding: 0 14px;
-    align-items: stretch;
-  }
-
-  .logo {
-    font-size: 18px;
-    display: flex;
-    align-items: center;
-  }
-
-  .topNav {
-    border-left: none;
-  }
-
-  .navButton {
-    min-height: 60px;
-    padding: 0 10px;
-    font-size: 12px;
-  }
-
-  .hero {
-    text-align: left;
-  }
-
-  .heroGrid {
-    padding: 34px 14px 24px;
-    gap: 22px;
-  }
-
-  .heroCopy {
-    padding-left: 14px;
-  }
-
-  .heroEyebrow {
-    margin-bottom: 14px;
-    font-size: 12px;
-  }
-
-  .heroTitle {
-    font-size: 48px;
-    line-height: 1.02;
-  }
-
-  .heroSubtitle {
-    margin-top: 18px;
-    font-size: 16px;
-    line-height: 1.55;
-  }
-
-  .heroActions {
-    margin-top: 24px;
-  }
-
-  .primaryAction,
-  .secondaryAction {
-    min-height: 54px;
-    width: 100%;
-    min-width: 0;
-    border-left: 1px solid var(--color-primary);
-    font-size: 14px;
-  }
-
-  .secondaryAction {
-    border-top: none;
-  }
-
-  .scrollHintButton {
-    width: 40px;
-    height: 40px;
-  }
-
-  .searchSection {
-    padding: 36px 14px 44px;
-  }
-
-  .modeTabs {
-    max-width: 100%;
-  }
-
-  .tab,
-  .activeTab {
-    min-height: 58px;
-    font-size: 17px;
-  }
-
-  .searchBarBlock {
-    padding: 10px;
-    gap: 10px;
-    border-radius: 10px;
-  }
-
-  .searchInput {
-    min-height: 58px;
-    padding: 0 14px;
-    font-size: 16px;
-  }
-
-  .searchButton {
-    min-height: 58px;
-    font-size: 18px;
-    border-radius: 10px;
-  }
-
-  .filtersCard {
-    padding: 14px;
-    border-radius: 10px;
-  }
-
-  .filtersTitle {
-    font-size: 22px;
-  }
-
-  .resetLink {
-    font-size: 16px;
-  }
-
+@media (max-width: 1024px) {
+  .heroGrid { min-height: auto; }
+  .heroRadar { width: clamp(220px, 30vw, 300px); }
   .filtersGrid,
-  .resultsGrid {
-    grid-template-columns: 1fr;
-    gap: 10px;
-    margin-top: 12px;
-  }
+  .resultsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .searchBarBlock { flex-direction: column; }
+  .searchButton { width: 100%; }
+}
 
-  .resultsHeader {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .filterBox {
-    min-height: 62px;
-  }
-
-  .emptyState {
-    margin-top: 16px;
-    padding: 30px 12px;
-    border-radius: 10px;
-  }
-
-  .emptyTitle {
-    font-size: 30px;
-  }
-
-  .emptyText {
-    font-size: 16px;
-  }
+@media (max-width: 700px) {
+  .topBarInner { min-height: 60px; padding: 0 14px; align-items: stretch; }
+  .logo { font-size: 18px; display: flex; align-items: center; }
+  .navButton { min-height: 60px; padding: 0 10px; font-size: 12px; }
+  .heroGrid { padding: 34px 14px 24px; gap: 22px; }
+  .heroCopy { padding-left: 0; }
+  .heroRadar { display: none; }
+  .heroEyebrow { margin-bottom: 14px; font-size: 12px; }
+  .heroTitle { font-size: 48px; line-height: 1.02; }
+  .heroSubtitle { margin-top: 18px; font-size: 16px; line-height: 1.55; }
+  .heroActions { margin-top: 24px; }
+  .primaryAction,
+  .secondaryAction { min-height: 54px; width: 100%; min-width: 0; font-size: 14px; }
+  .scrollHintButton { width: 40px; height: 40px; }
+  .searchSection { padding: 36px 14px 44px; }
+  .modeTabs { max-width: 100%; }
+  .tab,
+  .activeTab { min-height: 58px; font-size: 17px; }
+  .searchBarBlock { padding: 10px; gap: 10px; border-radius: 10px; }
+  .searchInput { min-height: 58px; padding: 0 14px; font-size: 16px; }
+  .searchButton { min-height: 58px; font-size: 18px; border-radius: 10px; }
+  .filtersCard { padding: 14px; border-radius: 10px; }
+  .filtersTitle { font-size: 22px; }
+  .resetLink { font-size: 16px; }
+  .filtersGrid,
+  .resultsGrid { grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
+  .resultsHeader { align-items: flex-start; flex-direction: column; }
+  .filterBox { min-height: 62px; }
+  .emptyState { margin-top: 16px; padding: 30px 12px; border-radius: 10px; }
+  .emptyTitle { font-size: 30px; }
+  .emptyText { font-size: 16px; }
 }
