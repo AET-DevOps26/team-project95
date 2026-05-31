@@ -3,31 +3,34 @@ import styles from '../style/HomePage.module.css';
 import scrollIcon from '/assets/icons/chevrons-down.svg';
 import FilterDropdown from '../components/FilterDropdown';
 import { getAvailableFilters } from '../api/filters';
+import { listTheses, searchTheses } from '../api/theses';
 import type { components } from '../api';
+import { MOCK_FILTERS } from '../mocks/theses';
 import { useSearchState } from '../state/searchState';
 import { Link } from 'react-router-dom';
 
-const INITIAL_FILTERS: components['schemas']['AvailableFiltersResponse'] = {
-  chairs: [
-    { id: 1, name: 'Chair of Software Engineering', websiteUrl: 'https://example.org/chairs/se' },
-    { id: 2, name: 'Chair of Machine Learning', websiteUrl: 'https://example.org/chairs/ml' },
-    { id: 3, name: 'Chair of Robotics and AI', websiteUrl: 'https://example.org/chairs/rai' },
-    { id: 4, name: 'Chair of Computer Vision', websiteUrl: 'https://example.org/chairs/cv' },
-    { id: 5, name: 'Chair of Data Engineering', websiteUrl: 'https://example.org/chairs/de' },
-  ],
-  degreeTypes: ['BACHELOR', 'MASTER', 'RESEARCH INTERNSHIP', 'SEMINAR', 'PHD'],
-  researchAreas: [
-    'Artificial Intelligence',
-    'Machine Learning',
-    'Natural Language Processing',
-    'Computer Vision',
-    'Distributed Systems',
-  ],
-  tags: ['LLM', 'Semantic Search', 'Information Retrieval', 'MLOps', 'Data Mining'],
-};
+type ThesisProposal = components['schemas']['ThesisProposal'];
+
+const INITIAL_FILTERS: components['schemas']['AvailableFiltersResponse'] = MOCK_FILTERS;
+
+function thesisMatchesSelectedFilters(thesis: ThesisProposal, selectedFilters: components['schemas']['ThesisSearchFilters']) {
+  const matchesChair = !selectedFilters.chairIds?.length || selectedFilters.chairIds.includes(thesis.chairId);
+  const matchesDegree =
+    !selectedFilters.degreeTypes?.length || Boolean(thesis.degreeType && selectedFilters.degreeTypes.includes(thesis.degreeType));
+  const matchesResearchArea =
+    !selectedFilters.researchAreas?.length ||
+    Boolean(thesis.researchArea && selectedFilters.researchAreas.includes(thesis.researchArea));
+  const matchesTags = !selectedFilters.tags?.length || selectedFilters.tags.every((tag) => thesis.tags?.includes(tag));
+
+  return matchesChair && matchesDegree && matchesResearchArea && matchesTags;
+}
 
 export default function HomePage() {
   const [filters, setFilters] = useState<components['schemas']['AvailableFiltersResponse']>(INITIAL_FILTERS);
+  const [allTheses, setAllTheses] = useState<ThesisProposal[]>([]);
+  const [serverSearchResults, setServerSearchResults] = useState<ThesisProposal[] | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [resultsError, setResultsError] = useState<string | null>(null);
   const searchSectionRef = useRef<HTMLElement | null>(null);
   const {
     queryMode,
@@ -40,6 +43,23 @@ export default function HomePage() {
   } = useSearchState();
   const showSearchBar = queryMode === 'Natural Language' || queryMode === 'Both';
   const showFilters = queryMode === 'Filters' || queryMode === 'Both';
+  const normalizedNaturalLanguageQuery = naturalLanguageQuery.trim();
+  const selectedApiFilters = useMemo(
+    () => ({
+      chairIds: selectedFilters.chairIds,
+      degreeTypes: selectedFilters.degreeTypes,
+      researchAreas: selectedFilters.researchAreas,
+      tags: selectedFilters.tags,
+      status: 'OPEN',
+    }),
+    [selectedFilters],
+  );
+  const shouldUseServerSearch = showSearchBar && normalizedNaturalLanguageQuery.length > 0;
+  const clientFilteredTheses = useMemo(
+    () => allTheses.filter((thesis) => thesisMatchesSelectedFilters(thesis, selectedApiFilters)),
+    [allTheses, selectedApiFilters],
+  );
+  const displayedTheses = serverSearchResults ?? clientFilteredTheses;
 
   const scrollToSearch = () => {
     searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -55,12 +75,48 @@ export default function HomePage() {
       }
     }
 
+    async function loadTheses() {
+      setResultsError(null);
+
+      try {
+        const response = await listTheses();
+        setAllTheses(response);
+      } catch (error) {
+        console.error('Failed to load theses', error);
+        setResultsError(error instanceof Error ? error.message : 'Failed to load thesis proposals.');
+      }
+    }
+
     void loadFilters();
+    void loadTheses();
   }, []);
 
-  useEffect(() => {
-    console.log('Currently selected filters:', selectedFilters);
-  }, [selectedFilters]);
+  async function handleSearchSubmit() {
+    if (!shouldUseServerSearch) {
+      setServerSearchResults(null);
+      setResultsError(null);
+      return;
+    }
+
+    setIsSearching(true);
+    setResultsError(null);
+
+    try {
+      const response = await searchTheses({
+        naturalLanguageQuery: normalizedNaturalLanguageQuery,
+        filters: selectedApiFilters,
+        page: 0,
+        size: 50,
+      });
+      setServerSearchResults(response.items);
+    } catch (error) {
+      console.error('Failed to search theses', error);
+      setServerSearchResults([]);
+      setResultsError(error instanceof Error ? error.message : 'Failed to search thesis proposals.');
+    } finally {
+      setIsSearching(false);
+    }
+  }
 
   const chairOptions = useMemo(
     () =>
@@ -166,7 +222,10 @@ export default function HomePage() {
           className={`${styles.searchBarBlock} ${styles.animatedSection} ${showSearchBar ? styles.isVisible : styles.isHidden}`}
           aria-hidden={!showSearchBar}
           inert={!showSearchBar}
-          onSubmit={(event) => event.preventDefault()}
+          onSubmit={(event) => {
+            event.preventDefault();
+            void handleSearchSubmit();
+          }}
         >
           <input
             className={styles.searchInput}
@@ -228,12 +287,46 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className={styles.emptyState}>
-          <h3 className={styles.emptyTitle}>No results yet</h3>
-          <p className={styles.emptyText}>
-            Use the search box above or apply filters to find open thesis opportunities.
-          </p>
+        <div className={styles.resultsHeader}>
+          <div>
+            <h3 className={styles.resultsTitle}>Thesis proposals</h3>
+            <p className={styles.resultsMeta}>
+              {isSearching ? 'Searching thesis service…' : `${displayedTheses.length} thesis proposals shown`}
+            </p>
+          </div>
         </div>
+
+        {resultsError && <p className={styles.resultsError}>{resultsError}</p>}
+
+        {displayedTheses.length > 0 ? (
+          <div className={styles.resultsGrid}>
+            {displayedTheses.map((thesis) => (
+              <Link className={styles.resultCard} to={`/thesis/${thesis.id}`} key={thesis.id}>
+                <div className={styles.resultTopline}>
+                  <span>{thesis.degreeType ?? 'Degree type open'}</span>
+                  <span>{thesis.status}</span>
+                </div>
+                <h4 className={styles.resultTitle}>{thesis.title}</h4>
+                <p className={styles.resultChair}>{thesis.chairName ?? 'Chair not specified'}</p>
+                <p className={styles.resultSummary}>{thesis.aiOverview ?? thesis.originalDescription ?? 'No summary available.'}</p>
+                <div className={styles.resultTags}>
+                  {(thesis.tags ?? []).slice(0, 4).map((tag) => (
+                    <span className={styles.resultTag} key={tag}>{tag}</span>
+                  ))}
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className={styles.emptyState}>
+            <h3 className={styles.emptyTitle}>{serverSearchResults ? 'No matching theses' : 'No thesis proposals loaded'}</h3>
+            <p className={styles.emptyText}>
+              {serverSearchResults
+                ? 'Try changing the natural language query or relaxing the filters.'
+                : 'The thesis list is empty or the thesis service could not be reached.'}
+            </p>
+          </div>
+        )}
       </section>
     </main>
   );

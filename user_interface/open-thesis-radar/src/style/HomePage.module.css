@@ -474,6 +474,108 @@
   padding: 8px 10px;
 }
 
+.resultsHeader {
+  max-width: 1200px;
+  margin: 26px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.resultsTitle {
+  margin: 0;
+  font-size: 30px;
+  color: var(--color-text-main);
+}
+
+.resultsMeta {
+  margin: 6px 0 0;
+  color: #53668f;
+  font-size: 17px;
+}
+
+.resultsError {
+  max-width: 1200px;
+  margin: 16px auto 0;
+  border: 1px solid #f3b5b5;
+  border-radius: var(--radius-md);
+  background: #fff1f1;
+  color: #9c2424;
+  padding: 14px 16px;
+  font-weight: 700;
+}
+
+.resultsGrid {
+  max-width: 1200px;
+  margin: 18px auto 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.resultCard {
+  min-height: 300px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-card);
+  color: var(--color-text-main);
+  padding: 22px;
+  text-decoration: none;
+  box-shadow: 0 12px 28px rgba(42, 70, 126, 0.08);
+  transition: transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard);
+}
+
+.resultCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 36px rgba(42, 70, 126, 0.14);
+}
+
+.resultTopline {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.resultTitle {
+  margin: 18px 0 0;
+  font-size: 23px;
+  line-height: 1.15;
+}
+
+.resultChair {
+  margin: 12px 0 0;
+  color: #40547e;
+  font-weight: 700;
+}
+
+.resultSummary {
+  margin: 14px 0 0;
+  color: #53668f;
+  line-height: 1.5;
+}
+
+.resultTags {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.resultTag {
+  border-radius: 999px;
+  background: #eef4ff;
+  color: var(--color-primary-strong);
+  padding: 7px 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
 .emptyState {
   max-width: 1200px;
   margin: 24px auto 0;
@@ -501,7 +603,8 @@
     min-height: auto;
   }
 
-  .filtersGrid {
+  .filtersGrid,
+  .resultsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -633,10 +736,16 @@
     font-size: 16px;
   }
 
-  .filtersGrid {
+  .filtersGrid,
+  .resultsGrid {
     grid-template-columns: 1fr;
     gap: 10px;
     margin-top: 12px;
+  }
+
+  .resultsHeader {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .filterBox {

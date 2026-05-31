@@ -28,6 +28,7 @@ export default function Button(props: ButtonProps | AnchorProps) {
 
   if (typeof props.href === 'string') {
     const { children, className, variant: _variant, ...rest } = props;
+    void _variant;
     return (
       <a {...rest} className={classes(variant, className)}>
         {children}
@@ -36,6 +37,7 @@ export default function Button(props: ButtonProps | AnchorProps) {
   }
 
   const { children, className, variant: _variant, ...rest } = props;
+  void _variant;
   return (
     <button {...rest} className={classes(variant, className)}>
       {children}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styles from '../style/DetailedThesisPage.module.css';
 import arrowLeftIcon from '/assets/icons/arrow-left.svg';
@@ -19,24 +19,6 @@ type ThesisProposal = components['schemas']['ThesisProposal'];
 
 const DEFAULT_THESIS_ID = 1001;
 const EMPTY_FIELD = 'Not specified';
-const SAMPLE_THESIS: ThesisProposal = {
-  id: DEFAULT_THESIS_ID,
-  chairId: 1,
-  chairName: 'Chair of Software Engineering',
-  title: 'Post-Quantum Cryptography in Intra-Vehicle Networks',
-  degreeType: 'BACHELOR',
-  researchArea: 'Networking',
-  status: 'OPEN',
-  sourceUrl: 'https://www.in.tum.de/en/open-theses/1234',
-  aiOverview:
-    'This thesis investigates secure communication for intra-vehicle networks under post-quantum threat models.',
-  originalDescription:
-    'Analyze candidate cryptographic schemes, evaluate integration constraints, and prototype a practical architecture for low-latency embedded environments.',
-  extractionConfidence: 0.93,
-  lastSeenAt: new Date().toISOString(),
-  advisors: [{ name: 'Not specified' }],
-  tags: ['Security', 'Embedded Systems'],
-};
 
 function displayValue(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === '') {
@@ -104,12 +86,6 @@ export default function DetailedThesisPage() {
         }
       } catch (error) {
         if (isCurrent) {
-          if (resolvedThesisId === DEFAULT_THESIS_ID) {
-            setThesis(SAMPLE_THESIS);
-            setErrorMessage(null);
-            return;
-          }
-
           setThesis(null);
           setErrorMessage(error instanceof Error ? error.message : 'Failed to load thesis details.');
         }
@@ -127,7 +103,7 @@ export default function DetailedThesisPage() {
     };
   }, [resolvedThesisId]);
 
-  const tagsText = useMemo(() => (thesis?.tags?.length ? thesis.tags.join(', ') : EMPTY_FIELD), [thesis?.tags]);
+  const tagsText = thesis?.tags?.length ? thesis.tags.join(', ') : EMPTY_FIELD;
   const sourceUrl = thesis?.sourceUrl;
 
   return (
@@ -231,12 +207,8 @@ export default function DetailedThesisPage() {
 
                   <div className={styles.additionalGrid}>
                     <div>
-                      <h3 className={styles.detailLabel}>Thesis ID</h3>
-                      <p className={styles.detailValue}>{thesis.id}</p>
                       <h3 className={styles.detailLabel}>Chair</h3>
                       <p className={styles.detailValue}>{displayValue(thesis.chairName)}</p>
-                      <h3 className={styles.detailLabel}>Chair ID</h3>
-                      <p className={styles.detailValue}>{thesis.chairId}</p>
                       <h3 className={styles.detailLabel}>Research Area</h3>
                       <p className={styles.detailValue}>{displayValue(thesis.researchArea)}</p>
                       <h3 className={styles.detailLabel}>Degree Type</h3>
