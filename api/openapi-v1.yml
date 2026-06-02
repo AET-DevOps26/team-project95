@@ -175,7 +175,30 @@ paths:
               schema:
                 $ref: '#/components/schemas/SourceEndpointListResponse'
 
-  /internal/v1/thesis-service/chairs/{chairId}/theses:
+  /internal/v1/thesis-service/scrape-runs:
+    post:
+      tags:
+        - Thesis Service Internal API
+      summary: Log a scrape run result
+      description: |
+        Called by the Scraping Service to record the outcome of a scrape attempt.
+        This should be called for both successful and failed runs to maintain a complete history.
+      operationId: logScrapeRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScrapeRunLogRequest'
+      responses:
+        '201':
+          description: Scrape run logged successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScrapeRunLogResponse'
+
+  /internal/v1/thesis-service/source-endpoints/{sourceEndpointId}/theses:
     put:
       tags:
         - Thesis Service Internal API
@@ -185,23 +208,22 @@ paths:
         GenAI extraction for one chair/source endpoint.
 
         Thesis Service behavior:
-        1. Save a new scrape run entry.
-        2. In one transaction, delete all existing thesis proposals for `chairId`
+        1. In one transaction, delete all existing thesis proposals for `chairId`
            and insert the newly extracted thesis proposals.
-        3. Commit only if the full replacement succeeds.
-        4. After relational replacement succeeds, call the Vector Search Service
+        2. Commit only if the full replacement succeeds.
+        3. After relational replacement succeeds, call the Vector Search Service
            to replace the vector index entries for the same chair.
 
         If validation or insertion fails, the old thesis data must remain unchanged.
       operationId: replaceChairTheses
       parameters:
-        - $ref: '#/components/parameters/ChairId'
+        - $ref: '#/components/parameters/SourceEndpointId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChairThesesReplacementRequest'
+              $ref: '#/components/schemas/SourceEndpointThesesReplacementRequest'
             example:
               sourceEndpointId: 10
               startedAt: "2026-05-10T08:00:00Z"
@@ -231,7 +253,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChairThesesReplacementResponse'
+                $ref: '#/components/schemas/SourceEndpointThesesReplacementResponse'
         '400':
           description: Invalid replacement payload.
           content:
@@ -288,7 +310,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/VectorSearchResponse'
 
-  /internal/v1/vector-search-service/chairs/{chairId}/index:
+  /internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index:
     post:
       tags:
         - Vector Search API
@@ -300,15 +322,15 @@ paths:
         1. Delete all existing vector index entries belonging to `chairId`.
         2. Generate embeddings for the provided theses.
         3. Insert the new vector index entries.
-      operationId: indexChairTheses
+      operationId: indexSourceEndpointTheses
       parameters:
-        - $ref: '#/components/parameters/ChairId'
+        - $ref: '#/components/parameters/SourceEndpointId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReplaceChairVectorsRequest'
+              $ref: '#/components/schemas/ReplaceSourceEndpointVectorsRequest'
             example:
               scrapeRunId: 42
               theses:
@@ -327,7 +349,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReplaceChairVectorsResponse'
+                $ref: '#/components/schemas/ReplaceSourceEndpointVectorsResponse'
 
   /internal/v1/genai-service/extract-theses:
     post:
@@ -384,6 +406,15 @@ paths:
 
 components:
   parameters:
+    SourceEndpointId:
+      name: sourceEndpointId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Internal source endpoint id.
+
     ChairId:
       name: chairId
       in: path
@@ -652,6 +683,9 @@ components:
 
     Advisor:
       type: object
+      required:
+        - name
+        - email
       properties:
         id:
           type: integer
@@ -662,7 +696,6 @@ components:
         email:
           type: string
           format: email
-          nullable: true
         profileUrl:
           type: string
           format: uri
@@ -670,26 +703,27 @@ components:
 
     AdvisorInput:
       type: object
+      required:
+        - name
+        - email
       properties:
         name:
           type: string
         email:
           type: string
           format: email
-          nullable: true
         profileUrl:
           type: string
           format: uri
           nullable: true
 
-    ChairThesesReplacementRequest:
+    ScrapeRunLogRequest:
       type: object
       required:
         - sourceEndpointId
         - startedAt
         - finishedAt
         - status
-        - theses
       properties:
         sourceEndpointId:
           type: integer
@@ -709,33 +743,45 @@ components:
         errorMessage:
           type: string
           nullable: true
-        rawHtmlSnapshotUrl:
-          type: string
-          format: uri
+        candidatesFound:
+          type: integer
           nullable: true
-          description: Optional location where the raw HTML snapshot is stored.
+          example: 5
+
+    ScrapeRunLogResponse:
+      type: object
+      required:
+        - id
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+        status:
+          type: string
+
+    SourceEndpointThesesReplacementRequest:
+      type: object
+      required:
+        - theses
+      properties:
         theses:
           type: array
           items:
             $ref: '#/components/schemas/ThesisProposalInput'
 
-    ChairThesesReplacementResponse:
+    SourceEndpointThesesReplacementResponse:
       type: object
       required:
-        - scrapeRunId
-        - chairId
+        - sourceEndpointId
         - deletedRelationalTheses
         - insertedRelationalTheses
         - replacedVectorEntries
       properties:
-        scrapeRunId:
+        sourceEndpointId:
           type: integer
           format: int64
-          example: 42
-        chairId:
-          type: integer
-          format: int64
-          example: 3
+          example: 10
         deletedRelationalTheses:
           type: integer
           example: 12
@@ -745,6 +791,10 @@ components:
         replacedVectorEntries:
           type: integer
           example: 9
+        errorMessage:
+          type: string
+          nullable: true
+          example: "Vector search sync failed: connection refused"
 
     TriggerScrapeResponse:
       type: object
@@ -867,15 +917,15 @@ components:
           format: float
           example: 0.87
 
-    ReplaceChairVectorsRequest:
+    ReplaceSourceEndpointVectorsRequest:
       type: object
       required:
-        - scrapeRunId
         - theses
       properties:
         scrapeRunId:
           type: integer
           format: int64
+          nullable: true
         theses:
           type: array
           items:
@@ -886,6 +936,7 @@ components:
       required:
         - thesisId
         - chairId
+        - sourceEndpointId
         - title
         - sourceUrl
       properties:
@@ -893,6 +944,9 @@ components:
           type: integer
           format: int64
         chairId:
+          type: integer
+          format: int64
+        sourceEndpointId:
           type: integer
           format: int64
         title:
@@ -917,14 +971,14 @@ components:
           items:
             type: string
 
-    ReplaceChairVectorsResponse:
+    ReplaceSourceEndpointVectorsResponse:
       type: object
       required:
-        - chairId
+        - sourceEndpointId
         - deletedVectorEntries
         - insertedVectorEntries
       properties:
-        chairId:
+        sourceEndpointId:
           type: integer
           format: int64
         deletedVectorEntries:

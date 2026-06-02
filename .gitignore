@@ -4,6 +4,10 @@
 !.env.example
 !.env.sample
 
+# Agents
+GEMINI.md
+AUDIT_REPORT.md
+
 # OS files
 .DS_Store
 .AppleDouble

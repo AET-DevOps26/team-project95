@@ -67,6 +67,7 @@
                             <generatorName>spring</generatorName>
                             <apiPackage>com.project95.thesis.vectorsearch.api</apiPackage>
                             <modelPackage>com.project95.thesis.vectorsearch.dto</modelPackage>
+                            <modelNameSuffix>Dto</modelNameSuffix>
                             <configOptions>
                                 <interfaceOnly>true</interfaceOnly>
                                 <useSpringBoot3>true</useSpringBoot3>

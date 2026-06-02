@@ -63,11 +63,13 @@
               <generatorName>spring</generatorName>
               <apiPackage>com.project95.thesis.scraping.api</apiPackage>
               <modelPackage>com.project95.thesis.scraping.dto</modelPackage>
+              <modelNameSuffix>Dto</modelNameSuffix>
               <configOptions>
                 <interfaceOnly>true</interfaceOnly>
                 <useSpringBoot3>true</useSpringBoot3>
                 <useJakartaEe>true</useJakartaEe>
                 <skipDefaultInterface>true</skipDefaultInterface>
+                <openApiNullable>false</openApiNullable>
               </configOptions>
             </configuration>
           </execution>
