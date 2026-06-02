@@ -130,6 +130,7 @@ public class ThesisManagementService {
       thesis.setDegreeType(normalize(unwrap(dto.getDegreeType())));
       thesis.setOriginalDescription(unwrap(dto.getOriginalDescription()));
       thesis.setAiOverview(unwrap(dto.getAiOverview()));
+      thesis.setRawHtmlSnapshot(unwrap(dto.getRawHtmlSnapshot()));
 
       thesis.setSourceUrl(dto.getSourceUrl().toString());
 

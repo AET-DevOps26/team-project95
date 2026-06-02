@@ -96,3 +96,4 @@
 //   researchAreas: Array.from(new Set(MOCK_THESES.map((thesis) => thesis.researchArea).filter(Boolean))) as string[],
 //   tags: Array.from(new Set(MOCK_THESES.flatMap((thesis) => thesis.tags ?? []))),
 // };
+

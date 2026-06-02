@@ -640,13 +640,6 @@ components:
           type: string
           nullable: true
           description: Optional raw HTML snippet stored for this thesis proposal.
-        extractionConfidence:
-          type: number
-          format: float
-          nullable: true
-          minimum: 0
-          maximum: 1
-          example: 0.93
         status:
           type: string
           example: "OPEN"
@@ -686,6 +679,10 @@ components:
         sourceUrl:
           type: string
           format: uri
+        rawHtmlSnapshot:
+          type: string
+          nullable: true
+          description: Optional raw HTML snippet extracted for this thesis proposal.
         status:
           type: string
           default: "OPEN"

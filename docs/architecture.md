@@ -35,7 +35,6 @@ Example output fields include:
 - research area
 - advisor/contact information
 - source URL
-- extraction confidence
 
 The GenAI service does not directly write to the database. It only returns structured data to the Scraping Service.
 
