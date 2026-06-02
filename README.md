@@ -1,3 +1,16 @@
+# ThesisHub / Open Thesis Radar
+
+## Local environment secrets
+
+Shared local `.env` files are managed with SOPS + age. See [docs/secrets.md](docs/secrets.md).
+
+Quick start after you have access:
+
+```bash
+scripts/secrets/decrypt-env.sh
+docker compose up --build
+```
+
 # *Problem Statement*
 
 At the Technical University of Munich (TUM), Bachelor's and Master's students must write a final thesis at the end of the course in order to graduate. A thesis topic can be realized in three ways:
