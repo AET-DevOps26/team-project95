@@ -11,9 +11,9 @@ public final class ThesisVectorUtils {
 
   private ThesisVectorUtils() {}
 
-  public static Expression chairFilter(Long chairId) {
+  public static Expression sourceEndpointFilter(Long sourceEndpointId) {
     return new Expression(
-        ExpressionType.EQ, new Key(ThesisVectorMetadata.CHAIR_ID), new Value(chairId));
+        ExpressionType.EQ, new Key(ThesisVectorMetadata.SOURCE_ENDPOINT_ID), new Value(sourceEndpointId));
   }
 
   public static void putIfPresent(Map<String, Object> metadata, String key, String value) {

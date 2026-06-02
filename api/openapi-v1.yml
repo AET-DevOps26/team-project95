@@ -198,7 +198,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/ScrapeRunLogResponse'
 
-  /internal/v1/thesis-service/chairs/{chairId}/theses:
+  /internal/v1/thesis-service/source-endpoints/{sourceEndpointId}/theses:
     put:
       tags:
         - Thesis Service Internal API
@@ -217,13 +217,13 @@ paths:
         If validation or insertion fails, the old thesis data must remain unchanged.
       operationId: replaceChairTheses
       parameters:
-        - $ref: '#/components/parameters/ChairId'
+        - $ref: '#/components/parameters/SourceEndpointId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ChairThesesReplacementRequest'
+              $ref: '#/components/schemas/SourceEndpointThesesReplacementRequest'
             example:
               sourceEndpointId: 10
               startedAt: "2026-05-10T08:00:00Z"
@@ -253,7 +253,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ChairThesesReplacementResponse'
+                $ref: '#/components/schemas/SourceEndpointThesesReplacementResponse'
         '400':
           description: Invalid replacement payload.
           content:
@@ -310,7 +310,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/VectorSearchResponse'
 
-  /internal/v1/vector-search-service/chairs/{chairId}/index:
+  /internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index:
     post:
       tags:
         - Vector Search API
@@ -324,13 +324,13 @@ paths:
         3. Insert the new vector index entries.
       operationId: indexChairTheses
       parameters:
-        - $ref: '#/components/parameters/ChairId'
+        - $ref: '#/components/parameters/SourceEndpointId'
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ReplaceChairVectorsRequest'
+              $ref: '#/components/schemas/ReplaceSourceEndpointVectorsRequest'
             example:
               scrapeRunId: 42
               theses:
@@ -349,7 +349,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ReplaceChairVectorsResponse'
+                $ref: '#/components/schemas/ReplaceSourceEndpointVectorsResponse'
 
   /internal/v1/genai-service/extract-theses:
     post:
@@ -406,6 +406,15 @@ paths:
 
 components:
   parameters:
+    SourceEndpointId:
+      name: sourceEndpointId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+      description: Internal source endpoint id.
+
     ChairId:
       name: chairId
       in: path
@@ -751,60 +760,28 @@ components:
         status:
           type: string
 
-    ChairThesesReplacementRequest:
+    SourceEndpointThesesReplacementRequest:
       type: object
       required:
-        - sourceEndpointId
-        - startedAt
-        - finishedAt
-        - status
         - theses
       properties:
-        sourceEndpointId:
-          type: integer
-          format: int64
-        startedAt:
-          type: string
-          format: date-time
-        finishedAt:
-          type: string
-          format: date-time
-        status:
-          type: string
-          enum:
-            - SUCCESS
-            - PARTIAL_SUCCESS
-            - FAILED
-        errorMessage:
-          type: string
-          nullable: true
-        rawHtmlSnapshotUrl:
-          type: string
-          format: uri
-          nullable: true
-          description: Optional location where the raw HTML snapshot is stored.
         theses:
           type: array
           items:
             $ref: '#/components/schemas/ThesisProposalInput'
 
-    ChairThesesReplacementResponse:
+    SourceEndpointThesesReplacementResponse:
       type: object
       required:
-        - chairId
+        - sourceEndpointId
         - deletedRelationalTheses
         - insertedRelationalTheses
         - replacedVectorEntries
       properties:
-        scrapeRunId:
+        sourceEndpointId:
           type: integer
           format: int64
-          nullable: true
-          example: 42
-        chairId:
-          type: integer
-          format: int64
-          example: 3
+          example: 10
         deletedRelationalTheses:
           type: integer
           example: 12
@@ -940,7 +917,7 @@ components:
           format: float
           example: 0.87
 
-    ReplaceChairVectorsRequest:
+    ReplaceSourceEndpointVectorsRequest:
       type: object
       required:
         - theses
@@ -959,6 +936,7 @@ components:
       required:
         - thesisId
         - chairId
+        - sourceEndpointId
         - title
         - sourceUrl
       properties:
@@ -966,6 +944,9 @@ components:
           type: integer
           format: int64
         chairId:
+          type: integer
+          format: int64
+        sourceEndpointId:
           type: integer
           format: int64
         title:
@@ -990,14 +971,14 @@ components:
           items:
             type: string
 
-    ReplaceChairVectorsResponse:
+    ReplaceSourceEndpointVectorsResponse:
       type: object
       required:
-        - chairId
+        - sourceEndpointId
         - deletedVectorEntries
         - insertedVectorEntries
       properties:
-        chairId:
+        sourceEndpointId:
           type: integer
           format: int64
         deletedVectorEntries:

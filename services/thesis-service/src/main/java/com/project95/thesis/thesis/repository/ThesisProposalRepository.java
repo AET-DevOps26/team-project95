@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 public interface ThesisProposalRepository
     extends JpaRepository<ThesisProposal, Long>, JpaSpecificationExecutor<ThesisProposal> {
 
-  long deleteByChairId(Long chairId);
+  long deleteBySourceEndpointId(Long sourceEndpointId);
 
   List<ThesisProposal> findByStatus(String status);
 

@@ -87,6 +87,7 @@ CREATE TABLE thesis_proposal_research_areas (
 CREATE INDEX idx_source_endpoints_chair_id ON source_endpoints(chair_id);
 CREATE INDEX idx_scrape_runs_source_endpoint_id ON scrape_runs(source_endpoint_id);
 CREATE INDEX idx_thesis_proposals_chair_id ON thesis_proposals(chair_id);
+CREATE INDEX idx_thesis_proposals_source_endpoint_id ON thesis_proposals(source_endpoint_id);
 
 CREATE INDEX idx_tpa_proposal_id ON thesis_proposal_advisors(thesis_proposal_id);
 CREATE INDEX idx_tpa_advisor_id ON thesis_proposal_advisors(advisor_id);
@@ -96,3 +97,4 @@ CREATE INDEX idx_tpt_tag_id ON thesis_proposal_tags(tag_id);
 
 CREATE INDEX idx_tpra_proposal_id ON thesis_proposal_research_areas(thesis_proposal_id);
 CREATE INDEX idx_tpra_research_area_id ON thesis_proposal_research_areas(research_area_id);
+X idx_tpra_research_area_id ON thesis_proposal_research_areas(research_area_id);

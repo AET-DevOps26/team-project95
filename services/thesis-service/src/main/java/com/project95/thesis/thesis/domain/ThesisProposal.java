@@ -44,6 +44,10 @@ public class ThesisProposal {
   @JoinColumn(name = "chair_id", nullable = false)
   private Chair chair;
 
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "source_endpoint_id", nullable = false)
+  private SourceEndpoint sourceEndpoint;
+
   @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
       name = "thesis_proposal_advisors",
@@ -154,6 +158,14 @@ public class ThesisProposal {
 
   public void setChair(Chair chair) {
     this.chair = chair;
+  }
+
+  public SourceEndpoint getSourceEndpoint() {
+    return sourceEndpoint;
+  }
+
+  public void setSourceEndpoint(SourceEndpoint sourceEndpoint) {
+    this.sourceEndpoint = sourceEndpoint;
   }
 
   public Set<Advisor> getAdvisors() {

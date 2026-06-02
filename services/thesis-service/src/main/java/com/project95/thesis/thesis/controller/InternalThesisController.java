@@ -65,16 +65,16 @@ public class InternalThesisController {
     return ResponseEntity.status(HttpStatus.CREATED).body(response);
   }
 
-  @PutMapping("/chairs/{chairId}/theses")
-  public ResponseEntity<ChairThesesReplacementResponseDto> replaceChairTheses(
-      @PathVariable("chairId") Long chairId,
-      @Valid @RequestBody ChairThesesReplacementRequestDto request) {
+  @PutMapping("/source-endpoints/{sourceEndpointId}/theses")
+  public ResponseEntity<SourceEndpointThesesReplacementResponseDto> replaceChairTheses(
+      @PathVariable("sourceEndpointId") Long sourceEndpointId,
+      @Valid @RequestBody SourceEndpointThesesReplacementRequestDto request) {
 
-    Objects.requireNonNull(chairId, "chairId must not be null");
+    Objects.requireNonNull(sourceEndpointId, "sourceEndpointId must not be null");
     Objects.requireNonNull(request, "request payload must not be null");
 
-    ChairThesesReplacementResponseDto response =
-        thesisCoordinationService.executeScrapeIngestionPipeline(chairId, request);
+    SourceEndpointThesesReplacementResponseDto response =
+        thesisCoordinationService.executeScrapeIngestionPipeline(sourceEndpointId, request);
     return ResponseEntity.ok(response);
   }
 }

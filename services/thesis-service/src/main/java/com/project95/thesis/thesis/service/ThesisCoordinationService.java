@@ -26,28 +26,27 @@ public class ThesisCoordinationService {
     this.restClient = restClient;
   }
 
-  public ChairThesesReplacementResponseDto executeScrapeIngestionPipeline(
-      Long chairId, ChairThesesReplacementRequestDto request) {
+  public SourceEndpointThesesReplacementResponseDto executeScrapeIngestionPipeline(
+      Long sourceEndpointId, SourceEndpointThesesReplacementRequestDto request) {
 
-    Objects.requireNonNull(chairId, "chairId must not be null");
+    Objects.requireNonNull(sourceEndpointId, "sourceEndpointId must not be null");
     Objects.requireNonNull(request, "request payload must not be null");
 
     int candidateCount = request.getTheses() == null ? 0 : request.getTheses().size();
 
     log.info(
-        "Executing Scrape Ingestion Pipeline for chairId: {}. Candidate count: {}",
-        chairId,
+        "Executing Scrape Ingestion Pipeline for sourceEndpointId: {}. Candidate count: {}",
+        sourceEndpointId,
         candidateCount);
 
     // 1. Transactional Database Update (Relational)
     IngestionResult ingestionResult =
-        thesisManagementService.replaceThesesInDatabase(chairId, request);
+        thesisManagementService.replaceThesesInDatabase(sourceEndpointId, request);
     List<ThesisProposal> persistentTheses = ingestionResult.persistentTheses();
 
     // 2. Prepare Vector Search replacement request
-    ReplaceChairVectorsRequestDto vectorRequest = new ReplaceChairVectorsRequestDto();
+    ReplaceSourceEndpointVectorsRequestDto vectorRequest = new ReplaceSourceEndpointVectorsRequestDto();
     // ScrapeRunId is now optional and managed by the scraping-service
-    vectorRequest.setScrapeRunId(null);
 
     List<VectorThesisDocumentDto> vectorDocs =
         persistentTheses.stream()
@@ -55,7 +54,8 @@ public class ThesisCoordinationService {
                 entity -> {
                   VectorThesisDocumentDto doc = new VectorThesisDocumentDto();
                   doc.setThesisId(entity.getId());
-                  doc.setChairId(chairId);
+                  doc.setChairId(entity.getChair().getId());
+                  doc.setSourceEndpointId(sourceEndpointId);
                   doc.setTitle(entity.getTitle());
 
                   doc.setDegreeType(entity.getDegreeType());
@@ -90,14 +90,14 @@ public class ThesisCoordinationService {
     int vectorReplacementsCount = 0;
     String vectorSyncError = null;
     try {
-      ReplaceChairVectorsResponseDto vectorResponse =
+      ReplaceSourceEndpointVectorsResponseDto vectorResponse =
           restClient
               .post()
-              .uri("/internal/v1/vector-search-service/chairs/{chairId}/index", chairId)
+              .uri("/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index", sourceEndpointId)
               .contentType(MediaType.APPLICATION_JSON)
               .body(vectorRequest)
               .retrieve()
-              .body(ReplaceChairVectorsResponseDto.class);
+              .body(ReplaceSourceEndpointVectorsResponseDto.class);
 
       if (vectorResponse != null && vectorResponse.getInsertedVectorEntries() != null) {
         vectorReplacementsCount = vectorResponse.getInsertedVectorEntries();
@@ -106,17 +106,16 @@ public class ThesisCoordinationService {
 
     } catch (Exception e) {
       log.error(
-          "CRITICAL: Relational data updated, but vector indexing sync failed for chairId: {}."
+          "CRITICAL: Relational data updated, but vector indexing sync failed for sourceEndpointId: {}."
               + " Reason: {}",
-          chairId,
+          sourceEndpointId,
           e.getMessage());
 
       vectorSyncError = "Vector sync failed: " + e.getMessage();
     }
 
-    ChairThesesReplacementResponseDto response = new ChairThesesReplacementResponseDto();
-    response.setScrapeRunId(null);
-    response.setChairId(chairId);
+    SourceEndpointThesesReplacementResponseDto response = new SourceEndpointThesesReplacementResponseDto();
+    response.setSourceEndpointId(sourceEndpointId);
     response.setInsertedRelationalTheses(persistentTheses.size());
     response.setReplacedVectorEntries(vectorReplacementsCount);
     response.setDeletedRelationalTheses((int) ingestionResult.deletedCount());

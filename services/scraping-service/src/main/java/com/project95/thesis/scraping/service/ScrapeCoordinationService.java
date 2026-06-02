@@ -94,14 +94,10 @@ public class ScrapeCoordinationService {
       OffsetDateTime finishedAt = OffsetDateTime.now(ZoneOffset.UTC);
 
       // Replace Theses
-      ChairThesesReplacementRequestDto requestBody = new ChairThesesReplacementRequestDto();
-      requestBody.setSourceEndpointId(endpoint.getId());
-      requestBody.setStartedAt(startedAt);
-      requestBody.setFinishedAt(finishedAt);
-      requestBody.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
+      SourceEndpointThesesReplacementRequestDto requestBody = new SourceEndpointThesesReplacementRequestDto();
       requestBody.setTheses(genAiResponse.getTheses());
 
-      submitThesesReplacement(endpoint.getChairId(), requestBody);
+      submitThesesReplacement(endpoint.getId(), requestBody);
 
       // Log SUCCESS (Centralized responsibility)
       logScrapeRun(
@@ -156,17 +152,17 @@ public class ScrapeCoordinationService {
     }
   }
 
-  private void submitThesesReplacement(Long chairId, ChairThesesReplacementRequestDto submission) {
+  private void submitThesesReplacement(Long sourceEndpointId, SourceEndpointThesesReplacementRequestDto submission) {
     try {
       thesisServiceClient
           .put()
-          .uri("/internal/v1/thesis-service/chairs/" + chairId + "/theses")
+          .uri("/internal/v1/thesis-service/source-endpoints/" + sourceEndpointId + "/theses")
           .body(submission)
           .retrieve()
           .toBodilessEntity();
-      log.info("Successfully submitted theses replacement for chairId: {}", chairId);
+      log.info("Successfully submitted theses replacement for sourceEndpointId: {}", sourceEndpointId);
     } catch (Exception e) {
-      log.error("Failed to submit theses replacement for chairId: {}", chairId, e);
+      log.error("Failed to submit theses replacement for sourceEndpointId: {}", sourceEndpointId, e);
       if (e instanceof RuntimeException re) throw re;
       throw new RuntimeException("Submission failed", e);
     }

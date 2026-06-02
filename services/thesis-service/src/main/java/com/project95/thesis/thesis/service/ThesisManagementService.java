@@ -3,7 +3,7 @@ package com.project95.thesis.thesis.service;
 import static com.project95.thesis.thesis.utils.Utils.normalize;
 import static com.project95.thesis.thesis.utils.Utils.unwrap;
 
-import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
+import com.project95.thesis.management.dto.SourceEndpointThesesReplacementRequestDto;
 import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.domain.*;
 import com.project95.thesis.thesis.repository.*;
@@ -22,6 +22,7 @@ public class ThesisManagementService {
 
   private final ThesisProposalRepository thesisRepository;
   private final ChairRepository chairRepository;
+  private final SourceEndpointRepository sourceEndpointRepository;
   private final TagRepository tagRepository;
   private final AdvisorRepository advisorRepository;
   private final ResearchAreaRepository researchAreaRepository;
@@ -30,12 +31,14 @@ public class ThesisManagementService {
   public ThesisManagementService(
       ThesisProposalRepository thesisRepository,
       ChairRepository chairRepository,
+      SourceEndpointRepository sourceEndpointRepository,
       TagRepository tagRepository,
       AdvisorRepository advisorRepository,
       ResearchAreaRepository researchAreaRepository,
       EntityLookupService entityLookupService) {
     this.thesisRepository = thesisRepository;
     this.chairRepository = chairRepository;
+    this.sourceEndpointRepository = sourceEndpointRepository;
     this.tagRepository = tagRepository;
     this.advisorRepository = advisorRepository;
     this.researchAreaRepository = researchAreaRepository;
@@ -44,26 +47,27 @@ public class ThesisManagementService {
 
   @Transactional
   public IngestionResult replaceThesesInDatabase(
-      Long chairId, ChairThesesReplacementRequestDto request) {
-    log.info("Starting atomic database replacement transaction for chairId: {}", chairId);
+      Long sourceEndpointId, SourceEndpointThesesReplacementRequestDto request) {
+    log.info("Starting atomic database replacement transaction for sourceEndpointId: {}", sourceEndpointId);
 
-    if (chairId == null) {
-      throw new IllegalArgumentException("chairId must not be null");
+    if (sourceEndpointId == null) {
+      throw new IllegalArgumentException("sourceEndpointId must not be null");
     }
     if (request == null || request.getTheses() == null) {
       throw new IllegalArgumentException("Replacement request and theses list must not be null");
     }
 
-    Chair chair =
-        chairRepository
-            .findById(chairId)
-            .orElseThrow(() -> new IllegalArgumentException("Chair not found with ID: " + chairId));
+    SourceEndpoint sourceEndpoint =
+        sourceEndpointRepository
+            .findById(sourceEndpointId)
+            .orElseThrow(() -> new IllegalArgumentException("SourceEndpoint not found with ID: " + sourceEndpointId));
+    Chair chair = sourceEndpoint.getChair();
 
     // 4. Perform side-effect-heavy shared entity synchronization
     entityLookupService.ensureSharedEntitiesExist(request);
 
     // 5. Atomic deletion and replacement
-    long deletedCount = thesisRepository.deleteByChairId(chairId);
+    long deletedCount = thesisRepository.deleteBySourceEndpointId(sourceEndpointId);
     thesisRepository.flush();
 
     List<ThesisProposal> entityList = new ArrayList<>();
@@ -110,6 +114,7 @@ public class ThesisManagementService {
     for (ThesisProposalInputDto dto : request.getTheses()) {
       ThesisProposal thesis = new ThesisProposal();
       thesis.setChair(chair);
+      thesis.setSourceEndpoint(sourceEndpoint);
 
       String title = normalize(dto.getTitle());
       if (title == null) {

@@ -1,12 +1,12 @@
 package com.project95.thesis.vectorsearch.api;
 
-import com.project95.thesis.vectorsearch.dto.ChairThesesReplacementRequestDto;
-import com.project95.thesis.vectorsearch.dto.ChairThesesReplacementResponseDto;
+import com.project95.thesis.vectorsearch.dto.SourceEndpointThesesReplacementRequestDto;
+import com.project95.thesis.vectorsearch.dto.SourceEndpointThesesReplacementResponseDto;
 import com.project95.thesis.vectorsearch.dto.GenAIExtractionRequestDto;
 import com.project95.thesis.vectorsearch.dto.GenAIExtractionResponseDto;
 import com.project95.thesis.vectorsearch.dto.HealthResponseDto;
-import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsRequestDto;
-import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsResponseDto;
+import com.project95.thesis.vectorsearch.dto.ReplaceSourceEndpointVectorsRequestDto;
+import com.project95.thesis.vectorsearch.dto.ReplaceSourceEndpointVectorsResponseDto;
 import com.project95.thesis.vectorsearch.dto.ScrapeRunLogRequestDto;
 import com.project95.thesis.vectorsearch.dto.ScrapeRunLogResponseDto;
 import com.project95.thesis.vectorsearch.dto.SourceEndpointListResponseDto;
@@ -39,10 +39,10 @@ public class VectorSearchController implements InternalApi {
   }
 
   @Override
-  public ResponseEntity<ReplaceChairVectorsResponseDto> indexChairTheses(
-      Long chairId, ReplaceChairVectorsRequestDto replaceChairVectorsRequest) {
+  public ResponseEntity<ReplaceSourceEndpointVectorsResponseDto> indexChairTheses(
+      Long sourceEndpointId, ReplaceSourceEndpointVectorsRequestDto replaceSourceEndpointVectorsRequest) {
     return ResponseEntity.ok(
-        thesisVectorIndexService.indexChairTheses(chairId, replaceChairVectorsRequest));
+        thesisVectorIndexService.indexChairTheses(sourceEndpointId, replaceSourceEndpointVectorsRequest));
   }
 
   @Override
@@ -68,8 +68,8 @@ public class VectorSearchController implements InternalApi {
   }
 
   @Override
-  public ResponseEntity<ChairThesesReplacementResponseDto> replaceChairTheses(
-      Long chairId, ChairThesesReplacementRequestDto chairThesesReplacementRequest) {
+  public ResponseEntity<SourceEndpointThesesReplacementResponseDto> replaceChairTheses(
+      Long sourceEndpointId, SourceEndpointThesesReplacementRequestDto sourceEndpointThesesReplacementRequest) {
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
   }
 

@@ -4,7 +4,7 @@ import static com.project95.thesis.thesis.utils.Utils.normalize;
 import static com.project95.thesis.thesis.utils.Utils.unwrap;
 
 import com.project95.thesis.management.dto.AdvisorInputDto;
-import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
+import com.project95.thesis.management.dto.SourceEndpointThesesReplacementRequestDto;
 import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.domain.Advisor;
 import com.project95.thesis.thesis.domain.ResearchArea;
@@ -39,7 +39,7 @@ public class EntityLookupService {
    * inserts for improved performance.
    */
   @Transactional
-  public void ensureSharedEntitiesExist(ChairThesesReplacementRequestDto request) {
+  public void ensureSharedEntitiesExist(SourceEndpointThesesReplacementRequestDto request) {
     Set<String> tagNames = new HashSet<>();
     Set<String> areaNames = new HashSet<>();
     Map<String, AdvisorInputDto> advisorByEmail = new HashMap<>();

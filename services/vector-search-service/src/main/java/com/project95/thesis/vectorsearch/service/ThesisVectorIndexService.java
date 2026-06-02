@@ -1,7 +1,7 @@
 package com.project95.thesis.vectorsearch.service;
 
-import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsRequestDto;
-import com.project95.thesis.vectorsearch.dto.ReplaceChairVectorsResponseDto;
+import com.project95.thesis.vectorsearch.dto.ReplaceSourceEndpointVectorsRequestDto;
+import com.project95.thesis.vectorsearch.dto.ReplaceSourceEndpointVectorsResponseDto;
 import com.project95.thesis.vectorsearch.dto.VectorThesisDocumentDto;
 import com.project95.thesis.vectorsearch.util.ThesisVectorDocumentValidator;
 import com.project95.thesis.vectorsearch.util.ThesisVectorMetadata;
@@ -27,31 +27,30 @@ public class ThesisVectorIndexService {
   }
 
   @Transactional
-  public ReplaceChairVectorsResponseDto indexChairTheses(
-      Long chairId, ReplaceChairVectorsRequestDto request) {
-    if (chairId == null) {
-      throw new IllegalArgumentException("chairId must not be null");
+  public ReplaceSourceEndpointVectorsResponseDto indexChairTheses(
+      Long sourceEndpointId, ReplaceSourceEndpointVectorsRequestDto request) {
+    if (sourceEndpointId == null) {
+      throw new IllegalArgumentException("sourceEndpointId must not be null");
     }
     if (request == null || request.getTheses() == null) {
       throw new IllegalArgumentException(
-          "Replace chair vectors request and theses must not be null");
+          "Replace source endpoint vectors request and theses must not be null");
     }
 
     List<VectorThesisDocumentDto> theses = request.getTheses();
     List<Document> documents = new ArrayList<>(theses.size());
     for (VectorThesisDocumentDto thesis : theses) {
-      ThesisVectorDocumentValidator.validateForChair(chairId, thesis);
       documents.add(toDocument(thesis));
     }
 
-    vectorStore.delete(ThesisVectorUtils.chairFilter(chairId));
+    vectorStore.delete(ThesisVectorUtils.sourceEndpointFilter(sourceEndpointId));
 
     if (!documents.isEmpty()) {
       vectorStore.add(documents);
     }
 
     // Spring AI VectorStore#delete(filter) does not expose the number of deleted rows.
-    return new ReplaceChairVectorsResponseDto(chairId, 0, documents.size());
+    return new ReplaceSourceEndpointVectorsResponseDto(sourceEndpointId, 0, documents.size());
   }
 
   private Document toDocument(VectorThesisDocumentDto thesis) {
@@ -84,6 +83,7 @@ public class ThesisVectorIndexService {
     Map<String, Object> metadata = new LinkedHashMap<>();
     metadata.put(ThesisVectorMetadata.THESIS_ID, thesis.getThesisId());
     metadata.put(ThesisVectorMetadata.CHAIR_ID, thesis.getChairId());
+    metadata.put(ThesisVectorMetadata.SOURCE_ENDPOINT_ID, thesis.getSourceEndpointId());
     metadata.put(ThesisVectorMetadata.TITLE, thesis.getTitle());
     ThesisVectorUtils.putIfPresent(
         metadata, ThesisVectorMetadata.DEGREE_TYPE, thesis.getDegreeType());
