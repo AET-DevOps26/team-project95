@@ -6,10 +6,11 @@ import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.*;
 
-import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
+import com.project95.thesis.management.dto.SourceEndpointThesesReplacementRequestDto;
 import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.domain.Chair;
 import com.project95.thesis.thesis.domain.ResearchArea;
+import com.project95.thesis.thesis.domain.SourceEndpoint;
 import com.project95.thesis.thesis.domain.Tag;
 import com.project95.thesis.thesis.repository.*;
 import java.net.URI;
@@ -28,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ThesisManagementServiceTest {
 
   @Mock private ThesisProposalRepository thesisRepository;
+  @Mock private SourceEndpointRepository sourceEndpointRepository;
   @Mock private ChairRepository chairRepository;
   @Mock private TagRepository tagRepository;
   @Mock private AdvisorRepository advisorRepository;
@@ -37,18 +39,22 @@ class ThesisManagementServiceTest {
   @InjectMocks private ThesisManagementService service;
 
   private Chair testChair;
+  private SourceEndpoint testSourceEndpoint;
 
   @BeforeEach
   void setUp() {
     testChair = new Chair();
     testChair.setId(1L);
+    testSourceEndpoint = new SourceEndpoint();
+    testSourceEndpoint.setId(1L);
+    testSourceEndpoint.setChair(testChair);
   }
 
   @Test
   void replaceThesesInDatabase_Success() {
     // Arrange
-    Long chairId = 1L;
-    when(chairRepository.findById(chairId)).thenReturn(Optional.of(testChair));
+    Long sourceEndpointId = 1L;
+    when(sourceEndpointRepository.findById(sourceEndpointId)).thenReturn(Optional.of(testSourceEndpoint));
 
     ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTitle("AI in Medicine");
@@ -56,11 +62,7 @@ class ThesisManagementServiceTest {
     input.setDegreeType("MASTER");
     input.setTags(List.of("AI", "Medicine"));
 
-    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
-    request.setSourceEndpointId(10L);
-    request.setStartedAt(OffsetDateTime.now());
-    request.setFinishedAt(OffsetDateTime.now());
-    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
+    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(input));
 
     Tag tagAi = new Tag("AI");
@@ -69,10 +71,10 @@ class ThesisManagementServiceTest {
 
     // Return the items being saved
     when(thesisRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
-    when(thesisRepository.deleteByChairId(chairId)).thenReturn(0L);
+    when(thesisRepository.deleteBySourceEndpointId(sourceEndpointId)).thenReturn(0L);
 
     // Act
-    IngestionResult result = service.replaceThesesInDatabase(chairId, request);
+    IngestionResult result = service.replaceThesesInDatabase(sourceEndpointId, request);
 
     // Assert
     assertThat(result.persistentTheses()).hasSize(1);
@@ -81,15 +83,15 @@ class ThesisManagementServiceTest {
     assertThat(result.deletedCount()).isZero();
 
     verify(entityLookupService).ensureSharedEntitiesExist(request);
-    verify(thesisRepository).deleteByChairId(chairId);
+    verify(thesisRepository).deleteBySourceEndpointId(sourceEndpointId);
     verify(thesisRepository).saveAll(anyList());
   }
 
   @Test
   void replaceThesesInDatabase_DeDuplicatesTagsAndAreas() {
     // Arrange
-    Long chairId = 1L;
-    when(chairRepository.findById(chairId)).thenReturn(Optional.of(testChair));
+    Long sourceEndpointId = 1L;
+    when(sourceEndpointRepository.findById(sourceEndpointId)).thenReturn(Optional.of(testSourceEndpoint));
 
     ThesisProposalInputDto input1 = new ThesisProposalInputDto();
     input1.setTitle(" T1 "); // Add whitespace to test normalization
@@ -103,11 +105,7 @@ class ThesisManagementServiceTest {
     input2.setTags(List.of("SharedTag"));
     input2.setResearchArea("SharedArea");
 
-    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
-    request.setSourceEndpointId(10L);
-    request.setStartedAt(OffsetDateTime.now());
-    request.setFinishedAt(OffsetDateTime.now());
-    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
+    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(input1, input2));
 
     Tag sharedTag = new Tag("SharedTag");
@@ -117,10 +115,10 @@ class ThesisManagementServiceTest {
     when(researchAreaRepository.findAllByNameIn(anySet())).thenReturn(List.of(sharedArea));
     when(thesisRepository.saveAll(anyList())).thenAnswer(i -> i.getArgument(0));
 
-    when(thesisRepository.deleteByChairId(chairId)).thenReturn(5L);
+    when(thesisRepository.deleteBySourceEndpointId(sourceEndpointId)).thenReturn(5L);
 
     // Act
-    IngestionResult result = service.replaceThesesInDatabase(chairId, request);
+    IngestionResult result = service.replaceThesesInDatabase(sourceEndpointId, request);
 
     // Assert
     assertThat(result.persistentTheses()).hasSize(2);
@@ -138,25 +136,21 @@ class ThesisManagementServiceTest {
   }
 
   @Test
-  void replaceThesesInDatabase_ThrowsIfChairNotFound() {
+  void replaceThesesInDatabase_ThrowsIfSourceEndpointNotFound() {
     // Arrange
-    Long chairId = 99L;
-    when(chairRepository.findById(chairId)).thenReturn(Optional.empty());
+    Long sourceEndpointId = 99L;
+    when(sourceEndpointRepository.findById(sourceEndpointId)).thenReturn(Optional.empty());
 
     ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTitle("Valid Title");
     input.setSourceUrl(URI.create("http://example.com"));
 
-    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
-    request.setSourceEndpointId(10L);
-    request.setStartedAt(OffsetDateTime.now());
-    request.setFinishedAt(OffsetDateTime.now());
-    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
+    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(input));
 
     // Act & Assert
     assertThrows(
-        IllegalArgumentException.class, () -> service.replaceThesesInDatabase(chairId, request));
-    verify(thesisRepository, never()).deleteByChairId(any());
+        IllegalArgumentException.class, () -> service.replaceThesesInDatabase(sourceEndpointId, request));
+    verify(thesisRepository, never()).deleteBySourceEndpointId(any());
   }
 }

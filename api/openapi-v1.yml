@@ -322,7 +322,7 @@ paths:
         1. Delete all existing vector index entries belonging to `chairId`.
         2. Generate embeddings for the provided theses.
         3. Insert the new vector index entries.
-      operationId: indexChairTheses
+      operationId: indexSourceEndpointTheses
       parameters:
         - $ref: '#/components/parameters/SourceEndpointId'
       requestBody:

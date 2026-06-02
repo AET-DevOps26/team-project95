@@ -61,7 +61,7 @@ class ScrapeCoordinationServiceTest {
 
     // 4. Mock the final submission PUT request back to the Main Thesis Service
     mockServer
-        .expect(requestTo("/internal/v1/thesis-service/chairs/10/theses"))
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints/1/theses"))
         .andExpect(method(HttpMethod.PUT))
         .andRespond(withSuccess());
 

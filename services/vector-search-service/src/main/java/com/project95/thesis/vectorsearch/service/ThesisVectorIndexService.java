@@ -27,7 +27,7 @@ public class ThesisVectorIndexService {
   }
 
   @Transactional
-  public ReplaceSourceEndpointVectorsResponseDto indexChairTheses(
+  public ReplaceSourceEndpointVectorsResponseDto indexSourceEndpointTheses(
       Long sourceEndpointId, ReplaceSourceEndpointVectorsRequestDto request) {
     if (sourceEndpointId == null) {
       throw new IllegalArgumentException("sourceEndpointId must not be null");

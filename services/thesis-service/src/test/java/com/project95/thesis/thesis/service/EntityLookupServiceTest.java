@@ -4,7 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 import com.project95.thesis.management.dto.AdvisorInputDto;
-import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
+import com.project95.thesis.management.dto.SourceEndpointThesesReplacementRequestDto;
 import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.repository.AdvisorRepository;
 import com.project95.thesis.thesis.repository.ResearchAreaRepository;
@@ -29,7 +29,7 @@ class EntityLookupServiceTest {
   @Test
   void ensureSharedEntitiesExist_SavesNewEntities() {
     // Arrange
-    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
     ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTags(List.of("T1"));
     input.setResearchArea("A1");

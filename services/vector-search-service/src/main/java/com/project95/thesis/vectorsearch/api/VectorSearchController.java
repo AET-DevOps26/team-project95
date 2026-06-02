@@ -39,10 +39,10 @@ public class VectorSearchController implements InternalApi {
   }
 
   @Override
-  public ResponseEntity<ReplaceSourceEndpointVectorsResponseDto> indexChairTheses(
+  public ResponseEntity<ReplaceSourceEndpointVectorsResponseDto> indexSourceEndpointTheses(
       Long sourceEndpointId, ReplaceSourceEndpointVectorsRequestDto replaceSourceEndpointVectorsRequest) {
     return ResponseEntity.ok(
-        thesisVectorIndexService.indexChairTheses(sourceEndpointId, replaceSourceEndpointVectorsRequest));
+        thesisVectorIndexService.indexSourceEndpointTheses(sourceEndpointId, replaceSourceEndpointVectorsRequest));
   }
 
   @Override

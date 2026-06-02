@@ -8,8 +8,8 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import com.project95.thesis.management.dto.ChairThesesReplacementRequestDto;
-import com.project95.thesis.management.dto.ChairThesesReplacementResponseDto;
+import com.project95.thesis.management.dto.SourceEndpointThesesReplacementRequestDto;
+import com.project95.thesis.management.dto.SourceEndpointThesesReplacementResponseDto;
 import com.project95.thesis.thesis.domain.ThesisProposal;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,31 +41,37 @@ class ThesisCoordinationServiceTest {
   @Test
   void executeScrapeIngestionPipeline_CallsVectorService() {
     // Arrange
-    Long chairId = 1L;
-    ChairThesesReplacementRequestDto request = new ChairThesesReplacementRequestDto();
-    request.setSourceEndpointId(10L);
-    request.setStatus(ChairThesesReplacementRequestDto.StatusEnum.SUCCESS);
+    Long sourceEndpointId = 1L;
+    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+
+    com.project95.thesis.thesis.domain.Chair chair = new com.project95.thesis.thesis.domain.Chair();
+    chair.setId(sourceEndpointId);
 
     ThesisProposal persistentThesis = new ThesisProposal();
     persistentThesis.setId(100L);
     persistentThesis.setTitle("Vector Sync Test");
+    persistentThesis.setChair(chair);
+
+    com.project95.thesis.thesis.domain.SourceEndpoint endpoint = new com.project95.thesis.thesis.domain.SourceEndpoint();
+    endpoint.setId(sourceEndpointId);
+    persistentThesis.setSourceEndpoint(endpoint);
 
     IngestionResult ingestionResult = new IngestionResult(List.of(persistentThesis), 12L);
 
-    when(thesisManagementService.replaceThesesInDatabase(eq(chairId), any()))
+    when(thesisManagementService.replaceThesesInDatabase(eq(sourceEndpointId), any()))
         .thenReturn(ingestionResult);
 
     String vectorResponseJson =
         "{\"chairId\":1,\"insertedVectorEntries\":1,\"deletedVectorEntries\":0}";
 
     mockServer
-        .expect(requestTo("http://vector-service/internal/v1/vector-search-service/chairs/1/index"))
+        .expect(requestTo("http://vector-service/internal/v1/vector-search-service/source-endpoints/1/index"))
         .andExpect(method(HttpMethod.POST))
         .andRespond(withSuccess(vectorResponseJson, MediaType.APPLICATION_JSON));
 
     // Act
-    ChairThesesReplacementResponseDto response =
-        service.executeScrapeIngestionPipeline(chairId, request);
+    SourceEndpointThesesReplacementResponseDto response =
+        service.executeScrapeIngestionPipeline(sourceEndpointId, request);
 
     // Assert
     assertThat(response.getInsertedRelationalTheses()).isEqualTo(1);
@@ -73,3 +79,4 @@ class ThesisCoordinationServiceTest {
     mockServer.verify();
   }
 }
+
