@@ -53,7 +53,9 @@ CREATE TABLE thesis_proposals (
     status VARCHAR(255) NOT NULL DEFAULT 'OPEN',
     last_seen_at TIMESTAMPTZ,
     chair_id BIGINT NOT NULL,
-    CONSTRAINT fk_thesis_proposals_chair FOREIGN KEY (chair_id) REFERENCES chairs(id) ON DELETE CASCADE
+    source_endpoint_id BIGINT NOT NULL,
+    CONSTRAINT fk_thesis_proposals_chair FOREIGN KEY (chair_id) REFERENCES chairs(id) ON DELETE CASCADE,
+    CONSTRAINT fk_thesis_proposals_source_endpoint FOREIGN KEY (source_endpoint_id) REFERENCES source_endpoints(id) ON DELETE CASCADE
 );
 
 -- Join Table: Thesis Proposal <-> Advisors
@@ -97,4 +99,3 @@ CREATE INDEX idx_tpt_tag_id ON thesis_proposal_tags(tag_id);
 
 CREATE INDEX idx_tpra_proposal_id ON thesis_proposal_research_areas(thesis_proposal_id);
 CREATE INDEX idx_tpra_research_area_id ON thesis_proposal_research_areas(research_area_id);
-X idx_tpra_research_area_id ON thesis_proposal_research_areas(research_area_id);

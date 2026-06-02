@@ -14,7 +14,6 @@ import com.project95.thesis.thesis.domain.SourceEndpoint;
 import com.project95.thesis.thesis.domain.Tag;
 import com.project95.thesis.thesis.repository.*;
 import java.net.URI;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -54,7 +53,8 @@ class ThesisManagementServiceTest {
   void replaceThesesInDatabase_Success() {
     // Arrange
     Long sourceEndpointId = 1L;
-    when(sourceEndpointRepository.findById(sourceEndpointId)).thenReturn(Optional.of(testSourceEndpoint));
+    when(sourceEndpointRepository.findById(sourceEndpointId))
+        .thenReturn(Optional.of(testSourceEndpoint));
 
     ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTitle("AI in Medicine");
@@ -62,7 +62,8 @@ class ThesisManagementServiceTest {
     input.setDegreeType("MASTER");
     input.setTags(List.of("AI", "Medicine"));
 
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(input));
 
     Tag tagAi = new Tag("AI");
@@ -91,7 +92,8 @@ class ThesisManagementServiceTest {
   void replaceThesesInDatabase_DeDuplicatesTagsAndAreas() {
     // Arrange
     Long sourceEndpointId = 1L;
-    when(sourceEndpointRepository.findById(sourceEndpointId)).thenReturn(Optional.of(testSourceEndpoint));
+    when(sourceEndpointRepository.findById(sourceEndpointId))
+        .thenReturn(Optional.of(testSourceEndpoint));
 
     ThesisProposalInputDto input1 = new ThesisProposalInputDto();
     input1.setTitle(" T1 "); // Add whitespace to test normalization
@@ -105,7 +107,8 @@ class ThesisManagementServiceTest {
     input2.setTags(List.of("SharedTag"));
     input2.setResearchArea("SharedArea");
 
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(input1, input2));
 
     Tag sharedTag = new Tag("SharedTag");
@@ -145,12 +148,15 @@ class ThesisManagementServiceTest {
     input.setTitle("Valid Title");
     input.setSourceUrl(URI.create("http://example.com"));
 
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(input));
 
     // Act & Assert
     assertThrows(
-        IllegalArgumentException.class, () -> service.replaceThesesInDatabase(sourceEndpointId, request));
+        IllegalArgumentException.class,
+        () -> service.replaceThesesInDatabase(sourceEndpointId, request));
     verify(thesisRepository, never()).deleteBySourceEndpointId(any());
   }
 }
+

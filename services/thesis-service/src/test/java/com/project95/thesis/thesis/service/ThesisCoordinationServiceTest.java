@@ -42,7 +42,8 @@ class ThesisCoordinationServiceTest {
   void executeScrapeIngestionPipeline_CallsVectorService() {
     // Arrange
     Long sourceEndpointId = 1L;
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
 
     com.project95.thesis.thesis.domain.Chair chair = new com.project95.thesis.thesis.domain.Chair();
     chair.setId(sourceEndpointId);
@@ -52,7 +53,8 @@ class ThesisCoordinationServiceTest {
     persistentThesis.setTitle("Vector Sync Test");
     persistentThesis.setChair(chair);
 
-    com.project95.thesis.thesis.domain.SourceEndpoint endpoint = new com.project95.thesis.thesis.domain.SourceEndpoint();
+    com.project95.thesis.thesis.domain.SourceEndpoint endpoint =
+        new com.project95.thesis.thesis.domain.SourceEndpoint();
     endpoint.setId(sourceEndpointId);
     persistentThesis.setSourceEndpoint(endpoint);
 
@@ -65,7 +67,9 @@ class ThesisCoordinationServiceTest {
         "{\"chairId\":1,\"insertedVectorEntries\":1,\"deletedVectorEntries\":0}";
 
     mockServer
-        .expect(requestTo("http://vector-service/internal/v1/vector-search-service/source-endpoints/1/index"))
+        .expect(
+            requestTo(
+                "http://vector-service/internal/v1/vector-search-service/source-endpoints/1/index"))
         .andExpect(method(HttpMethod.POST))
         .andRespond(withSuccess(vectorResponseJson, MediaType.APPLICATION_JSON));
 
@@ -79,4 +83,3 @@ class ThesisCoordinationServiceTest {
     mockServer.verify();
   }
 }
-

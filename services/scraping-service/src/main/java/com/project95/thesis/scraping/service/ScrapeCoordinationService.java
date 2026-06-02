@@ -94,7 +94,8 @@ public class ScrapeCoordinationService {
       OffsetDateTime finishedAt = OffsetDateTime.now(ZoneOffset.UTC);
 
       // Replace Theses
-      SourceEndpointThesesReplacementRequestDto requestBody = new SourceEndpointThesesReplacementRequestDto();
+      SourceEndpointThesesReplacementRequestDto requestBody =
+          new SourceEndpointThesesReplacementRequestDto();
       requestBody.setTheses(genAiResponse.getTheses());
 
       submitThesesReplacement(endpoint.getId(), requestBody);
@@ -152,7 +153,8 @@ public class ScrapeCoordinationService {
     }
   }
 
-  private void submitThesesReplacement(Long sourceEndpointId, SourceEndpointThesesReplacementRequestDto submission) {
+  private void submitThesesReplacement(
+      Long sourceEndpointId, SourceEndpointThesesReplacementRequestDto submission) {
     try {
       thesisServiceClient
           .put()
@@ -160,9 +162,11 @@ public class ScrapeCoordinationService {
           .body(submission)
           .retrieve()
           .toBodilessEntity();
-      log.info("Successfully submitted theses replacement for sourceEndpointId: {}", sourceEndpointId);
+      log.info(
+          "Successfully submitted theses replacement for sourceEndpointId: {}", sourceEndpointId);
     } catch (Exception e) {
-      log.error("Failed to submit theses replacement for sourceEndpointId: {}", sourceEndpointId, e);
+      log.error(
+          "Failed to submit theses replacement for sourceEndpointId: {}", sourceEndpointId, e);
       if (e instanceof RuntimeException re) throw re;
       throw new RuntimeException("Submission failed", e);
     }

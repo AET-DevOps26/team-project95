@@ -48,7 +48,9 @@ public class ThesisManagementService {
   @Transactional
   public IngestionResult replaceThesesInDatabase(
       Long sourceEndpointId, SourceEndpointThesesReplacementRequestDto request) {
-    log.info("Starting atomic database replacement transaction for sourceEndpointId: {}", sourceEndpointId);
+    log.info(
+        "Starting atomic database replacement transaction for sourceEndpointId: {}",
+        sourceEndpointId);
 
     if (sourceEndpointId == null) {
       throw new IllegalArgumentException("sourceEndpointId must not be null");
@@ -60,7 +62,10 @@ public class ThesisManagementService {
     SourceEndpoint sourceEndpoint =
         sourceEndpointRepository
             .findById(sourceEndpointId)
-            .orElseThrow(() -> new IllegalArgumentException("SourceEndpoint not found with ID: " + sourceEndpointId));
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "SourceEndpoint not found with ID: " + sourceEndpointId));
     Chair chair = sourceEndpoint.getChair();
 
     // 4. Perform side-effect-heavy shared entity synchronization

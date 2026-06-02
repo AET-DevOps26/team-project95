@@ -45,7 +45,8 @@ public class ThesisCoordinationService {
     List<ThesisProposal> persistentTheses = ingestionResult.persistentTheses();
 
     // 2. Prepare Vector Search replacement request
-    ReplaceSourceEndpointVectorsRequestDto vectorRequest = new ReplaceSourceEndpointVectorsRequestDto();
+    ReplaceSourceEndpointVectorsRequestDto vectorRequest =
+        new ReplaceSourceEndpointVectorsRequestDto();
     // ScrapeRunId is now optional and managed by the scraping-service
 
     List<VectorThesisDocumentDto> vectorDocs =
@@ -93,7 +94,9 @@ public class ThesisCoordinationService {
       ReplaceSourceEndpointVectorsResponseDto vectorResponse =
           restClient
               .post()
-              .uri("/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index", sourceEndpointId)
+              .uri(
+                  "/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index",
+                  sourceEndpointId)
               .contentType(MediaType.APPLICATION_JSON)
               .body(vectorRequest)
               .retrieve()
@@ -106,15 +109,16 @@ public class ThesisCoordinationService {
 
     } catch (Exception e) {
       log.error(
-          "CRITICAL: Relational data updated, but vector indexing sync failed for sourceEndpointId: {}."
-              + " Reason: {}",
+          "CRITICAL: Relational data updated, but vector indexing sync failed for sourceEndpointId:"
+              + " {}. Reason: {}",
           sourceEndpointId,
           e.getMessage());
 
       vectorSyncError = "Vector sync failed: " + e.getMessage();
     }
 
-    SourceEndpointThesesReplacementResponseDto response = new SourceEndpointThesesReplacementResponseDto();
+    SourceEndpointThesesReplacementResponseDto response =
+        new SourceEndpointThesesReplacementResponseDto();
     response.setSourceEndpointId(sourceEndpointId);
     response.setInsertedRelationalTheses(persistentTheses.size());
     response.setReplacedVectorEntries(vectorReplacementsCount);

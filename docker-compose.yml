@@ -36,8 +36,8 @@ services:
       - "8082:8082"
     environment:
       # Azure OpenAI embedding settings.
-      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
-      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-}
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-https://api.openai.com}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-dummy-key}
       AZURE_OPENAI_EMBEDDING_DEPLOYMENT: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-text-embedding-ada-002}
       AZURE_OPENAI_EMBEDDING_MODEL: ${AZURE_OPENAI_EMBEDDING_MODEL:-text-embedding-ada-002}
       PGVECTOR_DIMENSIONS: ${PGVECTOR_DIMENSIONS:-1536}
@@ -100,13 +100,6 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
-      timeout: 5s
-      retries: 5
-
-volumes:
-  postgres_data:
-  vector_postgres_data:
- 5s
       timeout: 5s
       retries: 5
 

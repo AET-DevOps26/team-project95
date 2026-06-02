@@ -29,7 +29,8 @@ class EntityLookupServiceTest {
   @Test
   void ensureSharedEntitiesExist_SavesNewEntities() {
     // Arrange
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
     ThesisProposalInputDto input = new ThesisProposalInputDto();
     input.setTags(List.of("T1"));
     input.setResearchArea("A1");
