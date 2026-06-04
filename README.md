@@ -71,8 +71,6 @@ For local development, most variables have defaults in `docker-compose.yml`.
 │   └── openapi-v1.yml                 # Shared OpenAPI contract
 ├── docs/
 │   ├── architecture.md                # High-level architecture
-│   ├── vector-search-*.md             # Vector search notes and implementation docs
-│   └── project-best-practices.md
 ├── services/
 │   ├── pom.xml                        # Maven parent project
 │   ├── thesis-service/                # Main backend and relational data owner
@@ -247,15 +245,6 @@ Initial user stories include:
 6. As a student, I want to see why a thesis matches my query.
 
 Future work and next steps should be tracked as backlog tickets.
-
-## Documentation
-
-Additional documentation:
-
-- [`docs/architecture.md`](docs/architecture.md)
-- [`docs/vector-search-implementation.md`](docs/vector-search-implementation.md)
-- [`docs/vector-search-azure-deployment.md`](docs/vector-search-azure-deployment.md)
-- [`docs/project-best-practices.md`](docs/project-best-practices.md)
 
 ## Notes for Contributors
 

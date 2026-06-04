@@ -13,9 +13,9 @@ Coming up with an idea for a thesis or partnering up with industry are by far th
 Essentially, PhD candidates at TUM's chairs are naturally taking on a very complex and/or vast research topic. For this reason, many thesis proposals are connected to ongoing research projects at TUM chairs. Researchers often publish thesis topics to **involve students** in specific subproblems, implementations, experiments, or literature studies related to their research area.
 
 In order to find helpers, PhD candidates post about  "open thesis" topics on **their chair's websites**.  This creates an **information gap** that the proposed platform aims to address.
-- Chair's websites do not have to follow a specific structure $\rightarrow$ harder to find where to look;
+- Chair's websites do not have to follow a specific structure -> harder to find where to look;
 - Varying levels of description about the open theses' topic;
-- Chair's websites are not in evidence $\rightarrow$ interesting topics can be missed/overlooked;
+- Chair's websites are not in evidence -> interesting topics can be missed/overlooked;
 - Even with dedication, navigating through all possible chair's websites and finding where open theses are listed is massively time consuming and frustrating;
 
 ### Platform's main functionality
@@ -26,9 +26,9 @@ Users who access the web-platform have access to all latest open theses, as they
 
 The platform offers **two** different methods of search:
 - Traditional filtering:
-		$\rightarrow$ Degree Type
-		$\rightarrow$ Research Area
-		$\rightarrow$ Keywords
+		- Degree Type
+		- Research Area
+		- Keywords
 - Usage of natural language to describe the type of thesis they look for.
 
 ### Intended Users
@@ -162,4 +162,3 @@ This helps students compare thesis topics more quickly and decide which ones the
 |   4 | As a **student**, I want to **describe my thesis interests in natural language**, so that I can find relevant topics even if I do not know the exact keywords or chair names.            |
 |   5 | As a **student**, I want to **see AI-generated thesis overviews**, so that I can quickly understand and compare thesis topics without reading long descriptions first.                   |
 |   6 | As a **student**, I want to **see why a thesis matches my natural-language query**, so that I can better understand the search results and decide whether the topic is relevant.         |
-|   7 | As an **administrator**, I want to **manage the list of chair websites used for scraping**, so that new sources can be added and outdated sources can be removed.                        |
