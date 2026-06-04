@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import styles from '../style/HomePage.module.css';
 import xIcon from '/assets/icons/x.svg';
 
@@ -17,6 +17,9 @@ interface FilterDropdownProps {
 export default function FilterDropdown({ label, values, options, onChange }: FilterDropdownProps) {
   const [query, setQuery] = useState('');
   const [isOpen, setIsOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const outsidePointerStartRef = useRef<{ x: number; y: number } | null>(null);
   const selectedCount = values.length;
   const menuId = useId();
   const placeholderText =
@@ -32,6 +35,26 @@ export default function FilterDropdown({ label, values, options, onChange }: Fil
     return options.filter((option) => option.label.toLowerCase().includes(normalizedQuery));
   }, [options, query]);
 
+  const closeDropdown = () => {
+    setIsOpen(false);
+    setQuery('');
+  };
+
+  const openDropdown = () => {
+    setIsOpen(true);
+
+    if (window.matchMedia('(max-width: 700px)').matches) {
+      window.setTimeout(() => wrapperRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 80);
+      window.setTimeout(() => wrapperRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' }), 320);
+    }
+  };
+
+  const blurInputOnTouch = () => {
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      inputRef.current?.blur();
+    }
+  };
+
   const toggleSelection = (optionValue: string) => {
     if (values.includes(optionValue)) {
       onChange(values.filter((value) => value !== optionValue));
@@ -41,11 +64,55 @@ export default function FilterDropdown({ label, values, options, onChange }: Fil
     onChange([...values, optionValue]);
   };
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (wrapperRef.current?.contains(event.target as Node)) {
+        outsidePointerStartRef.current = null;
+        return;
+      }
+
+      outsidePointerStartRef.current = { x: event.clientX, y: event.clientY };
+    };
+
+    const handlePointerUp = (event: PointerEvent) => {
+      const pointerStart = outsidePointerStartRef.current;
+      outsidePointerStartRef.current = null;
+
+      if (!pointerStart || wrapperRef.current?.contains(event.target as Node)) {
+        return;
+      }
+
+      const deltaX = Math.abs(event.clientX - pointerStart.x);
+      const deltaY = Math.abs(event.clientY - pointerStart.y);
+      const isTap = deltaX < 8 && deltaY < 8;
+
+      if (isTap) {
+        closeDropdown();
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('pointerup', handlePointerUp);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [isOpen]);
+
   return (
-    <label className={styles.filterBox}>
+    <div
+      ref={wrapperRef}
+      className={`${styles.filterBox} ${isOpen ? styles.filterBoxOpen : ''}`}
+    >
       <span className={styles.filterLabel}>{label}</span>
       <div className={styles.filterSearchWrapper}>
         <input
+          ref={inputRef}
           className={`${styles.filterInput} ${selectedCount > 0 ? styles.filterInputSelected : ''}`}
           type="text"
           value={query}
@@ -53,16 +120,10 @@ export default function FilterDropdown({ label, values, options, onChange }: Fil
           aria-label={`${label} filter search`}
           aria-expanded={isOpen}
           aria-controls={menuId}
-          onFocus={() => setIsOpen(true)}
-          onBlur={() => {
-            setTimeout(() => {
-              setIsOpen(false);
-              setQuery('');
-            }, 120);
-          }}
+          onFocus={openDropdown}
           onChange={(event) => {
             setQuery(event.target.value);
-            setIsOpen(true);
+            openDropdown();
           }}
         />
 
@@ -76,8 +137,13 @@ export default function FilterDropdown({ label, values, options, onChange }: Fil
                   <button
                     className={`${styles.filterMenuItem} ${isSelected ? styles.filterMenuItemSelected : ''}`}
                     type="button"
-                    onMouseDown={(event) => event.preventDefault()}
-                    onClick={() => toggleSelection(option.value)}
+                    onMouseDown={(event) => {
+                      event.preventDefault();
+                    }}
+                    onClick={() => {
+                      toggleSelection(option.value);
+                      blurInputOnTouch();
+                    }}
                   >
                     <span>{option.label}</span>
                     {isSelected && (
@@ -93,6 +159,6 @@ export default function FilterDropdown({ label, values, options, onChange }: Fil
           </ul>
         )}
       </div>
-    </label>
+    </div>
   );
 }

@@ -493,6 +493,7 @@
   background: linear-gradient(135deg, #fbfdff 0%, #f0f6ff 52%, #e8f1ff 100%);
   padding: 24px;
   position: relative;
+  z-index: 50;
   box-shadow: 0 14px 36px rgba(42, 70, 126, 0.07);
 }
 
@@ -562,14 +563,18 @@
   justify-content: center;
   gap: 8px;
   padding: 10px 14px;
+  position: relative;
+  z-index: 1;
   font-size: 16px;
   color: #2f4066;
   background: linear-gradient(180deg, #fbfdff 0%, #f5f9ff 100%);
   transition: transform var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
 }
 
-.filterBox:focus-within {
+.filterBox:focus-within,
+.filterBoxOpen {
   transform: translateY(-1px);
+  z-index: 60;
   border-color: var(--color-border-strong);
   box-shadow: 0 10px 22px rgba(42, 70, 126, 0.09);
 }
@@ -623,9 +628,11 @@
   position: absolute;
   left: 0;
   right: 0;
-  z-index: 2000;
+  z-index: 10000;
   max-height: 220px;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   border: 1px solid #d2e0f5;
   border-radius: var(--radius-md);
   background: #fbfdff;
@@ -924,7 +931,14 @@
   .filtersGrid,
   .resultsGrid { grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
   .resultsHeader { align-items: flex-start; flex-direction: column; }
-  .filterBox { min-height: 62px; }
+  .filterBox {
+    min-height: 62px;
+    scroll-margin-top: 72px;
+  }
+
+  .filterMenu {
+    max-height: min(220px, 42vh);
+  }
   .emptyState { margin-top: 16px; padding: 30px 12px; border-radius: 10px; }
   .emptyTitle { font-size: 30px; }
   .emptyText { font-size: 16px; }
