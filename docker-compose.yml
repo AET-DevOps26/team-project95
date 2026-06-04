@@ -26,7 +26,16 @@ services:
     ports:
       - "8081:8081"
     environment:
+      APP_SERVICES_MAIN_THESIS: ${APP_SERVICES_MAIN_THESIS:-http://thesis-service:8080}
       APP_SERVICES_GENAI: ${APP_SERVICES_GENAI:-http://genai-service:8000}
+      CLIENT_CONNECT_TIMEOUT: ${CLIENT_CONNECT_TIMEOUT:-4000}
+      CLIENT_READ_TIMEOUT: ${CLIENT_READ_TIMEOUT:-300000}
+
+    depends_on:
+      thesis-service:
+        condition: service_started
+      genai-service:
+        condition: service_started
 
   vector-search-service:
     build:
