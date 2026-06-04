@@ -1,169 +1,273 @@
-# *Problem Statement*
+# Open Thesis Radar / ThesisHub
+
+A thesis-discovery platform for TUM students. Open Thesis Radar centralizes open thesis proposals from chair websites, enriches them with GenAI-powered extraction and summaries, and supports both filter-based and natural-language semantic search.
+
+> TUM DevOps Project 2026 · Team Project 95
+
+## Quick Start
+
+```bash
+# clone the repository
+git clone <repository-url>
+cd team-project95
+
+# optional: create local environment file
+cp .env.example .env  # if available, otherwise create .env manually
+
+# start the full local stack
+docker compose up --build
+```
+
+Local URLs:
+
+- Frontend: http://localhost:3000
+- Thesis Service: http://localhost:8080
+- Scraping Service: http://localhost:8081
+- Vector Search Service: http://localhost:8082
+- GenAI Service: http://localhost:8000
+- PostgreSQL thesis database: localhost:5432
+- PostgreSQL vector database: localhost:5433
+
+## Installation
+
+Prerequisites:
+
+- Git
+- Docker
+- Docker Compose
+- Java 25, if running Spring services outside Docker
+- Maven, if running Spring services outside Docker
+- Python 3.11+, if running the GenAI service outside Docker
+- Node.js and npm, if running the frontend outside Docker
+
+### Environment Variables
+
+Important environment variables include:
+
+| Variable                            | Purpose                                        |
+| ----------------------------------- | ---------------------------------------------- |
+| `OPENAI_API_KEY`                    | OpenAI API key used by the GenAI service       |
+| `GENAI_MODEL_PROVIDER`              | `openai` or `ollama`                           |
+| `GENAI_MODEL_NAME`                  | Model used for thesis extraction and summaries |
+| `OLLAMA_BASE_URL`                   | Ollama endpoint when using local models        |
+| `THESIS_DB_NAME`                    | Thesis PostgreSQL database name                |
+| `THESIS_DB_USER`                    | Thesis PostgreSQL user                         |
+| `THESIS_DB_PASSWORD`                | Thesis PostgreSQL password                     |
+| `VECTOR_DB_NAME`                    | Vector PostgreSQL database name                |
+| `VECTOR_DB_USER`                    | Vector PostgreSQL user                         |
+| `VECTOR_DB_PASSWORD`                | Vector PostgreSQL password                     |
+| `AZURE_OPENAI_ENDPOINT`             | Embedding provider endpoint for vector search  |
+| `AZURE_OPENAI_API_KEY`              | API key for embeddings                         |
+| `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` | Embedding deployment name                      |
+| `PGVECTOR_DIMENSIONS`               | Embedding vector dimensions                    |
+
+For local development, most variables have defaults in `docker-compose.yml`.
+
+## Project Structure
+
+```text
+.
+├── api/
+│   └── openapi-v1.yml                 # Shared OpenAPI contract
+├── docs/
+│   ├── architecture.md                # High-level architecture
+│   ├── vector-search-*.md             # Vector search notes and implementation docs
+│   └── project-best-practices.md
+├── services/
+│   ├── pom.xml                        # Maven parent project
+│   ├── thesis-service/                # Main backend and relational data owner
+│   ├── scraping-service/              # Fetches chair pages and coordinates extraction
+│   ├── vector-search-service/         # Semantic search and thesis embeddings
+│   └── genai-service/                 # FastAPI + LangChain extraction service
+├── user_interface/
+│   └── open-thesis-radar/             # React + TypeScript + Vite frontend
+├── scripts/
+├── docker-compose.yml                 # Local development stack
+└── README.md
+```
+
+## Architecture Overview
+
+Open Thesis Radar is implemented as a microservice-based system.
+
+| Component             | Technology                       | Responsibility                                                                |
+| --------------------- | -------------------------------- | ----------------------------------------------------------------------------- |
+| Frontend              | React, TypeScript, Vite          | User interface for browsing, filtering, searching, and viewing thesis details |
+| Thesis Service        | Spring Boot, PostgreSQL          | Main API, thesis storage, filters, detail pages, scrape result ingestion      |
+| Scraping Service      | Spring Boot                      | Fetches chair/source pages and sends raw content to the GenAI service         |
+| GenAI Service         | FastAPI, LangChain               | Extracts structured thesis data from raw HTML/text and generates summaries    |
+| Vector Search Service | Spring Boot, Spring AI, pgvector | Creates and queries embeddings for semantic thesis search                     |
+| PostgreSQL            | PostgreSQL / pgvector            | Relational thesis data and vector storage                                     |
+
+Main data flow:
 
-At the Technical University of Munich (TUM), Bachelor's and Master's students must write a final thesis at the end of the course in order to graduate. A thesis topic can be realized in three ways:
+1. The frontend queries the Thesis Service for thesis search, filtering, and detail views.
+2. The Scraping Service requests source endpoints from the Thesis Service.
+3. The Scraping Service downloads chair pages.
+4. Raw page content is sent to the GenAI Service.
+5. The GenAI Service returns structured thesis proposals.
+6. The Scraping Service submits extracted theses to the Thesis Service.
+7. The Thesis Service stores the relational data and coordinates vector reindexing.
+8. Natural-language search is delegated to the Vector Search Service.
 
-- Students get accepted to take on an open thesis;
-- Students come up with their own idea for a thesis;
-- Students partner up with industry for a thesis;
+For more details, see [`docs/architecture.md`](docs/architecture.md).
 
-The common denominator for all these options is that a TUM chair must supervise the thesis, which implies that the specific thesis **must** be aligned with the interest of the specific chair, as the chair not only grades the work, but also provides an advisor (usually PhD candidate at the chair) to assist the student. 
+## API Contract
 
-Coming up with an idea for a thesis or partnering up with industry are by far the most unlikely scenarios, especially when it comes to a chair agreeing to supervise it. Therefore, applying for an open thesis is the path the majority of the students follow.
+The canonical API specification is:
 
-Essentially, PhD candidates at TUM's chairs are naturally taking on a very complex and/or vast research topic. For this reason, many thesis proposals are connected to ongoing research projects at TUM chairs. Researchers often publish thesis topics to **involve students** in specific subproblems, implementations, experiments, or literature studies related to their research area.
+```text
+api/openapi-v1.yml
+```
 
-In order to find helpers, PhD candidates post about  "open thesis" topics on **their chair's websites**.  This creates an **information gap** that the proposed platform aims to address.
-- Chair's websites do not have to follow a specific structure $\rightarrow$ harder to find where to look;
-- Varying levels of description about the open theses' topic;
-- Chair's websites are not in evidence $\rightarrow$ interesting topics can be missed/overlooked;
-- Even with dedication, navigating through all possible chair's websites and finding where open theses are listed is massively time consuming and frustrating;
+Important endpoint groups:
 
-### Platform's main functionality
+| Endpoint Group                              | Purpose                               |
+| ------------------------------------------- | ------------------------------------- |
+| `/api/v1/theses/search`                     | Search and filter theses              |
+| `/api/v1/theses/{thesisId}`                 | Get thesis details                    |
+| `/api/v1/chairs`                            | List chairs                           |
+| `/api/v1/filters`                           | Get available filter options          |
+| `/internal/v1/thesis-service/...`           | Internal thesis ingestion/source APIs |
+| `/internal/v1/scraping-service/scrape`      | Trigger scraping                      |
+| `/internal/v1/genai-service/extract-theses` | Extract thesis data from raw content  |
+| `/internal/v1/vector-search-service/...`    | Semantic search and vector indexing   |
+| `/internal/v1/health`                       | Health checks                         |
 
-In order to **centralize** and **organize** information, the new online platform encapsulates information about open theses **scraped** from multiple chairs within **one database**.
+Generated OpenAPI sources must not be edited manually.
 
-Users who access the web-platform have access to all latest open theses, as they are routinely scraped by the platform's microservices. 
+## Local Runtime
 
-The platform offers **two** different methods of search:
-- Traditional filtering:
-		$\rightarrow$ Degree Type
-		$\rightarrow$ Research Area
-		$\rightarrow$ Keywords
-- Usage of natural language to describe the type of thesis they look for.
+Start all services:
 
-### Intended Users
+```bash
+docker compose up --build
+```
 
-TUM **students** currently in the last stage of their **Bachelor's or Master's** who are looking for an open thesis proposal which fits their interests.
+Stop the stack:
 
-### GenAI Integration
+```bash
+docker compose down
+```
 
-The application revolves around GenAI's capabilities. It is integrated into the platform in the following manners:
-- After raw HTML is scraped from chair websites, AI is responsible to generate structured output in JSON with all fields necessary in order for the theses to be added to the database;
-- AI will generate an overview of the thesis. The overview will be a summary of theses with extensive descriptions and will enhance theses that provide little description;
-#### Vector Database
-An additional AI related feature offered by the application is **natural-language semantic search**. Users can describe their thesis interests in natural language, which is transformed into an **embedding vector** and compared against thesis embeddings in a vector database. The closest matches are then used to retrieve the corresponding thesis entries from the relational database.
+Stop the stack and remove volumes:
 
-### Scenarios of Application Usage
+```bash
+docker compose down -v
+```
 
-At the Technical University of Munich (TUM), Bachelor's and Master's students must write a final thesis at the end of their degree program in order to graduate. A thesis topic can usually be realized in three ways:
+### Run the Frontend Separately
 
-- Students apply for an already published open thesis;
-- Students propose their own thesis idea;
-- Students cooperate with an industry partner on a thesis topic.
+```bash
+cd user_interface/open-thesis-radar
+npm install
+npm run dev
+```
 
-The common requirement for all these options is that the thesis must be supervised by a TUM chair. This means that the topic has to be aligned with the research interests and expertise of a specific chair, since the chair is responsible not only for grading the thesis, but also for providing an advisor, usually a PhD candidate or researcher at the chair, to guide the student throughout the process.
+Frontend development server:
 
-Coming up with an individual thesis idea or partnering with industry is possible, but in practice these are often more difficult paths, especially because a chair must still agree to supervise the topic. Therefore, applying for an already published open thesis is the path followed by many students.
+```text
+http://localhost:5173
+```
 
-PhD candidates and researchers at TUM chairs usually work on complex and broad research topics. For this reason, many open thesis proposals are connected to ongoing research projects at the chairs. These topics allow students to contribute to specific subproblems, implementations, experiments, evaluations, or literature studies that are relevant to the chair's research area.
+### Run Java Services Separately
 
-To find suitable students, chairs publish open thesis topics on their own websites. However, since these thesis postings are scattered across many different chair websites, an information gap is created. This is the gap that the proposed platform aims to address.
+From the Maven parent:
 
-The current situation presents several problems:
+```bash
+cd services
+mvn clean package
+```
 
-- Chair websites do not follow a standardized structure, which makes it difficult to know where to look;
-- The level of detail provided for thesis descriptions varies significantly;
-- Many chair websites are not highly visible, meaning that interesting topics can easily be missed or overlooked;
-- Even for motivated students, manually navigating through many chair websites and searching for open thesis listings is time-consuming and frustrating.
+Run individual services from their module directories or through your IDE.
 
-### Platform's Main Functionality
+### Run the GenAI Service Separately
 
-In order to centralize and organize information, the proposed online platform collects information about open theses from multiple TUM chairs and stores it in a single database.
+```bash
+cd services/genai-service
+uvicorn app:app --host 0.0.0.0 --port 8000
+```
 
-Users who access the web platform can browse the latest available open thesis proposals, which are routinely collected by the platform's scraping microservices. Instead of visiting many different chair websites individually, students can use one centralized platform to discover thesis opportunities across different research areas.
+## Testing and Quality Checks
 
-The platform offers two main methods of search:
+Frontend:
 
-- Traditional filtering:
-  - Degree type;
-  - Research area;
-  - Keywords;
-  - Chair or department;
-  - Availability status.
+```bash
+cd user_interface/open-thesis-radar
+npm install
+npm run lint
+npm run build
+```
 
-- Natural-language semantic search:
-  - Users can describe the type of thesis they are interested in using natural language;
-  - The system compares this description with the available thesis entries and returns the most relevant results.
+Backend:
 
-### Intended Users
+```bash
+cd services
+mvn test
+```
 
-The intended users are TUM students who are currently in the final stage of their Bachelor's or Master's degree and are looking for an open thesis proposal that matches their interests, skills, and academic goals.
+Build all backend modules:
 
-The platform is especially useful for students who do not yet know which chair they want to work with, or who want to explore thesis opportunities across multiple research areas without manually checking each chair website.
+```bash
+cd services
+mvn clean package
+```
 
-### GenAI Integration
+Docker Compose validation:
 
-The application integrates GenAI and AI-related techniques in multiple parts of the system.
+```bash
+docker compose config
+```
 
-First, after raw HTML content is scraped from chair websites, AI is used to extract structured information from unstructured or semi-structured web pages. The goal is to transform inconsistent website content into a standardized JSON format containing the fields required to store the thesis entry in the database.
+## Service Ownership and Responsibilities
 
-Second, AI can generate a concise overview of each thesis. For thesis postings with long descriptions, this overview acts as a summary. For thesis postings with very limited descriptions, the overview can help clarify the topic by extracting and rephrasing the available information in a more understandable way.
+Current working areas should be kept transparent through GitHub issues, project board tickets, PR reviews, and weekly updates.
 
-Third, the platform provides natural-language semantic search. Users can describe their thesis interests in their own words, and the system transforms this query into an embedding vector. This vector is then compared against thesis embeddings stored in a vector database. The closest matches are used to retrieve the corresponding thesis entries from the relational database.
+| Area                  | Owner(s)                                 | Responsibility                                                             |
+| --------------------- | ---------------------------------------- | -------------------------------------------------------------------------- |
+| Frontend              | `<Zé Afonso / ZeAfonso21>`               | React UI, thesis search page, thesis detail page, frontend API integration |
+| Thesis Service        | `<Tomás Soares / TomasMSoares>`          | Main backend API, relational thesis data, filters, scrape result ingestion |
+| Scraping Service      | `<Tomás Soares / TomasMSoares>`          | Chair/source crawling, scrape scheduling, GenAI coordination               |
+| GenAI Service         | `<Martin Steinmayer - MartinSteinmayer>` | Thesis extraction, summary generation, model/provider configuration        |
+| Vector Search Service | `<Martin Steinmayer - MartinSteinmayer>` | Embeddings, semantic retrieval, vector reindexing                          |
+| DevOps / Integration  | `<All 3>`                                | Docker Compose, environment setup, CI/CD, deployment documentation         |
+| API Contract          | `<All 3>`                                | OpenAPI specification and generated service interfaces                     |
 
-This feature is AI-powered rather than purely rule-based. It allows users to search based on meaning instead of only exact keywords. For example, a student interested in "machine learning for medical images" may still find relevant theses that use terms such as "computer vision", "neural networks", "healthcare data", or "image classification", even if the exact words from the query do not appear in the thesis title.
+## Planning and Backlog
 
-Optionally, GenAI can also be used to generate a short explanation for why a thesis matches the user's query. This would make the recommendation process more transparent and easier to understand.
+The product backlog should be maintained through issues.
 
-### Scenarios of Application Usage
+Initial user stories include:
 
-#### Scenario 1: Traditional Filtering
+1. As a student, I want to browse all currently available open theses in one platform.
+2. As a student, I want to filter thesis proposals by degree type, research area, chair, and keywords.
+3. As a student, I want to open a thesis detail page.
+4. As a student, I want to describe thesis interests in natural language.
+5. As a student, I want to see AI-generated thesis overviews.
+6. As a student, I want to see why a thesis matches my query.
 
-A Master's student in Informatics is looking for a thesis related to cybersecurity. The student opens the platform and uses the traditional filtering system. They select "Master's Thesis" as the degree type and "Cybersecurity" as the research area.
+Future work and next steps should be tracked as backlog tickets.
 
-The platform queries the database and returns a list of open thesis proposals that match these filters. The student can then open individual thesis entries, read the descriptions, check the supervising chair, and access the original source website if they want to apply or contact the responsible advisor.
+## Documentation
 
-This scenario is useful when the student already has a clear idea of the field they are interested in and wants to narrow down the available options using explicit criteria.
+Additional documentation:
 
-#### Scenario 2: Natural-Language Search
+- [`docs/architecture.md`](docs/architecture.md)
+- [`docs/vector-search-implementation.md`](docs/vector-search-implementation.md)
+- [`docs/vector-search-azure-deployment.md`](docs/vector-search-azure-deployment.md)
+- [`docs/project-best-practices.md`](docs/project-best-practices.md)
 
-A student does not know the exact research area or keywords they should search for, but they know the kind of thesis they would like to work on. Instead of using filters, they write:
+## Notes for Contributors
 
-> I am interested in a practical thesis involving machine learning, preferably with real-world data and some implementation work.
-
-The platform converts this natural-language description into an embedding vector and compares it with the stored thesis embeddings. It then returns thesis proposals that are semantically close to the student's interest, even if the exact words used by the student do not appear in the thesis title or description.
-
-This scenario is useful when the student has a general interest but does not know the exact terminology used by different chairs.
-
-#### Scenario 3: Discovering Overlooked Topics
-
-A Bachelor's student is looking for a thesis but only knows a few well-known chairs. Without the platform, the student would likely check only those chairs' websites and might miss relevant topics published by smaller or less visible chairs.
-
-Using the platform, the student can browse thesis proposals from many different chairs in one place. This increases the chance of discovering interesting topics that would otherwise have been overlooked.
-
-This scenario demonstrates how the platform reduces the information gap between students and chairs.
-
-#### Scenario 4: AI-Assisted Thesis Entry Creation
-
-A scraping microservice visits a chair website and finds a page containing an open thesis proposal. However, the page structure is different from other chair websites, and the relevant information is embedded in normal text instead of being presented in a table or standardized format.
-
-The system uses AI to extract the relevant fields, such as title, degree type, research area, advisor, chair, description, and application link. The extracted information is transformed into a structured JSON object and then stored in the database.
-
-This scenario shows how AI helps the platform handle the lack of standardization across chair websites.
-
-#### Scenario 5: Thesis Overview Generation
-
-Some thesis postings contain very long and detailed descriptions, while others only provide a short paragraph. To make the browsing experience more consistent, the platform generates a short overview for each thesis.
-
-For long descriptions, the overview summarizes the most important information. For shorter descriptions, it reformulates the available content into a clearer and more readable format without inventing unsupported details.
-
-This helps students compare thesis topics more quickly and decide which ones they want to inspect in more detail.
-
-
-
+- Keep generated OpenAPI sources out of manual edits.
+- Keep service boundaries clear:
+  - GenAI extracts only.
+  - Thesis Service owns relational data.
+  - Vector Search Service owns embeddings and semantic retrieval.
+  - Scraping Service coordinates ingestion.
+- Prefer configuration through environment variables.
+- Document important architectural decisions in `docs/`.
 
 # Weekly Documentation
 
 Weekly meeting notes live in [`docs/weekly-updates/`](docs/weekly-updates/). For each meeting, copy [`docs/weekly-updates/template.md`](docs/weekly-updates/template.md), name the new file with the ISO meeting date (`YYYY-MM-DD.md`), and include status updates plus related issues/PRs where possible.
-
-# *First Product Backlog* 
-
-|  ID | User Story                                                                                                                                                                               |
-| --: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-|   1 | As a **student**, I want to **browse all currently available open theses** in one platform, so that I do not have to manually visit many different chair websites.                       |
-|   2 | As a **student**, I want to **filter thesis proposals by degree type, research area, chair, and keywords**, so that I can quickly find topics that match my requirements.                |
-|   3 | As a **student**, I want to **open a thesis detail page**, so that I can read the full description, see the supervising chair, advisor information, and access the original source link. |
-|   4 | As a **student**, I want to **describe my thesis interests in natural language**, so that I can find relevant topics even if I do not know the exact keywords or chair names.            |
-|   5 | As a **student**, I want to **see AI-generated thesis overviews**, so that I can quickly understand and compare thesis topics without reading long descriptions first.                   |
-|   6 | As a **student**, I want to **see why a thesis matches my natural-language query**, so that I can better understand the search results and decide whether the topic is relevant.         |
-|   7 | As an **administrator**, I want to **manage the list of chair websites used for scraping**, so that new sources can be added and outdated sources can be removed.                        |
