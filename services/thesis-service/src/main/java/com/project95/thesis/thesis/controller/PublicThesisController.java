@@ -8,6 +8,7 @@ import com.project95.thesis.thesis.repository.ThesisProposalRepository;
 import com.project95.thesis.thesis.service.ThesisSearchService;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +30,13 @@ public class PublicThesisController {
   public ResponseEntity<SearchThesesResponseDto> searchTheses(
       @Valid @RequestBody SearchThesesRequestDto request) {
     return ResponseEntity.ok(thesisSearchService.searchTheses(request));
+  }
+
+  @GetMapping
+  public ResponseEntity<List<ThesisProposalDto>> listTheses() {
+    List<ThesisProposalDto> theses =
+        thesisRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
+    return ResponseEntity.ok(theses);
   }
 
   @GetMapping("/{thesisId}")

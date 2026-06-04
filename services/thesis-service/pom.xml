@@ -93,6 +93,7 @@
               
               <!-- Filter generation -->
               <apisToGenerate>
+                api/v1/theses,
                 api/v1/theses/search,
                 api/v1/theses/{thesisId},
                 api/v1/chairs,
