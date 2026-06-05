@@ -9,6 +9,8 @@ import com.project95.thesis.vectorsearch.util.ThesisVectorUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
@@ -21,6 +23,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class ThesisVectorSearchService {
 
+  private static final Logger log = LoggerFactory.getLogger(ThesisVectorSearchService.class);
+
   private static final int DEFAULT_LIMIT = 50;
   private static final int MAX_LIMIT = 200;
 
@@ -32,13 +36,21 @@ public class ThesisVectorSearchService {
 
   public VectorSearchResponseDto semanticSearch(VectorSearchRequestDto request) {
     if (request == null || ThesisVectorUtils.isBlank(request.getQuery())) {
+      log.warn("Rejected semantic vector search request with blank query");
       throw new IllegalArgumentException("Search query must not be blank");
     }
 
+    String normalizedQuery = request.getQuery().trim();
+    int resolvedLimit = resolveLimit(request.getLimit());
+    log.info(
+        "Starting semantic vector search. queryLength={}, requestedLimit={}, resolvedLimit={}, filters={}",
+        normalizedQuery.length(),
+        request.getLimit(),
+        resolvedLimit,
+        filterSummary(request.getFilters()));
+
     SearchRequest.Builder searchRequest =
-        SearchRequest.builder()
-            .query(request.getQuery().trim())
-            .topK(resolveLimit(request.getLimit()));
+        SearchRequest.builder().query(normalizedQuery).topK(resolvedLimit);
 
     Expression filterExpression = buildFilterExpression(request.getFilters());
     if (filterExpression != null) {
@@ -48,6 +60,7 @@ public class ThesisVectorSearchService {
     List<Document> documents = vectorStore.similaritySearch(searchRequest.build());
     List<VectorSearchResultDto> results =
         documents == null ? List.of() : documents.stream().map(this::toResult).toList();
+    log.info("Completed semantic vector search. resultCount={}", results.size());
 
     VectorSearchResponseDto response = new VectorSearchResponseDto();
     response.setResults(results);
@@ -59,6 +72,26 @@ public class ThesisVectorSearchService {
       return DEFAULT_LIMIT;
     }
     return Math.max(1, Math.min(MAX_LIMIT, limit));
+  }
+
+  private String filterSummary(VectorSearchFiltersDto filters) {
+    if (filters == null) {
+      return "none";
+    }
+    return "chairIds="
+        + sizeOf(filters.getChairIds())
+        + ", degreeTypes="
+        + sizeOf(filters.getDegreeTypes())
+        + ", researchAreas="
+        + sizeOf(filters.getResearchAreas())
+        + ", tags="
+        + sizeOf(filters.getTags())
+        + ", statusPresent="
+        + !ThesisVectorUtils.isBlank(filters.getStatus());
+  }
+
+  private int sizeOf(List<?> values) {
+    return values == null ? 0 : values.size();
   }
 
   private Expression buildFilterExpression(VectorSearchFiltersDto filters) {
