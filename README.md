@@ -152,6 +152,10 @@ This helps students compare thesis topics more quickly and decide which ones the
 
 
 
+# Weekly Documentation
+
+Weekly meeting notes live in [`docs/weekly-updates/`](docs/weekly-updates/). For each meeting, copy [`docs/weekly-updates/template.md`](docs/weekly-updates/template.md), name the new file with the ISO meeting date (`YYYY-MM-DD.md`), and include status updates plus related issues/PRs where possible.
+
 # *First Product Backlog* 
 
 |  ID | User Story                                                                                                                                                                               |
