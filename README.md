@@ -226,8 +226,8 @@ Current working areas should be kept transparent through GitHub issues, project 
 | Frontend              | `<Zé Afonso / ZeAfonso21>`               | React UI, thesis search page, thesis detail page, frontend API integration |
 | Thesis Service        | `<Tomás Soares / TomasMSoares>`          | Main backend API, relational thesis data, filters, scrape result ingestion |
 | Scraping Service      | `<Tomás Soares / TomasMSoares>`          | Chair/source crawling, scrape scheduling, GenAI coordination               |
-| GenAI Service         | `<Martin Steinmayer - MartinSteinmayer>` | Thesis extraction, summary generation, model/provider configuration        |
-| Vector Search Service | `<Martin Steinmayer - MartinSteinmayer>` | Embeddings, semantic retrieval, vector reindexing                          |
+| GenAI Service         | `<Martin Steinmayer / MartinSteinmayer>` | Thesis extraction, summary generation, model/provider configuration        |
+| Vector Search Service | `<Martin Steinmayer / MartinSteinmayer>` | Embeddings, semantic retrieval, vector reindexing                          |
 | DevOps / Integration  | `<All 3>`                                | Docker Compose, environment setup, CI/CD, deployment documentation         |
 | API Contract          | `<All 3>`                                | OpenAPI specification and generated service interfaces                     |
 
