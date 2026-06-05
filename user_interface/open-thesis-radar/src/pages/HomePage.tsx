@@ -5,13 +5,12 @@ import FilterDropdown from '../components/FilterDropdown';
 import { getAvailableFilters } from '../api/filters';
 import { listTheses, searchTheses } from '../api/theses';
 import type { components } from '../api';
-import { MOCK_FILTERS } from '../mocks/theses';
+// import { MOCK_FILTERS } from '../mocks/theses';
 import { useSearchState } from '../state/searchState';
 import { Link } from 'react-router-dom';
 
 type ThesisProposal = components['schemas']['ThesisProposal'];
 
-const INITIAL_FILTERS: components['schemas']['AvailableFiltersResponse'] = MOCK_FILTERS;
 
 function thesisMatchesSelectedFilters(thesis: ThesisProposal, selectedFilters: components['schemas']['ThesisSearchFilters']) {
   const matchesChair = !selectedFilters.chairIds?.length || selectedFilters.chairIds.includes(thesis.chairId);
@@ -26,7 +25,7 @@ function thesisMatchesSelectedFilters(thesis: ThesisProposal, selectedFilters: c
 }
 
 export default function HomePage() {
-  const [filters, setFilters] = useState<components['schemas']['AvailableFiltersResponse']>(INITIAL_FILTERS);
+  const [filters, setFilters] = useState<components['schemas']['AvailableFiltersResponse'] | null>(null);
   const [allTheses, setAllTheses] = useState<ThesisProposal[]>([]);
   const [serverSearchResults, setServerSearchResults] = useState<ThesisProposal[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -120,30 +119,30 @@ export default function HomePage() {
 
   const chairOptions = useMemo(
     () =>
-      (filters.chairs ?? []).map((chair) => ({
+      (filters?.chairs ?? []).map((chair) => ({
         value: String(chair.id),
         label: chair.name,
       })),
-    [filters.chairs],
+    [filters?.chairs],
   );
 
   const degreeTypeOptions = useMemo(
-    () => (filters.degreeTypes ?? []).map((degreeType) => ({ value: degreeType, label: degreeType })),
-    [filters.degreeTypes],
+    () => (filters?.degreeTypes ?? []).map((degreeType) => ({ value: degreeType, label: degreeType })),
+    [filters?.degreeTypes],
   );
 
   const researchAreaOptions = useMemo(
     () =>
-      (filters.researchAreas ?? []).map((researchArea) => ({
+      (filters?.researchAreas ?? []).map((researchArea) => ({
         value: researchArea,
         label: researchArea,
       })),
-    [filters.researchAreas],
+    [filters?.researchAreas],
   );
 
   const tagOptions = useMemo(
-    () => (filters.tags ?? []).map((tag) => ({ value: tag, label: tag })),
-    [filters.tags],
+    () => (filters?.tags ?? []).map((tag) => ({ value: tag, label: tag })),
+    [filters?.tags],
   );
 
   return (
@@ -258,7 +257,7 @@ export default function HomePage() {
             <button
               className={`${styles.resetLink} ${styles.clickableButton}`}
               type="button"
-              onClick={resetSelectedFilters}
+              onClick={() => {resetSelectedFilters(); setServerSearchResults(null)}}
             >
               Reset all
             </button>
