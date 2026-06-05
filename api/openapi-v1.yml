@@ -42,6 +42,23 @@ tags:
     description: Health checks for all services.
 
 paths:
+  /api/v1/theses:
+    get:
+      tags:
+        - Frontend API
+      summary: List all theses
+      description: Fetch all thesis proposals currently stored in the database.
+      operationId: listTheses
+      responses:
+        '200':
+          description: Thesis proposals returned successfully.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ThesisProposal'
+
   /api/v1/theses/search:
     post:
       tags:
@@ -705,13 +722,13 @@ components:
       type: object
       required:
         - name
-        - email
       properties:
         name:
           type: string
         email:
           type: string
           format: email
+          nullable: true
         profileUrl:
           type: string
           format: uri
