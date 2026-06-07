@@ -7,6 +7,13 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   frontend:
     name: Frontend lint and build
@@ -102,3 +109,18 @@ jobs:
 
       - name: Validate Compose configuration
         run: docker compose config
+
+  docker-images:
+    name: Build Docker images
+    needs:
+      - frontend
+      - backend
+      - genai
+      - docker-compose
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/build-images.yml
+    with:
+      push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    secrets: inherit
