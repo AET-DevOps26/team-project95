@@ -120,7 +120,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: ./.github/workflows/build-images.yml
+    uses: ./.github/workflows/build_images.yml
     with:
       push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     secrets: inherit
