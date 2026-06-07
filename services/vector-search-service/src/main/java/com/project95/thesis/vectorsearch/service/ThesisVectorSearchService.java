@@ -83,11 +83,7 @@ public class ThesisVectorSearchService {
         + ", degreeTypes="
         + sizeOf(filters.getDegreeTypes())
         + ", researchAreas="
-        + sizeOf(filters.getResearchAreas())
-        + ", tags="
-        + sizeOf(filters.getTags())
-        + ", statusPresent="
-        + !ThesisVectorUtils.isBlank(filters.getStatus());
+        + sizeOf(filters.getResearchAreas());
   }
 
   private int sizeOf(List<?> values) {

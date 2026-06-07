@@ -23,7 +23,9 @@ public class GlobalExceptionHandler {
 
   @ExceptionHandler({MethodArgumentNotValidException.class, ConstraintViolationException.class})
   public ResponseEntity<ErrorResponseDto> handleValidationException(Exception ex) {
-    log.warn("Vector search request validation failed: {}", ex.getMessage());
+    log.warn(
+        "Vector search request validation failed: exceptionType={}", ex.getClass().getSimpleName());
+    log.debug("Validation exception details", ex);
     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
         .body(new ErrorResponseDto("Request validation failed"));
   }
