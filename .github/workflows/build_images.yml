@@ -1,0 +1,84 @@
+name: Build Docker Images
+
+on:
+  workflow_call:
+    inputs:
+      push:
+        description: Push images to GitHub Container Registry
+        required: true
+        type: boolean
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build Docker image (${{ matrix.image }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: frontend
+            context: ./user_interface/open-thesis-radar
+            dockerfile: ./user_interface/open-thesis-radar/Dockerfile
+          - image: thesis-service
+            context: .
+            dockerfile: ./services/thesis-service/Dockerfile
+          - image: scraping-service
+            context: .
+            dockerfile: ./services/scraping-service/Dockerfile
+          - image: vector-search-service
+            context: .
+            dockerfile: ./services/vector-search-service/Dockerfile
+          - image: genai-service
+            context: .
+            dockerfile: ./services/genai-service/Dockerfile
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Prepare image repository name
+        id: repo
+        shell: bash
+        run: echo "repository=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GitHub Container Registry
+        if: inputs.push
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up QEMU
+        if: inputs.push
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.repo.outputs.repository }}/${{ matrix.image }}
+          tags: |
+            type=raw,value=latest,enable=${{ inputs.push }}
+            type=sha,format=long,prefix=
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          platforms: ${{ inputs.push && 'linux/amd64,linux/arm64' || 'linux/amd64' }}
+          context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
+          push: ${{ inputs.push }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
