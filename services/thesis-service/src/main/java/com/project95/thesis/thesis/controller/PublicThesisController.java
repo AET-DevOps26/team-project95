@@ -38,13 +38,6 @@ public class PublicThesisController {
     return ResponseEntity.ok(thesisSearchService.searchTheses(request));
   }
 
-  @GetMapping
-  public ResponseEntity<List<ThesisProposalDto>> listTheses() {
-    List<ThesisProposalDto> theses =
-        thesisRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
-    return ResponseEntity.ok(theses);
-  }
-
   @GetMapping("/{thesisId}")
   public ResponseEntity<ThesisProposalDto> getThesisById(@PathVariable("thesisId") Long thesisId) {
     return thesisRepository
