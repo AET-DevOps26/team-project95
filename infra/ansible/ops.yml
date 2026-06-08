@@ -1,0 +1,68 @@
+---
+- name: Operate Open Thesis Radar containers
+  hosts: app
+  become: true
+  vars:
+    app_dir: /open-thesis-radar
+    service: "{{ lookup('env', 'SERVICE') }}"
+    op_action: "{{ lookup('env', 'ACTION') }}"
+    allowed_services:
+      - frontend
+      - thesis-service
+      - scraping-service
+      - vector-search-service
+      - genai-service
+      - thesis-db
+      - vector-db
+      - certbot
+    allowed_actions:
+      - start
+      - stop
+      - restart
+      - pull
+      - logs
+  pre_tasks:
+    - name: Validate operation inputs
+      ansible.builtin.assert:
+        that:
+          - service in allowed_services
+          - op_action in allowed_actions
+        fail_msg: "Set SERVICE to one of {{ allowed_services }} and ACTION to one of {{ allowed_actions }}."
+
+  tasks:
+    - name: Start service
+      ansible.builtin.command: docker compose start {{ service }}
+      args:
+        chdir: "{{ app_dir }}"
+      when: op_action == 'start'
+
+    - name: Stop service
+      ansible.builtin.command: docker compose stop {{ service }}
+      args:
+        chdir: "{{ app_dir }}"
+      when: op_action == 'stop'
+
+    - name: Restart service
+      ansible.builtin.command: docker compose restart {{ service }}
+      args:
+        chdir: "{{ app_dir }}"
+      when: op_action == 'restart'
+
+    - name: Pull service image
+      ansible.builtin.command: docker compose pull {{ service }}
+      args:
+        chdir: "{{ app_dir }}"
+      when: op_action == 'pull'
+
+    - name: Show service logs
+      ansible.builtin.command: docker compose logs --tail=200 {{ service }}
+      args:
+        chdir: "{{ app_dir }}"
+      register: service_logs
+      changed_when: false
+      when: op_action == 'logs'
+
+    - name: Print service logs
+      ansible.builtin.debug:
+        var: service_logs.stdout_lines
+      when: op_action == 'logs'
