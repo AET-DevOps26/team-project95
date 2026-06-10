@@ -169,6 +169,7 @@ public class ScrapeCoordinationService {
       thesis.setOriginalDescription(cleanText(thesis.getOriginalDescription()));
       thesis.setAiOverview(cleanText(thesis.getAiOverview()));
       thesis.setResearchArea(cleanText(thesis.getResearchArea()));
+      thesis.setSourceUrl(cleanText(thesis.getSourceUrl()));
       thesis.setStatus(cleanText(thesis.getStatus()));
 
       if (thesis.getTags() != null) {
@@ -190,8 +191,9 @@ public class ScrapeCoordinationService {
             .filter(advisor -> advisor != null && hasUsableEmail(advisor.getEmail()))
             .peek(
                 advisor -> {
-                  advisor.setName(cleanText(advisor.getName()));
                   advisor.setEmail(cleanText(advisor.getEmail()));
+                  advisor.setName(cleanAdvisorName(advisor.getName(), advisor.getEmail()));
+                  advisor.setProfileUrl(cleanText(advisor.getProfileUrl()));
                 })
             .toList();
 
@@ -207,6 +209,11 @@ public class ScrapeCoordinationService {
 
   private boolean hasUsableEmail(String email) {
     return email != null && BASIC_EMAIL_PATTERN.matcher(email.trim()).matches();
+  }
+
+  private String cleanAdvisorName(String name, String fallbackEmail) {
+    String cleanedName = cleanText(name);
+    return cleanedName == null || cleanedName.isBlank() ? fallbackEmail : cleanedName;
   }
 
   private String cleanText(String value) {
