@@ -2,6 +2,7 @@ package com.project95.thesis.scraping.service;
 
 import com.project95.thesis.scraping.config.ClientProperties;
 import com.project95.thesis.scraping.dto.*;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -169,7 +170,7 @@ public class ScrapeCoordinationService {
       thesis.setOriginalDescription(cleanText(thesis.getOriginalDescription()));
       thesis.setAiOverview(cleanText(thesis.getAiOverview()));
       thesis.setResearchArea(cleanText(thesis.getResearchArea()));
-      thesis.setSourceUrl(cleanText(thesis.getSourceUrl()));
+      thesis.setSourceUrl(cleanUri(thesis.getSourceUrl()));
       thesis.setStatus(cleanText(thesis.getStatus()));
 
       if (thesis.getTags() != null) {
@@ -193,7 +194,7 @@ public class ScrapeCoordinationService {
                 advisor -> {
                   advisor.setEmail(cleanText(advisor.getEmail()));
                   advisor.setName(cleanAdvisorName(advisor.getName(), advisor.getEmail()));
-                  advisor.setProfileUrl(cleanText(advisor.getProfileUrl()));
+                  advisor.setProfileUrl(cleanUri(advisor.getProfileUrl()));
                 })
             .toList();
 
@@ -214,6 +215,15 @@ public class ScrapeCoordinationService {
   private String cleanAdvisorName(String name, String fallbackEmail) {
     String cleanedName = cleanText(name);
     return cleanedName == null || cleanedName.isBlank() ? fallbackEmail : cleanedName;
+  }
+
+  private URI cleanUri(URI value) {
+    if (value == null) {
+      return null;
+    }
+
+    String cleanedValue = cleanText(value.toString());
+    return URI.create(cleanedValue);
   }
 
   private String cleanText(String value) {
