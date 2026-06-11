@@ -18,6 +18,9 @@ public class Chair {
   @Column(name = "website_url", nullable = false, length = 1024)
   private String websiteUrl;
 
+  @Column(name = "registry_key", unique = true)
+  private String registryKey;
+
   // One Chair can have many Thesis Proposals.
   // If a Chair is deleted, its proposals are automatically removed (CascadeType.ALL +
   // orphanRemoval).
@@ -66,6 +69,14 @@ public class Chair {
 
   public void setWebsiteUrl(String websiteUrl) {
     this.websiteUrl = websiteUrl;
+  }
+
+  public String getRegistryKey() {
+    return registryKey;
+  }
+
+  public void setRegistryKey(String registryKey) {
+    this.registryKey = registryKey;
   }
 
   public List<ThesisProposal> getThesisProposals() {

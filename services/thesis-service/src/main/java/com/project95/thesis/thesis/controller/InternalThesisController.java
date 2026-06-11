@@ -34,7 +34,7 @@ public class InternalThesisController {
 
   @GetMapping("/source-endpoints")
   public ResponseEntity<SourceEndpointListResponseDto> listSourceEndpoints() {
-    List<SourceEndpoint> entities = sourceEndpointRepository.findAllWithChairEagerly();
+    List<SourceEndpoint> entities = sourceEndpointRepository.findActiveWithChairEagerly();
 
     List<SourceEndpointDto> dtos =
         entities.stream().map(this::mapToSourceEndpointDto).collect(Collectors.toList());

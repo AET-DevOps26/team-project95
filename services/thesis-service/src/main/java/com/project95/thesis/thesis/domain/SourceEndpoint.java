@@ -19,6 +19,9 @@ public class SourceEndpoint {
   @Column(nullable = false)
   private String status; // e.g., "ACTIVE"
 
+  @Column(name = "registry_key", unique = true)
+  private String registryKey;
+
   @Column(name = "last_scraped_at")
   private OffsetDateTime lastScrapedAt;
 
@@ -59,6 +62,14 @@ public class SourceEndpoint {
 
   public void setStatus(String status) {
     this.status = status;
+  }
+
+  public String getRegistryKey() {
+    return registryKey;
+  }
+
+  public void setRegistryKey(String registryKey) {
+    this.registryKey = registryKey;
   }
 
   public OffsetDateTime getLastScrapedAt() {

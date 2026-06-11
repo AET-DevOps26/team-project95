@@ -1,0 +1,458 @@
+[
+  {
+    "key": "tum-3d-ai",
+    "name": "Chair of 3D Artificial Intelligence",
+    "websiteUrl": "https://www.3dunderstanding.org/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-3d-ai-masters-topics",
+        "url": "https://www.3dunderstanding.org/masters-topics/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-aipro",
+    "name": "Chair of AI Processor Design",
+    "websiteUrl": "https://www.ce.cit.tum.de/en/aipro/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-aipro-thesis",
+        "url": "https://www.ce.cit.tum.de/en/aipro/thesis/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-dss",
+    "name": "Chair of Decision Sciences & Systems",
+    "websiteUrl": "https://www.cs.cit.tum.de/en/dss/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-dss-theses-topics",
+        "url": "https://www.cs.cit.tum.de/en/dss/teaching/theses-topics/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-caps",
+    "name": "Chair of Computer Architecture and Parallel Systems",
+    "websiteUrl": "https://www.ce.cit.tum.de/en/caps/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-caps-open-theses",
+        "url": "https://www.ce.cit.tum.de/en/caps/theses/open/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-lse",
+    "name": "Chair of Circuit Design",
+    "websiteUrl": "https://www.ee.cit.tum.de/en/lse/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-lse-master-theses",
+        "url": "https://www.ee.cit.tum.de/en/lse/theses-and-internships/master-theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-lnt",
+    "name": "Chair of Communications Engineering",
+    "websiteUrl": "https://www.ce.cit.tum.de/en/lnt/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-lnt-offered-theses",
+        "url": "https://www.ce.cit.tum.de/en/lnt/student-thesesseminars/offered-theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-lkn",
+    "name": "Chair of Communication Networks",
+    "websiteUrl": "https://www.ce.cit.tum.de/en/lkn/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-lkn-student-thesis",
+        "url": "https://www.ce.cit.tum.de/en/lkn/student-thesis/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-cmm",
+    "name": "Chair of Computational Molecular Medicine",
+    "websiteUrl": "https://www.cs.cit.tum.de/cmm/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-cmm-jobs-theses",
+        "url": "https://www.cs.cit.tum.de/cmm/jobs-theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-cph",
+    "name": "Chair of Computational Photonics",
+    "websiteUrl": "https://www.ee.cit.tum.de/cph/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-cph-theses",
+        "url": "https://www.ee.cit.tum.de/cph/teaching/theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-cm",
+    "name": "Chair of Connected Mobility",
+    "websiteUrl": "https://www.ce.cit.tum.de/cm/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-cm-open-thesis-topics",
+        "url": "https://www.ce.cit.tum.de/cm/thesis-guided-research/open-thesis-topics-guided-research/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-mml",
+    "name": "Chair of Control and Manipulation of Microscale Living Objects",
+    "websiteUrl": "https://www.ee.cit.tum.de/mml/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-mml-open-positions",
+        "url": "https://www.ee.cit.tum.de/mml/open-positions/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-cps",
+    "name": "Chair of Cyber Physical Systems",
+    "websiteUrl": "https://www.ce.cit.tum.de/en/cps/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-cps-open-student-theses",
+        "url": "https://www.ce.cit.tum.de/en/cps/open-student-theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-dast",
+    "name": "Chair of Data Analytics and Statistics",
+    "websiteUrl": "https://www.cs.cit.tum.de/dast/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-dast-projects",
+        "url": "https://www.cs.cit.tum.de/dast/lehre/projects/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-daml",
+    "name": "Chair of Data Analytics and Machine Learning",
+    "websiteUrl": "https://www.cs.cit.tum.de/en/daml/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-daml-open-theses",
+        "url": "https://www.cs.cit.tum.de/en/daml/open-theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-db",
+    "name": "Chair of Database Systems",
+    "websiteUrl": "https://db.in.tum.de/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-db-theses",
+        "url": "https://db.in.tum.de/teaching/theses/?lang=en",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-algo",
+    "name": "Chair of Efficient Algorithms",
+    "websiteUrl": "https://www.cs.cit.tum.de/algo/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-algo-theses-projects",
+        "url": "https://www.cs.cit.tum.de/algo/theses-and-projects/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-eda",
+    "name": "Chair of Electronic Design Automation",
+    "websiteUrl": "https://www.ce.cit.tum.de/en/eda/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-eda-open-positions",
+        "url": "https://www.ce.cit.tum.de/en/eda/theses-jobs/open-positions/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-esm",
+    "name": "Chair of Environmental Sensing and Modeling",
+    "websiteUrl": "https://www.ee.cit.tum.de/en/esm/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-esm-theses",
+        "url": "https://www.ee.cit.tum.de/en/esm/studentische-arbeiten/bachelors-masters-thesis/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-pl",
+    "name": "Chair of Formal Languages, Compiler Construction, Software Construction",
+    "websiteUrl": "https://www.cs.cit.tum.de/pl/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-pl-studienarbeiten",
+        "url": "https://www.cs.cit.tum.de/pl/lehre/studienarbeiten/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-hft",
+    "name": "Chair of High-Frequency Engineering",
+    "websiteUrl": "https://www.ee.cit.tum.de/en/hft/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-hft-theses",
+        "url": "https://www.ee.cit.tum.de/en/hft/education/theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-it-security",
+    "name": "Chair of IT Security",
+    "websiteUrl": "https://www.sec.in.tum.de/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-it-security-student-work",
+        "url": "https://www.sec.in.tum.de/i20/student-work",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-ii",
+    "name": "Chair of Information Infrastructures",
+    "websiteUrl": "https://www.cs.cit.tum.de/en/ii/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-ii-thesis-topics",
+        "url": "https://www.cs.cit.tum.de/en/ii/teaching/final-thesis/available-thesis-topics/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-bpm",
+    "name": "Chair of Information Systems and Business Process Management",
+    "websiteUrl": "https://www.cs.cit.tum.de/en/bpm/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-bpm-theses",
+        "url": "https://www.cs.cit.tum.de/en/bpm/theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-itr",
+    "name": "Chair of Information-oriented Control",
+    "websiteUrl": "https://www.ce.cit.tum.de/en/itr/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-itr-theses",
+        "url": "https://www.ce.cit.tum.de/en/itr/student-projects-and-theses/theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "eml-munich",
+    "name": "Chair of Explainable Machine Learning",
+    "websiteUrl": "https://www.eml-munich.de/",
+    "sourceEndpoints": [
+      {
+        "key": "eml-munich-thesis",
+        "url": "https://www.eml-munich.de/teaching/thesis",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-legal-tech",
+    "name": "Chair of Legal Tech",
+    "websiteUrl": "https://tumlegaltech.github.io/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-legal-tech-thesis-mentoring",
+        "url": "https://tumlegaltech.github.io/thesis_mentoring/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-mli",
+    "name": "Chair of Machine Learning",
+    "websiteUrl": "https://www.ce.cit.tum.de/mli/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-mli-theses",
+        "url": "https://www.ce.cit.tum.de/mli/theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-lmt",
+    "name": "Chair of Media Technology",
+    "websiteUrl": "https://www.ce.cit.tum.de/en/lmt/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-lmt-student-thesis",
+        "url": "https://www.ce.cit.tum.de/en/lmt/student-thesis/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-msa",
+    "name": "Chair of Microsensors and Actuators",
+    "websiteUrl": "https://www.ee.cit.tum.de/en/msa/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-msa-theses-internships",
+        "url": "https://www.ee.cit.tum.de/en/msa/teaching/theses-and-internships/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-net",
+    "name": "Chair of Network Architectures and Services",
+    "websiteUrl": "https://www.net.in.tum.de/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-net-theses",
+        "url": "https://www.net.in.tum.de/theses/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-pins",
+    "name": "Chair of Perception for Intelligent Systems",
+    "websiteUrl": "https://www.ce.cit.tum.de/pins/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-pins-student-positions",
+        "url": "https://www.ce.cit.tum.de/pins/open-positions/student-positions/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-qcs",
+    "name": "Chair of Quantum Communication Systems Engineering",
+    "websiteUrl": "https://www.ce.cit.tum.de/qcs/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-qcs-open-positions",
+        "url": "https://www.ce.cit.tum.de/qcs/open-positions/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-air",
+    "name": "Chair of Robotic, Artificial Intelligence and Real-Time Systems",
+    "websiteUrl": "https://www.ce.cit.tum.de/air/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-air-thesis-proposals",
+        "url": "https://www.ce.cit.tum.de/air/thesis-proposals/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-eisec",
+    "name": "Chair of Security in Information Technology",
+    "websiteUrl": "https://www.ce.cit.tum.de/eisec/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-eisec-studentische-arbeiten",
+        "url": "https://www.ce.cit.tum.de/eisec/studentische-arbeiten/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-seai",
+    "name": "Chair of Software Engineering and AI",
+    "websiteUrl": "https://www.cs.cit.tum.de/seai/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-seai-abschlussarbeiten",
+        "url": "https://www.cs.cit.tum.de/seai/abschlussarbeiten/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-sse",
+    "name": "Chair of Software and Systems Engineering",
+    "websiteUrl": "https://www.cs.cit.tum.de/en/sse/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-sse-theses-projects",
+        "url": "https://www.cs.cit.tum.de/en/sse/teaching/theses-and-projects/",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-lti",
+    "name": "Chair of Theoretical Information Technology",
+    "websiteUrl": "https://www.ce.cit.tum.de/en/lti/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-lti-studentische-arbeiten",
+        "url": "https://www.ce.cit.tum.de/en/lti/studentische-arbeiten/#c55667",
+        "status": "ACTIVE"
+      }
+    ]
+  },
+  {
+    "key": "tum-vcai",
+    "name": "Chair of Visual Computing and Artificial Intelligence",
+    "websiteUrl": "https://niessner.github.io/",
+    "sourceEndpoints": [
+      {
+        "key": "tum-vcai-student-topics",
+        "url": "https://niessner.github.io/student-topics/",
+        "status": "ACTIVE"
+      }
+    ]
+  }
+]
