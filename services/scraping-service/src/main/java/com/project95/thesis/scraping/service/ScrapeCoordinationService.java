@@ -2,8 +2,11 @@ package com.project95.thesis.scraping.service;
 
 import com.project95.thesis.scraping.config.ClientProperties;
 import com.project95.thesis.scraping.dto.*;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
+import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,6 +18,8 @@ import org.springframework.web.client.RestClient;
 public class ScrapeCoordinationService {
 
   private static final Logger log = LoggerFactory.getLogger(ScrapeCoordinationService.class);
+  private static final Pattern BASIC_EMAIL_PATTERN =
+      Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$");
 
   private final RestClient thesisServiceClient;
   private final RestClient genAiServiceClient;
@@ -96,6 +101,7 @@ public class ScrapeCoordinationService {
       // Replace Theses
       SourceEndpointThesesReplacementRequestDto requestBody =
           new SourceEndpointThesesReplacementRequestDto();
+      sanitizeThesesForSubmission(genAiResponse.getTheses());
       requestBody.setTheses(genAiResponse.getTheses());
 
       submitThesesReplacement(endpoint.getId(), requestBody);
@@ -151,6 +157,77 @@ public class ScrapeCoordinationService {
     } catch (Exception e) {
       log.error("Failed to log scrape run for endpointId: {}", endpointId, e);
     }
+  }
+
+  private void sanitizeThesesForSubmission(List<ThesisProposalInputDto> theses) {
+    if (theses == null) {
+      return;
+    }
+
+    for (ThesisProposalInputDto thesis : theses) {
+      thesis.setTitle(cleanText(thesis.getTitle()));
+      thesis.setDegreeType(cleanText(thesis.getDegreeType()));
+      thesis.setOriginalDescription(cleanText(thesis.getOriginalDescription()));
+      thesis.setAiOverview(cleanText(thesis.getAiOverview()));
+      thesis.setResearchArea(cleanText(thesis.getResearchArea()));
+      thesis.setSourceUrl(cleanUri(thesis.getSourceUrl()));
+      thesis.setStatus(cleanText(thesis.getStatus()));
+
+      if (thesis.getTags() != null) {
+        thesis.setTags(thesis.getTags().stream().map(this::cleanText).toList());
+      }
+
+      sanitizeAdvisorsWithoutUsableEmail(thesis);
+    }
+  }
+
+  private void sanitizeAdvisorsWithoutUsableEmail(ThesisProposalInputDto thesis) {
+    if (thesis.getAdvisors() == null || thesis.getAdvisors().isEmpty()) {
+      return;
+    }
+
+    int originalAdvisorCount = thesis.getAdvisors().size();
+    List<AdvisorInputDto> advisorsWithUsableEmail =
+        thesis.getAdvisors().stream()
+            .filter(advisor -> advisor != null && hasUsableEmail(advisor.getEmail()))
+            .peek(
+                advisor -> {
+                  advisor.setEmail(cleanText(advisor.getEmail()));
+                  advisor.setName(cleanAdvisorName(advisor.getName(), advisor.getEmail()));
+                  advisor.setProfileUrl(cleanUri(advisor.getProfileUrl()));
+                })
+            .toList();
+
+    if (advisorsWithUsableEmail.size() != originalAdvisorCount) {
+      log.warn(
+          "Dropping {} advisor(s) without usable email for thesis '{}'. Thesis will still be submitted.",
+          originalAdvisorCount - advisorsWithUsableEmail.size(),
+          thesis.getTitle());
+    }
+
+    thesis.setAdvisors(advisorsWithUsableEmail);
+  }
+
+  private boolean hasUsableEmail(String email) {
+    return email != null && BASIC_EMAIL_PATTERN.matcher(email.trim()).matches();
+  }
+
+  private String cleanAdvisorName(String name, String fallbackEmail) {
+    String cleanedName = cleanText(name);
+    return cleanedName == null || cleanedName.isBlank() ? fallbackEmail : cleanedName;
+  }
+
+  private URI cleanUri(URI value) {
+    if (value == null) {
+      return null;
+    }
+
+    String cleanedValue = cleanText(value.toString());
+    return URI.create(cleanedValue);
+  }
+
+  private String cleanText(String value) {
+    return value == null ? null : value.replace("\u0000", "");
   }
 
   private void submitThesesReplacement(
