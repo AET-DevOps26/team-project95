@@ -9,14 +9,13 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
 @Component
-@ConditionalOnProperty(name = "app.source-registry.sync-on-startup", havingValue = "true")
 public class SourceRegistrySyncRunner implements ApplicationRunner {
+  private static final String SYNC_SOURCE_REGISTRY_OPTION = "sync-source-registry";
   private static final TypeReference<List<ChairEntry>> REGISTRY_TYPE = new TypeReference<>() {};
 
   private final ObjectMapper objectMapper = new ObjectMapper();
@@ -35,6 +34,10 @@ public class SourceRegistrySyncRunner implements ApplicationRunner {
 
   @Override
   public void run(ApplicationArguments args) {
+    if (!args.containsOption(SYNC_SOURCE_REGISTRY_OPTION)) {
+      return;
+    }
+
     syncService.syncFromRegistry(loadRegistry());
   }
 
