@@ -1,0 +1,121 @@
+name: open-thesis-radar
+
+services:
+  frontend:
+    image: ${IMAGE_REPOSITORY}/frontend:${IMAGE_TAG:-latest}
+    container_name: open-thesis-radar-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - letsencrypt:/etc/letsencrypt:ro
+      - certbot-webroot:/var/www/certbot:ro
+    depends_on:
+      - thesis-service
+      - scraping-service
+      - vector-search-service
+      - genai-service
+
+  thesis-service:
+    image: ${IMAGE_REPOSITORY}/thesis-service:${IMAGE_TAG:-latest}
+    container_name: open-thesis-radar-thesis-service
+    restart: unless-stopped
+    environment:
+      THESIS_DB_HOST: thesis-db
+      THESIS_DB_PORT: 5432
+      THESIS_DB_NAME: ${THESIS_DB_NAME:-thesis_db}
+      THESIS_DB_USER: ${THESIS_DB_USER:-thesis_user}
+      THESIS_DB_PASSWORD: ${THESIS_DB_PASSWORD:-thesis_password}
+      THESIS_VECTOR_SEARCH_URL: http://vector-search-service:8082
+    depends_on:
+      thesis-db:
+        condition: service_healthy
+      vector-search-service:
+        condition: service_started
+
+  scraping-service:
+    image: ${IMAGE_REPOSITORY}/scraping-service:${IMAGE_TAG:-latest}
+    container_name: open-thesis-radar-scraping-service
+    restart: unless-stopped
+    environment:
+      APP_SERVICES_MAIN_THESIS: http://thesis-service:8080
+      APP_SERVICES_GENAI: http://genai-service:8000
+      CLIENT_CONNECT_TIMEOUT: ${CLIENT_CONNECT_TIMEOUT:-4000}
+      CLIENT_READ_TIMEOUT: ${CLIENT_READ_TIMEOUT:-300000}
+    depends_on:
+      - thesis-service
+      - genai-service
+
+  vector-search-service:
+    image: ${IMAGE_REPOSITORY}/vector-search-service:${IMAGE_TAG:-latest}
+    container_name: open-thesis-radar-vector-search-service
+    restart: unless-stopped
+    environment:
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-https://api.openai.com}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-dummy-key}
+      AZURE_OPENAI_EMBEDDING_DEPLOYMENT: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-text-embedding-ada-002}
+      AZURE_OPENAI_EMBEDDING_MODEL: ${AZURE_OPENAI_EMBEDDING_MODEL:-text-embedding-ada-002}
+      PGVECTOR_DIMENSIONS: ${PGVECTOR_DIMENSIONS:-1536}
+      PGVECTOR_URL: jdbc:postgresql://vector-db:5432/${VECTOR_DB_NAME:-vector_search_db}
+      PGVECTOR_USERNAME: ${VECTOR_DB_USER:-vector_user}
+      PGVECTOR_PASSWORD: ${VECTOR_DB_PASSWORD:-vector_password}
+    depends_on:
+      vector-db:
+        condition: service_healthy
+
+  genai-service:
+    image: ${IMAGE_REPOSITORY}/genai-service:${IMAGE_TAG:-latest}
+    container_name: open-thesis-radar-genai-service
+    restart: unless-stopped
+    environment:
+      GENAI_MODEL_PROVIDER: ${GENAI_MODEL_PROVIDER:-openai}
+      GENAI_MODEL_NAME: ${GENAI_MODEL_NAME:-gpt-4o-mini}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
+
+  thesis-db:
+    image: postgres:16-alpine
+    container_name: open-thesis-radar-thesis-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${THESIS_DB_NAME:-thesis_db}
+      POSTGRES_USER: ${THESIS_DB_USER:-thesis_user}
+      POSTGRES_PASSWORD: ${THESIS_DB_PASSWORD:-thesis_password}
+    volumes:
+      - thesis-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  vector-db:
+    image: pgvector/pgvector:pg16
+    container_name: open-thesis-radar-vector-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${VECTOR_DB_NAME:-vector_search_db}
+      POSTGRES_USER: ${VECTOR_DB_USER:-vector_user}
+      POSTGRES_PASSWORD: ${VECTOR_DB_PASSWORD:-vector_password}
+    volumes:
+      - vector-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: open-thesis-radar-certbot
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+
+volumes:
+  thesis-postgres-data:
+  vector-postgres-data:
+  letsencrypt:
+  certbot-webroot:

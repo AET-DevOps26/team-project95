@@ -1,0 +1,33 @@
+---
+- name: Deploy Open Thesis Radar
+  hosts: app
+  become: true
+  vars:
+    app_dir: /open-thesis-radar
+    app_domain: "{{ lookup('env', 'APP_DOMAIN') | lower }}"
+    certbot_email: "{{ lookup('env', 'CERTBOT_EMAIL') }}"
+    image_repository: "{{ lookup('env', 'IMAGE_REPOSITORY') }}"
+    image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('latest', true) }}"
+    ghcr_user: "{{ lookup('env', 'GHCR_USER') }}"
+    ghcr_token: "{{ lookup('env', 'GHCR_TOKEN') }}"
+    enable_certbot: "{{ lookup('env', 'ENABLE_CERTBOT') | default('true', true) | bool }}"
+  pre_tasks:
+    - name: Validate required deployment environment variables
+      ansible.builtin.assert:
+        that:
+          - app_domain | length > 0
+          - image_repository | length > 0
+        fail_msg: "Set APP_DOMAIN and IMAGE_REPOSITORY before running this playbook. Example: APP_DOMAIN=app.1.2.3.4.nip.io IMAGE_REPOSITORY=ghcr.io/owner/repo IMAGE_TAG=latest"
+
+    - name: Validate Certbot environment variables when Certbot is enabled
+      ansible.builtin.assert:
+        that:
+          - certbot_email | length > 0
+        fail_msg: "Set CERTBOT_EMAIL, or run with ENABLE_CERTBOT=false."
+      when: enable_certbot
+
+  roles:
+    - docker
+    - app
+    - role: certbot
+      when: enable_certbot
