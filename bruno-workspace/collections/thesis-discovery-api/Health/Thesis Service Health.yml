@@ -1,0 +1,22 @@
+info:
+  name: Thesis Service Health
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{thesisServiceUrl}}/internal/v1/health"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("Body contains status", function() {
+          expect(res.body).to.have.property("status");
+        });
+
+settings:
+  encodeUrl: true

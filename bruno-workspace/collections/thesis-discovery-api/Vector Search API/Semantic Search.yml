@@ -1,0 +1,35 @@
+info:
+  name: Semantic Search
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{vectorSearchServiceUrl}}/internal/v1/vector-search-service/search"
+  body:
+    type: json
+    data: |-
+      {
+        "query": "I want a thesis about semantic search with LLMs",
+        "filters": {
+          "chairIds": [{{chairId}}],
+          "degreeTypes": ["MASTER"],
+          "status": "OPEN"
+        },
+        "limit": 50
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("Body contains vector results", function() {
+          expect(res.body).to.have.property("results");
+          expect(res.body.results).to.be.an("array");
+        });
+
+settings:
+  encodeUrl: true
