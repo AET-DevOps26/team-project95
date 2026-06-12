@@ -1,0 +1,44 @@
+info:
+  name: Index Source Endpoint Theses
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{vectorSearchServiceUrl}}/internal/v1/vector-search-service/source-endpoints/{{sourceEndpointId}}/index"
+  body:
+    type: json
+    data: |-
+      {
+        "scrapeRunId": null,
+        "theses": [
+          {
+            "thesisId": 1001,
+            "chairId": {{chairId}},
+            "sourceEndpointId": {{sourceEndpointId}},
+            "title": "Semantic Search for Thesis Discovery",
+            "degreeType": "MASTER",
+            "aiOverview": "Build and evaluate a semantic search pipeline for thesis discovery.",
+            "originalDescription": "This thesis investigates semantic search for university thesis proposals.",
+            "researchArea": "Artificial Intelligence",
+            "sourceUrl": "https://example-chair.tum.de/theses/semantic-search",
+            "tags": ["Semantic Search", "LLM", "Information Retrieval"]
+          }
+        ]
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("Body contains replacement counters", function() {
+          expect(res.body).to.have.property("sourceEndpointId");
+          expect(res.body).to.have.property("deletedVectorEntries");
+          expect(res.body).to.have.property("insertedVectorEntries");
+        });
+
+settings:
+  encodeUrl: true

@@ -1,0 +1,34 @@
+info:
+  name: Log Scrape Run
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{thesisServiceUrl}}/internal/v1/thesis-service/scrape-runs"
+  body:
+    type: json
+    data: |-
+      {
+        "sourceEndpointId": {{sourceEndpointId}},
+        "startedAt": "{{$isoTimestamp}}",
+        "finishedAt": "{{$isoTimestamp}}",
+        "status": "SUCCESS",
+        "errorMessage": null,
+        "candidatesFound": 1
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 201", function() {
+          expect(res.status).to.equal(201);
+        });
+        test("Body contains scrape run id and status", function() {
+          expect(res.body).to.have.property("id");
+          expect(res.body).to.have.property("status");
+        });
+
+settings:
+  encodeUrl: true

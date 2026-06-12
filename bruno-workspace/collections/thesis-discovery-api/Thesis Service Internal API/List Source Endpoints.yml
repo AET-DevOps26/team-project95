@@ -1,0 +1,19 @@
+info:
+  name: List Source Endpoints
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{thesisServiceUrl}}/internal/v1/thesis-service/source-endpoints"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+
+settings:
+  encodeUrl: true

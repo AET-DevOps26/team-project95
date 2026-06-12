@@ -1,0 +1,39 @@
+info:
+  name: Search Theses
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{thesisServiceUrl}}/api/v1/theses/search"
+  body:
+    type: json
+    data: |-
+      {
+        "naturalLanguageQuery": "I want a thesis about semantic search for university documents",
+        "filters": {
+          "degreeTypes": ["MASTER"],
+          "researchAreas": ["Artificial Intelligence"],
+          "status": "OPEN"
+        },
+        "page": 0,
+        "size": 20
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("Body contains paged search fields", function() {
+          expect(res.body).to.have.property("items");
+          expect(res.body.items).to.be.an("array");
+          expect(res.body).to.have.property("page");
+          expect(res.body).to.have.property("size");
+          expect(res.body).to.have.property("totalElements");
+        });
+
+settings:
+  encodeUrl: true

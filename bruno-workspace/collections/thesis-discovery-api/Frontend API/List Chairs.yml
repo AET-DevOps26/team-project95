@@ -1,0 +1,22 @@
+info:
+  name: List Chairs
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{thesisServiceUrl}}/api/v1/chairs"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200", function() {
+          expect(res.status).to.equal(200);
+        });
+        test("Body is an array", function() {
+          expect(res.body).to.be.an("array");
+        });
+
+settings:
+  encodeUrl: true
