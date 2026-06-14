@@ -31,9 +31,6 @@ public class ThesisProposal {
   @Column(name = "raw_html_snapshot", columnDefinition = "TEXT")
   private String rawHtmlSnapshot;
 
-  @Column(name = "extraction_confidence")
-  private Float extractionConfidence;
-
   @Column(nullable = false)
   private String status = "OPEN";
 
@@ -126,14 +123,6 @@ public class ThesisProposal {
 
   public void setRawHtmlSnapshot(String rawHtmlSnapshot) {
     this.rawHtmlSnapshot = rawHtmlSnapshot;
-  }
-
-  public Float getExtractionConfidence() {
-    return extractionConfidence;
-  }
-
-  public void setExtractionConfidence(Float extractionConfidence) {
-    this.extractionConfidence = extractionConfidence;
   }
 
   public String getStatus() {

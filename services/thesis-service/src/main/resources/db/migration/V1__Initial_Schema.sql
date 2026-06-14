@@ -49,7 +49,6 @@ CREATE TABLE thesis_proposals (
     ai_overview TEXT,
     source_url VARCHAR(1024) NOT NULL,
     raw_html_snapshot TEXT,
-    extraction_confidence REAL,
     status VARCHAR(255) NOT NULL DEFAULT 'OPEN',
     last_seen_at TIMESTAMPTZ,
     chair_id BIGINT NOT NULL,
