@@ -14,6 +14,7 @@
   <name>scraping-service</name>
 
   <dependencies>
+    <!-- Core Spring Boot Starters -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
@@ -31,7 +32,7 @@
       <artifactId>spring-boot-starter-restclient</artifactId>
     </dependency>
 
-    <!-- Versions are pulled from parent's dependencyManagement -->
+    <!-- OpenAPI/DTO Dependencies (Versions managed by parent) -->
     <dependency>
       <groupId>org.openapitools</groupId>
       <artifactId>jackson-databind-nullable</artifactId>
@@ -45,6 +46,11 @@
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+
+      <plugin>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-maven-plugin</artifactId>
       </plugin>
@@ -52,7 +58,6 @@
       <plugin>
         <groupId>org.openapitools</groupId>
         <artifactId>openapi-generator-maven-plugin</artifactId>
-        <version>${openapi-generator-plugin.version}</version>
         <executions>
           <execution>
             <goals>

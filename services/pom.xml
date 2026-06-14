@@ -29,6 +29,7 @@
     <swagger-annotations.version>2.2.22</swagger-annotations.version>
     <openapi-generator-plugin.version>7.5.0</openapi-generator-plugin.version>
     <spring-ai.version>2.0.0-M6</spring-ai.version>
+    <testcontainers.version>2.0.5</testcontainers.version>
   </properties>
 
   <repositories>
@@ -36,19 +37,29 @@
       <id>spring-milestones</id>
       <name>Spring Milestones</name>
       <url>https://repo.spring.io/milestone</url>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
   </repositories>
 
   <!-- Centralized Version Control -->
   <dependencyManagement>
     <dependencies>
-    <dependency>
-      <groupId>org.springframework.ai</groupId>
-      <artifactId>spring-ai-bom</artifactId>
-      <version>${spring-ai.version}</version>
-      <type>pom</type>
-      <scope>import</scope>
-    </dependency>
+      <dependency>
+        <groupId>org.testcontainers</groupId>
+        <artifactId>testcontainers-bom</artifactId>
+        <version>${testcontainers.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <dependency>
+        <groupId>org.springframework.ai</groupId>
+        <artifactId>spring-ai-bom</artifactId>
+        <version>${spring-ai.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
       <dependency>
         <groupId>org.openapitools</groupId>
         <artifactId>jackson-databind-nullable</artifactId>
@@ -62,7 +73,7 @@
     </dependencies>
   </dependencyManagement>
 
-  <!-- Global Dependencies -->
+  <!-- Global Dependencies inherited by all services -->
   <dependencies>
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -79,5 +90,33 @@
       <artifactId>h2</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- Global Testcontainers for Integration Testing -->
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>testcontainers-postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+        </plugin>
+        <plugin>
+          <groupId>org.openapitools</groupId>
+          <artifactId>openapi-generator-maven-plugin</artifactId>
+          <version>${openapi-generator-plugin.version}</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+  </build>
 </project>
