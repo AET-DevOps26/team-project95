@@ -15,7 +15,6 @@ app:
       connect-ms: ${CLIENT_CONNECT_TIMEOUT:4000}
       read-ms: ${CLIENT_READ_TIMEOUT:120000}
   scheduling:
-    #Every Monday at 03:30
     scrape-cron: "0 30 3 * * MON"
 
 # Actuator config for DevOps health checks
