@@ -194,7 +194,6 @@ public class ThesisSearchService {
     dto.setSourceUrl(URI.create(entity.getSourceUrl()));
     dto.setStatus(entity.getStatus());
     dto.setLastSeenAt(entity.getLastSeenAt());
-    dto.setRawHtmlSnapshot(entity.getRawHtmlSnapshot());
 
     if (score != null) {
       dto.setSemanticScore(score.floatValue());

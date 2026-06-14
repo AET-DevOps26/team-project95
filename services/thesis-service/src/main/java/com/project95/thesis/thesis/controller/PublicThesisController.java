@@ -59,7 +59,6 @@ public class PublicThesisController {
     dto.setSourceUrl(URI.create(entity.getSourceUrl()));
     dto.setStatus(entity.getStatus());
     dto.setLastSeenAt(entity.getLastSeenAt());
-    dto.setRawHtmlSnapshot(entity.getRawHtmlSnapshot());
 
     if (!entity.getAdvisors().isEmpty()) {
       dto.setAdvisors(

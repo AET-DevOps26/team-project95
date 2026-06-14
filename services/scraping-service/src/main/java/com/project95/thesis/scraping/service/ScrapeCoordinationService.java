@@ -113,6 +113,7 @@ public class ScrapeCoordinationService {
           finishedAt,
           ScrapeRunLogRequestDto.StatusEnum.SUCCESS,
           null,
+          rawHtml,
           genAiResponse.getTheses().size());
 
     } catch (Exception e) {
@@ -127,6 +128,7 @@ public class ScrapeCoordinationService {
           finishedAt,
           ScrapeRunLogRequestDto.StatusEnum.FAILED,
           e.getMessage(),
+          null,
           0);
     }
   }
@@ -137,6 +139,7 @@ public class ScrapeCoordinationService {
       OffsetDateTime finishedAt,
       ScrapeRunLogRequestDto.StatusEnum status,
       String error,
+      String rawHtml,
       Integer candidates) {
     ScrapeRunLogRequestDto logRequest = new ScrapeRunLogRequestDto();
     logRequest.setSourceEndpointId(endpointId);
@@ -144,6 +147,7 @@ public class ScrapeCoordinationService {
     logRequest.setFinishedAt(finishedAt);
     logRequest.setStatus(status);
     logRequest.setErrorMessage(error);
+    logRequest.setRawHtmlSnapshot(rawHtml);
     logRequest.setCandidatesFound(candidates);
 
     try {

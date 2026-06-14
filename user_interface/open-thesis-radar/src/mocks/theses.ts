@@ -17,9 +17,6 @@
 //       'This thesis investigates secure communication for intra-vehicle networks under post-quantum threat models, with emphasis on practical latency and deployment constraints.',
 //     researchArea: 'Security',
 //     sourceUrl: 'https://www.in.tum.de/en/open-theses/post-quantum-vehicle-networks',
-//     rawHtmlSnapshot:
-//       '<article><h1>Post-Quantum Cryptography in Intra-Vehicle Networks</h1><p>Evaluate PQC schemes for automotive communication.</p></article>',
-//     extractionConfidence: 0.93,
 //     status: 'OPEN',
 //     lastSeenAt: '2026-05-22T09:30:00.000Z',
 //     advisors: [
@@ -40,9 +37,6 @@
 //       'This thesis explores hybrid information retrieval for thesis recommendations, combining filters, embeddings, ranking, and evaluation with realistic student queries.',
 //     researchArea: 'Artificial Intelligence',
 //     sourceUrl: 'https://www.in.tum.de/en/open-theses/semantic-search-thesis-discovery',
-//     rawHtmlSnapshot:
-//       '<article><h1>Semantic Search for Cross-Chair Thesis Discovery</h1><p>Build a hybrid retrieval system for thesis proposals.</p></article>',
-//     extractionConfidence: 0.91,
 //     status: 'OPEN',
 //     lastSeenAt: '2026-05-24T14:15:00.000Z',
 //     advisors: [
@@ -63,9 +57,6 @@
 //       'The project studies robot task planning from natural language instructions and visual scene context, including failure handling and evaluation in simulation.',
 //     researchArea: 'Robotics',
 //     sourceUrl: 'https://www.in.tum.de/en/open-theses/vision-language-planning-assistive-robots',
-//     rawHtmlSnapshot:
-//       '<article><h1>Vision-Language Planning for Assistive Mobile Robots</h1><p>Use VLMs for grounded robot task planning.</p></article>',
-//     extractionConfidence: 0.88,
 //     status: 'OPEN',
 //     lastSeenAt: '2026-05-26T11:45:00.000Z',
 //     advisors: [
