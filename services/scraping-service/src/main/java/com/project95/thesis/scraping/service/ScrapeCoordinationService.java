@@ -69,9 +69,10 @@ public class ScrapeCoordinationService {
 
     OffsetDateTime startedAt = OffsetDateTime.now(ZoneOffset.UTC);
     GenAIExtractionResponseDto genAiResponse = null;
+    String rawHtml = null;
 
     try {
-      String rawHtml = scrapingClient.get().uri(endpoint.getUrl()).retrieve().body(String.class);
+      rawHtml = scrapingClient.get().uri(endpoint.getUrl()).retrieve().body(String.class);
 
       if (rawHtml == null || rawHtml.isBlank()) {
         throw new RuntimeException("Received empty HTML from source URL");
@@ -113,6 +114,7 @@ public class ScrapeCoordinationService {
           finishedAt,
           ScrapeRunLogRequestDto.StatusEnum.SUCCESS,
           null,
+          rawHtml,
           genAiResponse.getTheses().size());
 
     } catch (Exception e) {
@@ -127,6 +129,7 @@ public class ScrapeCoordinationService {
           finishedAt,
           ScrapeRunLogRequestDto.StatusEnum.FAILED,
           e.getMessage(),
+          rawHtml,
           0);
     }
   }
@@ -137,6 +140,7 @@ public class ScrapeCoordinationService {
       OffsetDateTime finishedAt,
       ScrapeRunLogRequestDto.StatusEnum status,
       String error,
+      String rawHtml,
       Integer candidates) {
     ScrapeRunLogRequestDto logRequest = new ScrapeRunLogRequestDto();
     logRequest.setSourceEndpointId(endpointId);
@@ -144,6 +148,7 @@ public class ScrapeCoordinationService {
     logRequest.setFinishedAt(finishedAt);
     logRequest.setStatus(status);
     logRequest.setErrorMessage(error);
+    logRequest.setRawHtmlSnapshot(rawHtml);
     logRequest.setCandidatesFound(candidates);
 
     try {

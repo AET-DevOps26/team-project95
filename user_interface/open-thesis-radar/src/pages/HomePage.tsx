@@ -9,10 +9,10 @@ import type { components } from '../api';
 import { useSearchState } from '../state/searchState';
 import { Link } from 'react-router-dom';
 
-type ThesisProposal = components['schemas']['ThesisProposal'];
+type ThesisSearchResult = components['schemas']['ThesisSearchResult'];
 
 
-function thesisMatchesSelectedFilters(thesis: ThesisProposal, selectedFilters: components['schemas']['ThesisSearchFilters']) {
+function thesisMatchesSelectedFilters(thesis: ThesisSearchResult, selectedFilters: components['schemas']['ThesisSearchFilters']) {
   const matchesChair = !selectedFilters.chairIds?.length || selectedFilters.chairIds.includes(thesis.chairId);
   const matchesDegree =
     !selectedFilters.degreeTypes?.length || Boolean(thesis.degreeType && selectedFilters.degreeTypes.includes(thesis.degreeType));
@@ -26,8 +26,8 @@ function thesisMatchesSelectedFilters(thesis: ThesisProposal, selectedFilters: c
 
 export default function HomePage() {
   const [filters, setFilters] = useState<components['schemas']['AvailableFiltersResponse'] | null>(null);
-  const [allTheses, setAllTheses] = useState<ThesisProposal[]>([]);
-  const [serverSearchResults, setServerSearchResults] = useState<ThesisProposal[] | null>(null);
+  const [allTheses, setAllTheses] = useState<ThesisSearchResult[]>([]);
+  const [serverSearchResults, setServerSearchResults] = useState<ThesisSearchResult[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
   const [resultsError, setResultsError] = useState<string | null>(null);
   const searchSectionRef = useRef<HTMLElement | null>(null);
