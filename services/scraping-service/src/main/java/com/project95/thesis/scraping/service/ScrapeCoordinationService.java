@@ -69,9 +69,10 @@ public class ScrapeCoordinationService {
 
     OffsetDateTime startedAt = OffsetDateTime.now(ZoneOffset.UTC);
     GenAIExtractionResponseDto genAiResponse = null;
+    String rawHtml = null;
 
     try {
-      String rawHtml = scrapingClient.get().uri(endpoint.getUrl()).retrieve().body(String.class);
+      rawHtml = scrapingClient.get().uri(endpoint.getUrl()).retrieve().body(String.class);
 
       if (rawHtml == null || rawHtml.isBlank()) {
         throw new RuntimeException("Received empty HTML from source URL");
@@ -128,7 +129,7 @@ public class ScrapeCoordinationService {
           finishedAt,
           ScrapeRunLogRequestDto.StatusEnum.FAILED,
           e.getMessage(),
-          null,
+          rawHtml,
           0);
     }
   }

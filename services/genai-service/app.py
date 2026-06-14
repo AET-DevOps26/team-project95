@@ -79,7 +79,6 @@ class DraftThesisProposalInput(BaseModel):
     aiOverview: Optional[str] = None
     researchArea: Optional[str] = None
     sourceUrl: Optional[str] = None
-    rawHtmlSnapshot: Optional[str] = None
     status: Optional[str] = None
     advisors: list[DraftAdvisorInput] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
