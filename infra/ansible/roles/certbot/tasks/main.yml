@@ -1,0 +1,59 @@
+---
+- name: Ensure cron is installed
+  ansible.builtin.apt:
+    name: cron
+    state: present
+    update_cache: true
+
+- name: Ensure cron service is enabled and running
+  ansible.builtin.service:
+    name: cron
+    enabled: true
+    state: started
+
+- name: Check whether certificate already exists
+  ansible.builtin.shell: |
+    docker compose run --rm --entrypoint sh certbot -c 'test -f /etc/letsencrypt/live/{{ app_domain }}/fullchain.pem'
+  args:
+    chdir: "{{ app_dir }}"
+  register: certificate_exists
+  changed_when: false
+  failed_when: false
+
+- name: Request initial Let's Encrypt certificate
+  ansible.builtin.command: >-
+    docker compose run --rm certbot certonly
+    --webroot
+    --webroot-path /var/www/certbot
+    -d {{ app_domain }}
+    --email {{ certbot_email }}
+    --agree-tos
+    --no-eff-email
+    --non-interactive
+  args:
+    chdir: "{{ app_dir }}"
+  when: certificate_exists.rc != 0
+
+- name: Install HTTPS Nginx config
+  ansible.builtin.template:
+    src: nginx-https.conf.j2
+    dest: "{{ app_dir }}/nginx.conf"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+
+- name: Restart frontend Nginx with HTTPS config
+  ansible.builtin.command: docker compose up -d --force-recreate frontend
+  args:
+    chdir: "{{ app_dir }}"
+
+- name: Install Certbot renewal cron job
+  ansible.builtin.copy:
+    dest: /etc/cron.d/open-thesis-radar-certbot
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      SHELL=/bin/bash
+      PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+      17 3 * * * root cd {{ app_dir }} && docker compose run --rm certbot renew --quiet && docker compose exec -T frontend nginx -s reload >> /var/log/open-thesis-radar-certbot.log 2>&1

@@ -1,0 +1,54 @@
+---
+- name: Deploy Open Thesis Radar
+  hosts: app
+  become: true
+  vars:
+    app_dir: /open-thesis-radar
+    app_domain: "{{ lookup('env', 'APP_DOMAIN') | lower }}"
+    certbot_email: "{{ lookup('env', 'CERTBOT_EMAIL') }}"
+    image_repository: "{{ lookup('env', 'IMAGE_REPOSITORY') }}"
+    image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('latest', true) }}"
+    ghcr_user: "{{ lookup('env', 'GHCR_USER') }}"
+    ghcr_token: "{{ lookup('env', 'GHCR_TOKEN') }}"
+    enable_certbot: "{{ lookup('env', 'ENABLE_CERTBOT') | default('true', true) | bool }}"
+    thesis_db_name: "{{ lookup('env', 'THESIS_DB_NAME') | default('thesis_db', true) }}"
+    thesis_db_user: "{{ lookup('env', 'THESIS_DB_USER') | default('thesis_user', true) }}"
+    thesis_db_password: "{{ lookup('env', 'THESIS_DB_PASSWORD') }}"
+    vector_db_name: "{{ lookup('env', 'VECTOR_DB_NAME') | default('vector_search_db', true) }}"
+    vector_db_user: "{{ lookup('env', 'VECTOR_DB_USER') | default('vector_user', true) }}"
+    vector_db_password: "{{ lookup('env', 'VECTOR_DB_PASSWORD') }}"
+    client_connect_timeout: "{{ lookup('env', 'CLIENT_CONNECT_TIMEOUT') | default('4000', true) }}"
+    client_read_timeout: "{{ lookup('env', 'CLIENT_READ_TIMEOUT') | default('300000', true) }}"
+    azure_openai_endpoint: "{{ lookup('env', 'AZURE_OPENAI_ENDPOINT') | default('https://api.openai.com', true) }}"
+    azure_openai_api_key: "{{ lookup('env', 'AZURE_OPENAI_API_KEY') }}"
+    azure_openai_embedding_deployment: "{{ lookup('env', 'AZURE_OPENAI_EMBEDDING_DEPLOYMENT') | default('text-embedding-ada-002', true) }}"
+    azure_openai_embedding_model: "{{ lookup('env', 'AZURE_OPENAI_EMBEDDING_MODEL') | default('text-embedding-ada-002', true) }}"
+    pgvector_dimensions: "{{ lookup('env', 'PGVECTOR_DIMENSIONS') | default('1536', true) }}"
+    genai_model_provider: "{{ lookup('env', 'GENAI_MODEL_PROVIDER') | default('openai', true) | lower }}"
+    genai_model_name: "{{ lookup('env', 'GENAI_MODEL_NAME') | default('gpt-4o-mini', true) }}"
+    openai_api_key: "{{ lookup('env', 'OPENAI_API_KEY') }}"
+    ollama_base_url: "{{ lookup('env', 'OLLAMA_BASE_URL') | default('http://host.docker.internal:11434', true) }}"
+  pre_tasks:
+    - name: Validate required deployment environment variables
+      ansible.builtin.assert:
+        that:
+          - app_domain | length > 0
+          - image_repository | length > 0
+          - thesis_db_password | length > 0
+          - vector_db_password | length > 0
+          - azure_openai_api_key | length > 0
+          - openai_api_key | length > 0
+        fail_msg: "Set APP_DOMAIN, IMAGE_REPOSITORY, THESIS_DB_PASSWORD, VECTOR_DB_PASSWORD, AZURE_OPENAI_API_KEY, and OPENAI_API_KEY before running this playbook."
+
+    - name: Validate Certbot environment variables when Certbot is enabled
+      ansible.builtin.assert:
+        that:
+          - certbot_email | length > 0
+        fail_msg: "Set CERTBOT_EMAIL, or run with ENABLE_CERTBOT=false."
+      when: enable_certbot
+
+  roles:
+    - docker
+    - app
+    - role: certbot
+      when: enable_certbot

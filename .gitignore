@@ -87,5 +87,8 @@ node_modules/
 
 # Docker / local overrides
 docker-compose.override.yml
+
+# Local Ansible inventory
+infra/ansible/inventory.ini
 fetch-raw-html.sh
 source-endpoints.json
