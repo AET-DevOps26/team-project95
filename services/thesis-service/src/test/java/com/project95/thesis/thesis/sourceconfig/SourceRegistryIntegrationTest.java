@@ -8,7 +8,7 @@ import com.project95.thesis.thesis.repository.ChairRepository;
 import com.project95.thesis.thesis.repository.SourceEndpointRepository;
 import com.project95.thesis.thesis.sourceconfig.SourceRegistry.ChairEntry;
 import com.project95.thesis.thesis.sourceconfig.SourceRegistry.EndpointEntry;
-import com.project95.thesis.thesis.sourceconfig.SourceRegistry.SyncResult;
+import com.project95.thesis.thesis.sourceconfig.SourceRegistry.RegistryResult;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,8 +20,8 @@ import org.springframework.transaction.annotation.Transactional;
 @SpringBootTest
 @ActiveProfiles("test")
 @Transactional
-class SourceEndpointRegistrySyncServiceIntegrationTest {
-  @Autowired private SourceEndpointRegistrySyncService syncService;
+class SourceRegistryIntegrationTest {
+  @Autowired private SourceRegistryService registryService;
   @Autowired private ChairRepository chairRepository;
   @Autowired private SourceEndpointRepository sourceEndpointRepository;
 
@@ -32,11 +32,11 @@ class SourceEndpointRegistrySyncServiceIntegrationTest {
   }
 
   @Test
-  void syncFromRegistry_InsertsAndIsIdempotent() {
+  void applyRegistry_InsertsAndIsIdempotent() {
     List<ChairEntry> registry = List.of(chair("chair-a", "endpoint-a", "ACTIVE"));
 
-    SyncResult firstResult = syncService.syncFromRegistry(registry);
-    SyncResult secondResult = syncService.syncFromRegistry(registry);
+    RegistryResult firstResult = registryService.applyRegistry(registry);
+    RegistryResult secondResult = registryService.applyRegistry(registry);
 
     assertThat(firstResult.chairsInserted()).isEqualTo(1);
     assertThat(firstResult.endpointsInserted()).isEqualTo(1);
@@ -49,8 +49,8 @@ class SourceEndpointRegistrySyncServiceIntegrationTest {
   }
 
   @Test
-  void syncFromRegistry_UpdatesExistingRegistryManagedRows() {
-    syncService.syncFromRegistry(List.of(chair("chair-a", "endpoint-a", "ACTIVE")));
+  void applyRegistry_UpdatesExistingRegistryManagedRows() {
+    registryService.applyRegistry(List.of(chair("chair-a", "endpoint-a", "ACTIVE")));
 
     ChairEntry updatedChair =
         new ChairEntry(
@@ -59,7 +59,7 @@ class SourceEndpointRegistrySyncServiceIntegrationTest {
             "https://example.com/updated-chair/",
             List.of(new EndpointEntry("endpoint-a", "https://example.com/updated-endpoint/", "RETIRED")));
 
-    SyncResult result = syncService.syncFromRegistry(List.of(updatedChair));
+    RegistryResult result = registryService.applyRegistry(List.of(updatedChair));
 
     Chair chair = chairRepository.findByRegistryKey("chair-a").orElseThrow();
     SourceEndpoint endpoint = sourceEndpointRepository.findByRegistryKey("endpoint-a").orElseThrow();
@@ -72,8 +72,8 @@ class SourceEndpointRegistrySyncServiceIntegrationTest {
   }
 
   @Test
-  void syncFromRegistry_RetiresRemovedRegistryManagedEndpointsOnly() {
-    syncService.syncFromRegistry(
+  void applyRegistry_RetiresRemovedRegistryManagedEndpointsOnly() {
+    registryService.applyRegistry(
         List.of(chair("chair-a", "endpoint-a", "ACTIVE"), chair("chair-b", "endpoint-b", "ACTIVE")));
 
     Chair unmanagedChair = chairRepository.save(new Chair("Manual Chair", "https://manual.example.com/"));
@@ -83,7 +83,7 @@ class SourceEndpointRegistrySyncServiceIntegrationTest {
     unmanagedEndpoint.setStatus("ACTIVE");
     sourceEndpointRepository.save(unmanagedEndpoint);
 
-    SyncResult result = syncService.syncFromRegistry(List.of(chair("chair-a", "endpoint-a", "ACTIVE")));
+    RegistryResult result = registryService.applyRegistry(List.of(chair("chair-a", "endpoint-a", "ACTIVE")));
 
     assertThat(result.endpointsRetired()).isEqualTo(1);
     assertThat(sourceEndpointRepository.findByRegistryKey("endpoint-a").orElseThrow().getStatus())
@@ -95,7 +95,7 @@ class SourceEndpointRegistrySyncServiceIntegrationTest {
   }
 
   @Test
-  void syncFromRegistry_AttachesRegistryKeyToExistingUnmanagedRows() {
+  void applyRegistry_AttachesRegistryKeyToExistingUnmanagedRows() {
     Chair chair = chairRepository.save(new Chair("Chair chair-a", "https://example.com/chair-a/"));
     SourceEndpoint endpoint = new SourceEndpoint();
     endpoint.setChair(chair);
@@ -103,7 +103,7 @@ class SourceEndpointRegistrySyncServiceIntegrationTest {
     endpoint.setStatus("ACTIVE");
     sourceEndpointRepository.save(endpoint);
 
-    SyncResult result = syncService.syncFromRegistry(List.of(chair("chair-a", "endpoint-a", "ACTIVE")));
+    RegistryResult result = registryService.applyRegistry(List.of(chair("chair-a", "endpoint-a", "ACTIVE")));
 
     assertThat(result.chairsInserted()).isZero();
     assertThat(result.endpointsInserted()).isZero();

@@ -13,7 +13,7 @@ public final class SourceRegistry {
 
   public record EndpointEntry(String key, String url, String status) {}
 
-  public record SyncResult(
+  public record RegistryResult(
       int chairsInserted,
       int chairsUpdated,
       int endpointsInserted,

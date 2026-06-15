@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
 public class SourceRegistryValidator {
   private static final Set<String> SUPPORTED_STATUSES =
       Set.of(
-          SourceEndpointRegistrySyncService.STATUS_ACTIVE,
-          SourceEndpointRegistrySyncService.STATUS_RETIRED);
+          SourceRegistryService.STATUS_ACTIVE,
+          SourceRegistryService.STATUS_RETIRED);
 
   public void validate(List<ChairEntry> registry) {
     if (registry == null) {

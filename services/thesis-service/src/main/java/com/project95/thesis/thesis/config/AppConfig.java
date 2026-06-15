@@ -7,7 +7,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestClient;
 
 @Configuration
-@EnableConfigurationProperties(ClientProperties.class)
+@EnableConfigurationProperties({ClientProperties.class, SourceRegistryProperties.class})
 public class AppConfig {
 
   @Bean

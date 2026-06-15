@@ -8,23 +8,23 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
 public class ThesisServiceApplication {
-  private static final String SYNC_SOURCE_REGISTRY_COMMAND = "--sync-source-registry";
+  private static final String SOURCE_REGISTRY_COMMAND = "--sync-source-registry";
 
   public static void main(String[] args) {
     SpringApplication application = new SpringApplication(ThesisServiceApplication.class);
 
-    boolean syncSourceRegistry = hasSyncSourceRegistryCommand(args);
-    if (syncSourceRegistry) {
+    boolean sourceRegistryCommand = hasSourceRegistryCommand(args);
+    if (sourceRegistryCommand) {
       application.setWebApplicationType(WebApplicationType.NONE);
     }
 
     ConfigurableApplicationContext context = application.run(args);
-    if (syncSourceRegistry) {
+    if (sourceRegistryCommand) {
       System.exit(SpringApplication.exit(context));
     }
   }
 
-  private static boolean hasSyncSourceRegistryCommand(String[] args) {
-    return Arrays.asList(args).contains(SYNC_SOURCE_REGISTRY_COMMAND);
+  private static boolean hasSourceRegistryCommand(String[] args) {
+    return Arrays.asList(args).contains(SOURCE_REGISTRY_COMMAND);
   }
 }

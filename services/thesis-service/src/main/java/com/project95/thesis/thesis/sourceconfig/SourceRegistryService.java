@@ -6,7 +6,7 @@ import com.project95.thesis.thesis.repository.ChairRepository;
 import com.project95.thesis.thesis.repository.SourceEndpointRepository;
 import com.project95.thesis.thesis.sourceconfig.SourceRegistry.ChairEntry;
 import com.project95.thesis.thesis.sourceconfig.SourceRegistry.EndpointEntry;
-import com.project95.thesis.thesis.sourceconfig.SourceRegistry.SyncResult;
+import com.project95.thesis.thesis.sourceconfig.SourceRegistry.RegistryResult;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -20,17 +20,17 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class SourceEndpointRegistrySyncService {
+public class SourceRegistryService {
   public static final String STATUS_ACTIVE = "ACTIVE";
   public static final String STATUS_RETIRED = "RETIRED";
 
-  private static final Logger log = LoggerFactory.getLogger(SourceEndpointRegistrySyncService.class);
+  private static final Logger log = LoggerFactory.getLogger(SourceRegistryService.class);
 
   private final ChairRepository chairRepository;
   private final SourceEndpointRepository sourceEndpointRepository;
   private final SourceRegistryValidator validator;
 
-  public SourceEndpointRegistrySyncService(
+  public SourceRegistryService(
       ChairRepository chairRepository,
       SourceEndpointRepository sourceEndpointRepository,
       SourceRegistryValidator validator) {
@@ -40,30 +40,31 @@ public class SourceEndpointRegistrySyncService {
   }
 
   @Transactional
-  public SyncResult syncFromRegistry(List<ChairEntry> registry) {
+  public RegistryResult applyRegistry(List<ChairEntry> registry) {
     validator.validate(registry);
 
-    SyncStats stats = new SyncStats();
+    RegistryStats stats = new RegistryStats();
     Map<String, Chair> chairsByRegistryKey = chairsByRegistryKey();
     Map<String, SourceEndpoint> endpointsByRegistryKey = endpointsByRegistryKey();
     Set<String> desiredEndpointKeys = new HashSet<>();
 
     for (ChairEntry registryChair : registry) {
-      Chair chair = syncChair(registryChair, chairsByRegistryKey, stats);
+      Chair chair = applyChair(registryChair, chairsByRegistryKey, stats);
       chairsByRegistryKey.put(chair.getRegistryKey(), chair);
 
       for (EndpointEntry registryEndpoint : registryChair.sourceEndpoints()) {
         desiredEndpointKeys.add(registryEndpoint.key().trim());
-        SourceEndpoint endpoint = syncEndpoint(registryEndpoint, chair, endpointsByRegistryKey, stats);
+        SourceEndpoint endpoint =
+            applyEndpoint(registryEndpoint, chair, endpointsByRegistryKey, stats);
         endpointsByRegistryKey.put(endpoint.getRegistryKey(), endpoint);
       }
     }
 
     retireRemovedEndpoints(desiredEndpointKeys, stats);
-    SyncResult result = stats.toResult();
+    RegistryResult result = stats.toResult();
 
     log.info(
-        "Source endpoint registry sync completed. chairsInserted={}, chairsUpdated={}, endpointsInserted={}, endpointsUpdated={}, endpointsRetired={}",
+        "Source endpoint registry applied. chairsInserted={}, chairsUpdated={}, endpointsInserted={}, endpointsUpdated={}, endpointsRetired={}",
         result.chairsInserted(),
         result.chairsUpdated(),
         result.endpointsInserted(),
@@ -72,8 +73,8 @@ public class SourceEndpointRegistrySyncService {
     return result;
   }
 
-  private Chair syncChair(
-      ChairEntry registryChair, Map<String, Chair> chairsByRegistryKey, SyncStats stats) {
+  private Chair applyChair(
+      ChairEntry registryChair, Map<String, Chair> chairsByRegistryKey, RegistryStats stats) {
     String registryKey = registryChair.key().trim();
     String name = registryChair.name().trim();
     String websiteUrl = registryChair.websiteUrl().trim();
@@ -90,19 +91,14 @@ public class SourceEndpointRegistrySyncService {
       return chairRepository.save(chair);
     }
 
-    boolean changed = false;
-    if (!Objects.equals(chair.getRegistryKey(), registryKey)) {
-      chair.setRegistryKey(registryKey);
-      changed = true;
-    }
-    if (!Objects.equals(chair.getName(), name)) {
-      chair.setName(name);
-      changed = true;
-    }
-    if (!Objects.equals(chair.getWebsiteUrl(), websiteUrl)) {
-      chair.setWebsiteUrl(websiteUrl);
-      changed = true;
-    }
+    boolean changed =
+        !Objects.equals(chair.getRegistryKey(), registryKey)
+            || !Objects.equals(chair.getName(), name)
+            || !Objects.equals(chair.getWebsiteUrl(), websiteUrl);
+
+    chair.setRegistryKey(registryKey);
+    chair.setName(name);
+    chair.setWebsiteUrl(websiteUrl);
 
     if (changed) {
       stats.chairsUpdated++;
@@ -111,11 +107,11 @@ public class SourceEndpointRegistrySyncService {
     return chair;
   }
 
-  private SourceEndpoint syncEndpoint(
+  private SourceEndpoint applyEndpoint(
       EndpointEntry registryEndpoint,
       Chair chair,
       Map<String, SourceEndpoint> endpointsByRegistryKey,
-      SyncStats stats) {
+      RegistryStats stats) {
     String registryKey = registryEndpoint.key().trim();
     String url = registryEndpoint.url().trim();
     String status = SourceRegistryValidator.normalizeStatus(registryEndpoint.status());
@@ -135,23 +131,17 @@ public class SourceEndpointRegistrySyncService {
       return sourceEndpointRepository.save(endpoint);
     }
 
-    boolean changed = false;
-    if (!Objects.equals(endpoint.getRegistryKey(), registryKey)) {
-      endpoint.setRegistryKey(registryKey);
-      changed = true;
-    }
-    if (!Objects.equals(endpoint.getUrl(), url)) {
-      endpoint.setUrl(url);
-      changed = true;
-    }
-    if (!Objects.equals(endpoint.getStatus(), status)) {
-      endpoint.setStatus(status);
-      changed = true;
-    }
-    if (endpoint.getChair() == null || !Objects.equals(endpoint.getChair().getId(), chair.getId())) {
-      endpoint.setChair(chair);
-      changed = true;
-    }
+    boolean changed =
+        !Objects.equals(endpoint.getRegistryKey(), registryKey)
+            || !Objects.equals(endpoint.getUrl(), url)
+            || !Objects.equals(endpoint.getStatus(), status)
+            || endpoint.getChair() == null
+            || !Objects.equals(endpoint.getChair().getId(), chair.getId());
+
+    endpoint.setRegistryKey(registryKey);
+    endpoint.setUrl(url);
+    endpoint.setStatus(status);
+    endpoint.setChair(chair);
 
     if (changed) {
       stats.endpointsUpdated++;
@@ -160,7 +150,7 @@ public class SourceEndpointRegistrySyncService {
     return endpoint;
   }
 
-  private void retireRemovedEndpoints(Set<String> desiredEndpointKeys, SyncStats stats) {
+  private void retireRemovedEndpoints(Set<String> desiredEndpointKeys, RegistryStats stats) {
     for (SourceEndpoint endpoint : sourceEndpointRepository.findByRegistryKeyIsNotNull()) {
       if (!desiredEndpointKeys.contains(endpoint.getRegistryKey())
           && !STATUS_RETIRED.equals(endpoint.getStatus())) {
@@ -204,15 +194,15 @@ public class SourceEndpointRegistrySyncService {
         .findFirst();
   }
 
-  private static class SyncStats {
+  private static class RegistryStats {
     private int chairsInserted;
     private int chairsUpdated;
     private int endpointsInserted;
     private int endpointsUpdated;
     private int endpointsRetired;
 
-    private SyncResult toResult() {
-      return new SyncResult(
+    private RegistryResult toResult() {
+      return new RegistryResult(
           chairsInserted, chairsUpdated, endpointsInserted, endpointsUpdated, endpointsRetired);
     }
   }
