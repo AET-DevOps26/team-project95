@@ -87,3 +87,6 @@ node_modules/
 
 # Docker / local overrides
 docker-compose.override.yml
+
+# Local Ansible inventory
+infra/ansible/inventory.ini

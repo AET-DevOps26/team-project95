@@ -30,7 +30,7 @@ ansible --version
 Copy the template:
 
 ```bash
-cp infra/ansible/inventory.ini.j2 infra/ansible/inventory.ini
+cp infra/ansible/inventory.example.ini infra/ansible/inventory.ini
 ```
 
 Edit `infra/ansible/inventory.ini` and replace the placeholders:
@@ -91,7 +91,7 @@ export GHCR_TOKEN="<github-token-or-pat>"
 
 The token needs permission to read private GHCR packages, usually `read:packages` and, for private repositories, `repo`.
 
-Optional service configuration:
+Required secret configuration:
 
 ```bash
 export THESIS_DB_PASSWORD="change-me"
@@ -99,6 +99,8 @@ export VECTOR_DB_PASSWORD="change-me"
 export AZURE_OPENAI_API_KEY="change-me"
 export OPENAI_API_KEY="change-me"
 ```
+
+`OPENAI_API_KEY` is required when `GENAI_MODEL_PROVIDER=openai`, which is the default. Non-secret values such as database names and timeouts have deployment defaults.
 
 ### 4. First test without Certbot
 

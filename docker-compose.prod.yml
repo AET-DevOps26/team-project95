@@ -2,7 +2,7 @@ name: open-thesis-radar
 
 services:
   frontend:
-    image: ${IMAGE_REPOSITORY}/frontend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REPOSITORY:?IMAGE_REPOSITORY is required}/frontend:${IMAGE_TAG:-latest}
     container_name: open-thesis-radar-frontend
     restart: unless-stopped
     ports:
@@ -19,7 +19,7 @@ services:
       - genai-service
 
   thesis-service:
-    image: ${IMAGE_REPOSITORY}/thesis-service:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REPOSITORY:?IMAGE_REPOSITORY is required}/thesis-service:${IMAGE_TAG:-latest}
     container_name: open-thesis-radar-thesis-service
     restart: unless-stopped
     environment:
@@ -27,7 +27,7 @@ services:
       THESIS_DB_PORT: 5432
       THESIS_DB_NAME: ${THESIS_DB_NAME:-thesis_db}
       THESIS_DB_USER: ${THESIS_DB_USER:-thesis_user}
-      THESIS_DB_PASSWORD: ${THESIS_DB_PASSWORD:-thesis_password}
+      THESIS_DB_PASSWORD: ${THESIS_DB_PASSWORD:?THESIS_DB_PASSWORD is required}
       THESIS_VECTOR_SEARCH_URL: http://vector-search-service:8082
     depends_on:
       thesis-db:
@@ -36,7 +36,7 @@ services:
         condition: service_started
 
   scraping-service:
-    image: ${IMAGE_REPOSITORY}/scraping-service:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REPOSITORY:?IMAGE_REPOSITORY is required}/scraping-service:${IMAGE_TAG:-latest}
     container_name: open-thesis-radar-scraping-service
     restart: unless-stopped
     environment:
@@ -49,30 +49,30 @@ services:
       - genai-service
 
   vector-search-service:
-    image: ${IMAGE_REPOSITORY}/vector-search-service:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REPOSITORY:?IMAGE_REPOSITORY is required}/vector-search-service:${IMAGE_TAG:-latest}
     container_name: open-thesis-radar-vector-search-service
     restart: unless-stopped
     environment:
       AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-https://api.openai.com}
-      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-dummy-key}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:?AZURE_OPENAI_API_KEY is required}
       AZURE_OPENAI_EMBEDDING_DEPLOYMENT: ${AZURE_OPENAI_EMBEDDING_DEPLOYMENT:-text-embedding-ada-002}
       AZURE_OPENAI_EMBEDDING_MODEL: ${AZURE_OPENAI_EMBEDDING_MODEL:-text-embedding-ada-002}
       PGVECTOR_DIMENSIONS: ${PGVECTOR_DIMENSIONS:-1536}
       PGVECTOR_URL: jdbc:postgresql://vector-db:5432/${VECTOR_DB_NAME:-vector_search_db}
       PGVECTOR_USERNAME: ${VECTOR_DB_USER:-vector_user}
-      PGVECTOR_PASSWORD: ${VECTOR_DB_PASSWORD:-vector_password}
+      PGVECTOR_PASSWORD: ${VECTOR_DB_PASSWORD:?VECTOR_DB_PASSWORD is required}
     depends_on:
       vector-db:
         condition: service_healthy
 
   genai-service:
-    image: ${IMAGE_REPOSITORY}/genai-service:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REPOSITORY:?IMAGE_REPOSITORY is required}/genai-service:${IMAGE_TAG:-latest}
     container_name: open-thesis-radar-genai-service
     restart: unless-stopped
     environment:
       GENAI_MODEL_PROVIDER: ${GENAI_MODEL_PROVIDER:-openai}
       GENAI_MODEL_NAME: ${GENAI_MODEL_NAME:-gpt-4o-mini}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
 
   thesis-db:
@@ -82,7 +82,7 @@ services:
     environment:
       POSTGRES_DB: ${THESIS_DB_NAME:-thesis_db}
       POSTGRES_USER: ${THESIS_DB_USER:-thesis_user}
-      POSTGRES_PASSWORD: ${THESIS_DB_PASSWORD:-thesis_password}
+      POSTGRES_PASSWORD: ${THESIS_DB_PASSWORD:?THESIS_DB_PASSWORD is required}
     volumes:
       - thesis-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -98,7 +98,7 @@ services:
     environment:
       POSTGRES_DB: ${VECTOR_DB_NAME:-vector_search_db}
       POSTGRES_USER: ${VECTOR_DB_USER:-vector_user}
-      POSTGRES_PASSWORD: ${VECTOR_DB_PASSWORD:-vector_password}
+      POSTGRES_PASSWORD: ${VECTOR_DB_PASSWORD:?VECTOR_DB_PASSWORD is required}
     volumes:
       - vector-postgres-data:/var/lib/postgresql/data
     healthcheck:

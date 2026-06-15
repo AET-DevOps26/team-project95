@@ -30,6 +30,7 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: "0600"
+  no_log: true
 
 - name: Log in to GitHub Container Registry when credentials are provided
   ansible.builtin.shell: |
