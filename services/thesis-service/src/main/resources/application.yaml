@@ -16,6 +16,8 @@ spring:
     locations: classpath:db/migration
 
 app:
+  source-registry:
+    path: ${THESIS_SOURCE_REGISTRY_PATH:classpath:source-endpoints.json}
   client:
     vector-search:
       url: ${THESIS_VECTOR_SEARCH_URL:${VECTOR_SEARCH_URL:http://localhost:8082}}

@@ -100,4 +100,3 @@ crash.*.log
 # Local Ansible inventory
 infra/ansible/inventory.ini
 fetch-raw-html.sh
-source-endpoints.json
