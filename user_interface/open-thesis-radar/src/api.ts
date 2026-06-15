@@ -4,6 +4,26 @@
  */
 
 export interface paths {
+    "/api/v1/theses": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List all theses
+         * @description Fetch all thesis proposals currently stored in the database.
+         */
+        get: operations["listTheses"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/theses/search": {
         parameters: {
             query?: never;
@@ -116,7 +136,28 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/internal/v1/thesis-service/chairs/{chairId}/theses": {
+    "/internal/v1/thesis-service/scrape-runs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Log a scrape run result
+         * @description Called by the Scraping Service to record the outcome of a scrape attempt.
+         *     This should be called for both successful and failed runs to maintain a complete history.
+         */
+        post: operations["logScrapeRun"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/v1/thesis-service/source-endpoints/{sourceEndpointId}/theses": {
         parameters: {
             query?: never;
             header?: never;
@@ -130,11 +171,10 @@ export interface paths {
          *     GenAI extraction for one chair/source endpoint.
          *
          *     Thesis Service behavior:
-         *     1. Save a new scrape run entry.
-         *     2. In one transaction, delete all existing thesis proposals for `chairId`
+         *     1. In one transaction, delete all existing thesis proposals for `chairId`
          *        and insert the newly extracted thesis proposals.
-         *     3. Commit only if the full replacement succeeds.
-         *     4. After relational replacement succeeds, call the Vector Search Service
+         *     2. Commit only if the full replacement succeeds.
+         *     3. After relational replacement succeeds, call the Vector Search Service
          *        to replace the vector index entries for the same chair.
          *
          *     If validation or insertion fails, the old thesis data must remain unchanged.
@@ -192,7 +232,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/internal/v1/vector-search-service/chairs/{chairId}/index": {
+    "/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index": {
         parameters: {
             query?: never;
             header?: never;
@@ -210,7 +250,7 @@ export interface paths {
          *     2. Generate embeddings for the provided theses.
          *     3. Insert the new vector index entries.
          */
-        post: operations["indexChairTheses"];
+        post: operations["indexSourceEndpointTheses"];
         delete?: never;
         options?: never;
         head?: never;
@@ -364,13 +404,6 @@ export interface components {
             researchArea?: string | null;
             /** Format: uri */
             sourceUrl: string;
-            /** @description Optional raw HTML snippet stored for this thesis proposal. */
-            rawHtmlSnapshot?: string | null;
-            /**
-             * Format: float
-             * @example 0.93
-             */
-            extractionConfidence?: number | null;
             /** @example OPEN */
             status: string;
             /** Format: date-time */
@@ -394,20 +427,20 @@ export interface components {
         Advisor: {
             /** Format: int64 */
             id?: number | null;
-            name?: string;
+            name: string;
             /** Format: email */
-            email?: string | null;
+            email: string;
             /** Format: uri */
             profileUrl?: string | null;
         };
         AdvisorInput: {
-            name?: string;
+            name: string;
             /** Format: email */
             email?: string | null;
             /** Format: uri */
             profileUrl?: string | null;
         };
-        ChairThesesReplacementRequest: {
+        ScrapeRunLogRequest: {
             /** Format: int64 */
             sourceEndpointId: number;
             /** Format: date-time */
@@ -417,30 +450,33 @@ export interface components {
             /** @enum {string} */
             status: "SUCCESS" | "PARTIAL_SUCCESS" | "FAILED";
             errorMessage?: string | null;
-            /**
-             * Format: uri
-             * @description Optional location where the raw HTML snapshot is stored.
-             */
-            rawHtmlSnapshotUrl?: string | null;
+            /** @description Raw HTML snapshot of the source page, stored for debugging. */
+            rawHtmlSnapshot?: string | null;
+            /** @example 5 */
+            candidatesFound?: number | null;
+        };
+        ScrapeRunLogResponse: {
+            /** Format: int64 */
+            id: number;
+            status: string;
+        };
+        SourceEndpointThesesReplacementRequest: {
             theses: components["schemas"]["ThesisProposalInput"][];
         };
-        ChairThesesReplacementResponse: {
+        SourceEndpointThesesReplacementResponse: {
             /**
              * Format: int64
-             * @example 42
+             * @example 10
              */
-            scrapeRunId: number;
-            /**
-             * Format: int64
-             * @example 3
-             */
-            chairId: number;
+            sourceEndpointId: number;
             /** @example 12 */
             deletedRelationalTheses: number;
             /** @example 9 */
             insertedRelationalTheses: number;
             /** @example 9 */
             replacedVectorEntries: number;
+            /** @example Vector search sync failed: connection refused */
+            errorMessage?: string | null;
         };
         TriggerScrapeResponse: {
             /** @example true */
@@ -497,9 +533,9 @@ export interface components {
              */
             score: number;
         };
-        ReplaceChairVectorsRequest: {
+        ReplaceSourceEndpointVectorsRequest: {
             /** Format: int64 */
-            scrapeRunId: number;
+            scrapeRunId?: number | null;
             theses: components["schemas"]["VectorThesisDocument"][];
         };
         VectorThesisDocument: {
@@ -507,6 +543,8 @@ export interface components {
             thesisId: number;
             /** Format: int64 */
             chairId: number;
+            /** Format: int64 */
+            sourceEndpointId: number;
             title: string;
             degreeType?: string | null;
             aiOverview?: string | null;
@@ -516,9 +554,9 @@ export interface components {
             sourceUrl: string;
             tags?: string[];
         };
-        ReplaceChairVectorsResponse: {
+        ReplaceSourceEndpointVectorsResponse: {
             /** Format: int64 */
-            chairId: number;
+            sourceEndpointId: number;
             /** @example 12 */
             deletedVectorEntries: number;
             /** @example 9 */
@@ -545,6 +583,8 @@ export interface components {
     };
     responses: never;
     parameters: {
+        /** @description Internal source endpoint id. */
+        SourceEndpointId: number;
         /** @description Internal chair id. */
         ChairId: number;
         /** @description Internal thesis proposal id. */
@@ -556,6 +596,26 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    listTheses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Thesis proposals returned successfully. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ThesisSearchResult"][];
+                };
+            };
+        };
+    };
     searchTheses: {
         parameters: {
             query?: never;
@@ -672,13 +732,37 @@ export interface operations {
             };
         };
     };
+    logScrapeRun: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScrapeRunLogRequest"];
+            };
+        };
+        responses: {
+            /** @description Scrape run logged successfully. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScrapeRunLogResponse"];
+                };
+            };
+        };
+    };
     replaceChairTheses: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Internal chair id. */
-                chairId: components["parameters"]["ChairId"];
+                /** @description Internal source endpoint id. */
+                sourceEndpointId: components["parameters"]["SourceEndpointId"];
             };
             cookie?: never;
         };
@@ -686,12 +770,6 @@ export interface operations {
             content: {
                 /**
                  * @example {
-                 *       "sourceEndpointId": 10,
-                 *       "startedAt": "2026-05-10T08:00:00Z",
-                 *       "finishedAt": "2026-05-10T08:01:42Z",
-                 *       "status": "SUCCESS",
-                 *       "errorMessage": null,
-                 *       "rawHtmlSnapshotUrl": null,
                  *       "theses": [
                  *         {
                  *           "title": "Semantic Search for Thesis Discovery",
@@ -717,7 +795,7 @@ export interface operations {
                  *       ]
                  *     }
                  */
-                "application/json": components["schemas"]["ChairThesesReplacementRequest"];
+                "application/json": components["schemas"]["SourceEndpointThesesReplacementRequest"];
             };
         };
         responses: {
@@ -727,7 +805,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ChairThesesReplacementResponse"];
+                    "application/json": components["schemas"]["SourceEndpointThesesReplacementResponse"];
                 };
             };
             /** @description Invalid replacement payload. */
@@ -799,13 +877,13 @@ export interface operations {
             };
         };
     };
-    indexChairTheses: {
+    indexSourceEndpointTheses: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                /** @description Internal chair id. */
-                chairId: components["parameters"]["ChairId"];
+                /** @description Internal source endpoint id. */
+                sourceEndpointId: components["parameters"]["SourceEndpointId"];
             };
             cookie?: never;
         };
@@ -833,7 +911,7 @@ export interface operations {
                  *       ]
                  *     }
                  */
-                "application/json": components["schemas"]["ReplaceChairVectorsRequest"];
+                "application/json": components["schemas"]["ReplaceSourceEndpointVectorsRequest"];
             };
         };
         responses: {
@@ -843,7 +921,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["ReplaceChairVectorsResponse"];
+                    "application/json": components["schemas"]["ReplaceSourceEndpointVectorsResponse"];
                 };
             };
         };

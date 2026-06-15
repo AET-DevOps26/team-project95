@@ -23,6 +23,9 @@ public class ScrapeRun {
   @Column(name = "error_message", columnDefinition = "TEXT")
   private String errorMessage;
 
+  @Column(name = "raw_html_snapshot", columnDefinition = "TEXT")
+  private String rawHtmlSnapshot;
+
   @Column(name = "candidates_found")
   private Integer candidatesFound = 0;
 
@@ -71,6 +74,14 @@ public class ScrapeRun {
 
   public void setErrorMessage(String errorMessage) {
     this.errorMessage = errorMessage;
+  }
+
+  public String getRawHtmlSnapshot() {
+    return rawHtmlSnapshot;
+  }
+
+  public void setRawHtmlSnapshot(String rawHtmlSnapshot) {
+    this.rawHtmlSnapshot = rawHtmlSnapshot;
   }
 
   public Integer getCandidatesFound() {

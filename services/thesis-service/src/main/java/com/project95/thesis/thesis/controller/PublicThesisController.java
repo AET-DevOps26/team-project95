@@ -3,6 +3,7 @@ package com.project95.thesis.thesis.controller;
 import com.project95.thesis.management.dto.SearchThesesRequestDto;
 import com.project95.thesis.management.dto.SearchThesesResponseDto;
 import com.project95.thesis.management.dto.ThesisProposalDto;
+import com.project95.thesis.management.dto.ThesisSearchResultDto;
 import com.project95.thesis.thesis.domain.ThesisProposal;
 import com.project95.thesis.thesis.repository.ThesisProposalRepository;
 import com.project95.thesis.thesis.service.ThesisSearchService;
@@ -26,17 +27,15 @@ public class PublicThesisController {
     this.thesisRepository = thesisRepository;
   }
 
+  @GetMapping
+  public ResponseEntity<List<ThesisSearchResultDto>> listTheses() {
+    return ResponseEntity.ok(thesisSearchService.listAllTheses());
+  }
+
   @PostMapping("/search")
   public ResponseEntity<SearchThesesResponseDto> searchTheses(
       @Valid @RequestBody SearchThesesRequestDto request) {
     return ResponseEntity.ok(thesisSearchService.searchTheses(request));
-  }
-
-  @GetMapping
-  public ResponseEntity<List<ThesisProposalDto>> listTheses() {
-    List<ThesisProposalDto> theses =
-        thesisRepository.findAll().stream().map(this::mapToDto).collect(Collectors.toList());
-    return ResponseEntity.ok(theses);
   }
 
   @GetMapping("/{thesisId}")
@@ -68,6 +67,7 @@ public class PublicThesisController {
                   a -> {
                     com.project95.thesis.management.dto.AdvisorDto advDto =
                         new com.project95.thesis.management.dto.AdvisorDto();
+                    advDto.setId(a.getId());
                     advDto.setName(a.getName());
                     advDto.setEmail(a.getEmail());
                     if (a.getProfileUrl() != null) {

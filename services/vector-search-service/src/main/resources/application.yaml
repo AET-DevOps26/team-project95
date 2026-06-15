@@ -27,6 +27,10 @@ spring:
         max-document-batch-size: 10000
 
 management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
   endpoints:
     web:
       base-path: /
