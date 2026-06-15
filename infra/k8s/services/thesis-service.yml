@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: thesis-service
+  namespace: open-thesis-radar
+  labels:
+    app: thesis-service
+spec:
+  selector:
+    app: thesis-service
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: thesis-service-port

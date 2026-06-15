@@ -1,0 +1,17 @@
+fullnameOverride: vector-db
+
+auth:
+  username: vector_user
+  database: vector_search_db
+  existingSecret: vector-db-secret
+  secretKeys:
+    adminPasswordKey: password
+    userPasswordKey: password
+
+primary:
+  resourcesPreset: nano
+  persistence:
+    size: 10Gi
+
+metrics:
+  enabled: true

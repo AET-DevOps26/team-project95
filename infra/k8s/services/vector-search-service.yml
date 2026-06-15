@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vector-search-service
+  namespace: open-thesis-radar
+  labels:
+    app: vector-search-service
+spec:
+  selector:
+    app: vector-search-service
+  ports:
+    - protocol: TCP
+      port: 8082
+      targetPort: vector-search-service-port

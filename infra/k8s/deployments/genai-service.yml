@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: genai-service-deployment
+  namespace: open-thesis-radar
+  labels:
+    app: genai-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: genai-service
+  template:
+    metadata:
+      labels:
+        app: genai-service
+    spec:
+      containers:
+        - name: genai-service-container
+          image: ghcr.io/aet-devops26/team-project95/genai-service:latest
+          ports:
+            - containerPort: 8000
+              name: genai-service-port
+          env:
+            - name: GENAI_MODEL_PROVIDER
+              value: openai
+            - name: GENAI_MODEL_NAME
+              value: gpt-5.4
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: openai-secret
+                  key: api-key
+            - name: OLLAMA_BASE_URL
+              value: http://host.docker.internal:11434
+          livenessProbe:
+            httpGet:
+              path: /internal/v1/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /internal/v1/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scraping-service-deployment
+  namespace: open-thesis-radar
+  labels:
+    app: scraping-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: scraping-service
+  template:
+    metadata:
+      labels:
+        app: scraping-service
+    spec:
+      containers:
+        - name: scraping-service-container
+          image: ghcr.io/aet-devops26/team-project95/scraping-service:latest
+          ports:
+            - containerPort: 8081
+              name: scraping-service-port
+          env:
+            - name: APP_SERVICES_MAIN_THESIS
+              value: http://thesis-service:8080
+            - name: APP_SERVICES_GENAI
+              value: http://genai-service:8000
+            - name: CLIENT_CONNECT_TIMEOUT
+              value: "4000"
+            - name: CLIENT_READ_TIMEOUT
+              value: "300000"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thesis-service-deployment
+  namespace: open-thesis-radar
+  labels:
+    app: thesis-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: thesis-service
+  template:
+    metadata:
+      labels:
+        app: thesis-service
+    spec:
+      containers:
+        - name: thesis-service-container
+          image: ghcr.io/aet-devops26/team-project95/thesis-service:latest
+          ports:
+            - containerPort: 8080
+              name: thesis-service-port
+          env:
+            - name: THESIS_DB_HOST
+              value: thesis-db
+            - name: THESIS_DB_PORT
+              value: "5432"
+            - name: THESIS_DB_NAME
+              value: thesis_db
+            - name: THESIS_DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: thesis-db-secret
+                  key: username
+            - name: THESIS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: thesis-db-secret
+                  key: password
+            - name: THESIS_VECTOR_SEARCH_URL
+              value: http://vector-search-service:8082
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

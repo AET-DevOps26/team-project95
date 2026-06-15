@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vector-search-service-deployment
+  namespace: open-thesis-radar
+  labels:
+    app: vector-search-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vector-search-service
+  template:
+    metadata:
+      labels:
+        app: vector-search-service
+    spec:
+      containers:
+        - name: vector-search-service-container
+          image: ghcr.io/aet-devops26/team-project95/vector-search-service:latest
+          ports:
+            - containerPort: 8082
+              name: vector-search-service-port
+          env:
+            - name: PGVECTOR_URL
+              value: jdbc:postgresql://vector-db:5432/vector_search_db
+            - name: PGVECTOR_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: vector-db-secret
+                  key: username
+            - name: PGVECTOR_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: vector-db-secret
+                  key: password
+            - name: PGVECTOR_DIMENSIONS
+              value: "1536"
+            - name: AZURE_OPENAI_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: azure-openai-secret
+                  key: endpoint
+            - name: AZURE_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: azure-openai-secret
+                  key: api-key
+            - name: AZURE_OPENAI_EMBEDDING_DEPLOYMENT
+              value: text-embedding-ada-002
+            - name: AZURE_OPENAI_EMBEDDING_MODEL
+              value: text-embedding-ada-002
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"

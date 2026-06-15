@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-interface
+  namespace: open-thesis-radar
+  labels:
+    app: user-interface
+spec:
+  selector:
+    app: user-interface
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: user-interface-port
