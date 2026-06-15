@@ -96,3 +96,6 @@ docker-compose.override.yml
 !*.tfvars.example
 crash.log
 crash.*.log
+
+fetch-raw-html.sh
+source-endpoints.json

@@ -46,14 +46,6 @@ function formatDateTime(value: string | null | undefined) {
   });
 }
 
-function formatConfidence(value: number | null | undefined) {
-  if (value === null || value === undefined) {
-    return EMPTY_FIELD;
-  }
-
-  return `${Math.round(value * 100)}%`;
-}
-
 function formatAdvisors(advisors: ThesisProposal['advisors']) {
   if (!advisors?.length) {
     return EMPTY_FIELD;
@@ -219,8 +211,6 @@ export default function DetailedThesisPage() {
                       <p className={styles.detailValue}>{formatAdvisors(thesis.advisors)}</p>
                       <h3 className={styles.detailLabel}>Tags</h3>
                       <p className={styles.detailValue}>{tagsText}</p>
-                      <h3 className={styles.detailLabel}>Extraction Confidence</h3>
-                      <p className={styles.detailValue}>{formatConfidence(thesis.extractionConfidence)}</p>
                       <h3 className={styles.detailLabel}>Source</h3>
                       <a href={sourceUrl} target="_blank" rel="noreferrer" className={styles.detailLink}>
                         View source

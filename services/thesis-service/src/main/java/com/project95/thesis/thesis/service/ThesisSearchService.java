@@ -41,34 +41,31 @@ public class ThesisSearchService {
             request.getPage() != null ? request.getPage() : 0,
             request.getSize() != null ? request.getSize() : 20);
 
-    List<Long> vectorMatchIds = null;
+    Map<Long, Double> vectorMatchScores = null;
 
     if (request.getNaturalLanguageQuery() != null && !request.getNaturalLanguageQuery().isBlank()) {
-      vectorMatchIds = callVectorSearch(request);
-      if (vectorMatchIds == null) {
+      vectorMatchScores = callVectorSearch(request);
+      if (vectorMatchScores == null) {
         log.warn("Vector search failed. Falling back to relational search only.");
-      } else if (vectorMatchIds.isEmpty()) {
+      } else if (vectorMatchScores.isEmpty()) {
         // Vector search succeeded but found nothing - strict match policy
         return emptyResponse(pageable);
       }
     }
 
-    Specification<ThesisProposal> spec = buildSpecification(request.getFilters(), vectorMatchIds);
+    List<Long> includeIds =
+        vectorMatchScores != null ? new ArrayList<>(vectorMatchScores.keySet()) : null;
+    Specification<ThesisProposal> spec = buildSpecification(request.getFilters(), includeIds);
 
     // If we have vector match IDs, we must ensure ranking is preserved
-    if (vectorMatchIds != null && !vectorMatchIds.isEmpty()) {
+    if (vectorMatchScores != null && !vectorMatchScores.isEmpty()) {
       // Fetch ALL matching candidates from DB (capped by vector service limit, e.g. 200)
       List<ThesisProposal> allCandidates = thesisRepository.findAll(spec);
 
-      // Build rank map for O(1) lookup during sort
-      final Map<Long, Integer> rankMap = new HashMap<>();
-      for (int i = 0; i < vectorMatchIds.size(); i++) {
-        rankMap.put(vectorMatchIds.get(i), i);
-      }
-
       // Re-order based on vector search relevance
+      final Map<Long, Double> finalScores = vectorMatchScores;
       allCandidates.sort(
-          Comparator.comparingInt(t -> rankMap.getOrDefault(t.getId(), Integer.MAX_VALUE)));
+          Comparator.comparingDouble(t -> -finalScores.getOrDefault(t.getId(), 0.0)));
 
       // Manual pagination for the ranked list
       int start = (int) pageable.getOffset();
@@ -79,28 +76,39 @@ public class ThesisSearchService {
               ? allCandidates.subList(start, end)
               : Collections.emptyList();
 
-      return mapToResponseDto(new PageImpl<>(pagedList, pageable, allCandidates.size()));
+      return mapToResponseDto(
+          new PageImpl<>(pagedList, pageable, allCandidates.size()), vectorMatchScores);
     }
 
     // Standard relational pagination
     Page<ThesisProposal> page = thesisRepository.findAll(spec, pageable);
-    return mapToResponseDto(page);
+    return mapToResponseDto(page, null);
   }
 
-  private SearchThesesResponseDto mapToResponseDto(Page<ThesisProposal> page) {
+  public List<ThesisSearchResultDto> listAllTheses() {
+    log.info("Listing all theses");
+    return thesisRepository.findAll().stream()
+        .map(entity -> mapToSearchResultDto(entity, null))
+        .collect(Collectors.toList());
+  }
+
+  private SearchThesesResponseDto mapToResponseDto(
+      Page<ThesisProposal> page, Map<Long, Double> scores) {
     SearchThesesResponseDto response = new SearchThesesResponseDto();
     response.setItems(
-        page.getContent().stream().map(this::mapToSearchResultDto).collect(Collectors.toList()));
+        page.getContent().stream()
+            .map(
+                entity ->
+                    mapToSearchResultDto(entity, scores != null ? scores.get(entity.getId()) : null))
+            .collect(Collectors.toList()));
     response.setTotalElements((int) page.getTotalElements());
     response.setPage(page.getNumber());
     response.setSize(page.getSize());
     return response;
   }
 
-  /**
-   * @return List of IDs on success, empty list for zero matches, or null on service failure.
-   */
-  private List<Long> callVectorSearch(SearchThesesRequestDto request) {
+  /** @return Map of ID -> Score on success, empty map for zero matches, or null on service failure. */
+  private Map<Long, Double> callVectorSearch(SearchThesesRequestDto request) {
     VectorSearchRequestDto vectorRequest = new VectorSearchRequestDto();
     vectorRequest.setQuery(request.getNaturalLanguageQuery());
 
@@ -123,10 +131,13 @@ public class ThesisSearchService {
               .body(VectorSearchResponseDto.class);
 
       if (vectorResponse != null && vectorResponse.getResults() != null) {
-        return vectorResponse.getResults().stream()
-            .map(VectorSearchResultDto::getThesisId)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+        Map<Long, Double> scores = new LinkedHashMap<>();
+        for (VectorSearchResultDto res : vectorResponse.getResults()) {
+          if (res.getThesisId() != null) {
+            scores.put(res.getThesisId(), (double) res.getScore());
+          }
+        }
+        return scores;
       }
       return null;
     } catch (Exception e) {
@@ -171,7 +182,7 @@ public class ThesisSearchService {
     };
   }
 
-  private ThesisSearchResultDto mapToSearchResultDto(ThesisProposal entity) {
+  private ThesisSearchResultDto mapToSearchResultDto(ThesisProposal entity, Double score) {
     ThesisSearchResultDto dto = new ThesisSearchResultDto();
     dto.setId(entity.getId());
     dto.setTitle(entity.getTitle());
@@ -184,6 +195,10 @@ public class ThesisSearchService {
     dto.setStatus(entity.getStatus());
     dto.setLastSeenAt(entity.getLastSeenAt());
 
+    if (score != null) {
+      dto.setSemanticScore(score.floatValue());
+    }
+
     if (!entity.getAdvisors().isEmpty()) {
       dto.setAdvisors(
           entity.getAdvisors().stream()
@@ -191,6 +206,7 @@ public class ThesisSearchService {
                   a -> {
                     com.project95.thesis.management.dto.AdvisorDto advDto =
                         new com.project95.thesis.management.dto.AdvisorDto();
+                    advDto.setId(a.getId());
                     advDto.setName(a.getName());
                     advDto.setEmail(a.getEmail());
                     if (a.getProfileUrl() != null) {

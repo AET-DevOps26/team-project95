@@ -49,12 +49,14 @@ type ThesisProposal = components['schemas']['ThesisProposal'];
 //     .every((token) => searchableText.includes(token));
 // }
 
-export async function listTheses(client: ApiClient = defaultApiClient): Promise<ThesisProposal[]> {
+type ThesisSearchResult = components['schemas']['ThesisSearchResult'];
+
+export async function listTheses(client: ApiClient = defaultApiClient): Promise<ThesisSearchResult[]> {
   // if (USE_MOCK_THESIS) {
   //   return MOCK_THESES;
   // }
 
-  return client.request<ThesisProposal[]>('/api/v1/theses', {
+  return client.request<ThesisSearchResult[]>('/api/v1/theses', {
     method: 'GET',
   });
 }

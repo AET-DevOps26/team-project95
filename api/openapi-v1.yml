@@ -57,7 +57,7 @@ paths:
               schema:
                 type: array
                 items:
-                  $ref: '#/components/schemas/ThesisProposal'
+                  $ref: '#/components/schemas/ThesisSearchResult'
 
   /api/v1/theses/search:
     post:
@@ -242,12 +242,6 @@ paths:
             schema:
               $ref: '#/components/schemas/SourceEndpointThesesReplacementRequest'
             example:
-              sourceEndpointId: 10
-              startedAt: "2026-05-10T08:00:00Z"
-              finishedAt: "2026-05-10T08:01:42Z"
-              status: "SUCCESS"
-              errorMessage: null
-              rawHtmlSnapshotUrl: null
               theses:
                 - title: "Semantic Search for Thesis Discovery"
                   degreeType: "MASTER"
@@ -636,17 +630,6 @@ components:
         sourceUrl:
           type: string
           format: uri
-        rawHtmlSnapshot:
-          type: string
-          nullable: true
-          description: Optional raw HTML snippet stored for this thesis proposal.
-        extractionConfidence:
-          type: number
-          format: float
-          nullable: true
-          minimum: 0
-          maximum: 1
-          example: 0.93
         status:
           type: string
           example: "OPEN"
@@ -760,6 +743,10 @@ components:
         errorMessage:
           type: string
           nullable: true
+        rawHtmlSnapshot:
+          type: string
+          nullable: true
+          description: Raw HTML snapshot of the source page, stored for debugging.
         candidatesFound:
           type: integer
           nullable: true

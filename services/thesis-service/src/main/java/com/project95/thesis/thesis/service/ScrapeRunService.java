@@ -60,6 +60,7 @@ public class ScrapeRunService {
     run.setFinishedAt(request.getFinishedAt());
     run.setStatus(request.getStatus().toString());
     run.setErrorMessage(unwrap(request.getErrorMessage()));
+    run.setRawHtmlSnapshot(unwrap(request.getRawHtmlSnapshot()));
     run.setCandidatesFound(
         unwrap(request.getCandidatesFound()) != null ? unwrap(request.getCandidatesFound()) : 0);
 
