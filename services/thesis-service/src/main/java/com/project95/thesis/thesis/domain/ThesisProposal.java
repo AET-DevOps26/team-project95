@@ -28,12 +28,6 @@ public class ThesisProposal {
   @Column(name = "source_url", nullable = false, length = 1024)
   private String sourceUrl;
 
-  @Column(name = "raw_html_snapshot", columnDefinition = "TEXT")
-  private String rawHtmlSnapshot;
-
-  @Column(name = "extraction_confidence")
-  private Float extractionConfidence;
-
   @Column(nullable = false)
   private String status = "OPEN";
 
@@ -118,22 +112,6 @@ public class ThesisProposal {
 
   public void setSourceUrl(String sourceUrl) {
     this.sourceUrl = sourceUrl;
-  }
-
-  public String getRawHtmlSnapshot() {
-    return rawHtmlSnapshot;
-  }
-
-  public void setRawHtmlSnapshot(String rawHtmlSnapshot) {
-    this.rawHtmlSnapshot = rawHtmlSnapshot;
-  }
-
-  public Float getExtractionConfidence() {
-    return extractionConfidence;
-  }
-
-  public void setExtractionConfidence(Float extractionConfidence) {
-    this.extractionConfidence = extractionConfidence;
   }
 
   public String getStatus() {

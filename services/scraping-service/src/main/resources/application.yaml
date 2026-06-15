@@ -13,12 +13,16 @@ app:
       url: ${APP_SERVICES_GENAI:http://localhost:8000}
     timeouts:
       connect-ms: ${CLIENT_CONNECT_TIMEOUT:4000}
-      read-ms: ${CLIENT_READ_TIMEOUT:10000}
+      read-ms: ${CLIENT_READ_TIMEOUT:120000}
   scheduling:
     scrape-cron: "0 0 * * * *"
 
 # Actuator config for DevOps health checks
 management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
   endpoints:
     web:
       base-path: /
