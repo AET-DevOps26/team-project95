@@ -31,8 +31,6 @@ spec:
                 secretKeyRef:
                   name: openai-secret
                   key: api-key
-            - name: OLLAMA_BASE_URL
-              value: http://host.docker.internal:11434
           livenessProbe:
             httpGet:
               path: /internal/v1/health

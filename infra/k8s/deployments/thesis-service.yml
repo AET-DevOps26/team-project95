@@ -29,10 +29,7 @@ spec:
             - name: THESIS_DB_NAME
               value: thesis_db
             - name: THESIS_DB_USER
-              valueFrom:
-                secretKeyRef:
-                  name: thesis-db-secret
-                  key: username
+              value: thesis_user
             - name: THESIS_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -42,13 +39,13 @@ spec:
               value: http://vector-search-service:8082
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /health
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /health
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10

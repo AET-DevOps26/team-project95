@@ -25,10 +25,7 @@ spec:
             - name: PGVECTOR_URL
               value: jdbc:postgresql://vector-db:5432/vector_search_db
             - name: PGVECTOR_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: vector-db-secret
-                  key: username
+              value: vector_user
             - name: PGVECTOR_PASSWORD
               valueFrom:
                 secretKeyRef:

@@ -6,11 +6,13 @@ releases:
   - name: thesis-db
     namespace: open-thesis-radar
     chart: bitnami/postgresql
+    version: "18.7.4"
     values:
       - helm-values/thesis-db-values.yml
 
   - name: vector-db
     namespace: open-thesis-radar
     chart: bitnami/postgresql
+    version: "18.7.4"
     values:
       - helm-values/vector-db-values.yml
