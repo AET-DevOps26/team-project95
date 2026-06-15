@@ -1,0 +1,17 @@
+project_name = "devops-project"
+environment  = "prod"
+location     = "westeurope"
+
+admin_username       = "azureuser"
+admin_ssh_public_key = "ssh-ed25519 AAAA... replace-with-your-public-key"
+
+# Recommended: restrict SSH to your public IP/CIDR.
+ssh_source_address_prefixes = ["0.0.0.0/0"]
+web_source_address_prefixes = ["0.0.0.0/0"]
+
+vm_size         = "Standard_B2s"
+os_disk_size_gb = 30
+
+tags = {
+  owner = "replace-me"
+}

@@ -88,6 +88,15 @@ node_modules/
 # Docker / local overrides
 docker-compose.override.yml
 
+# Terraform
+**/.terraform/providers
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+crash.*.log
+
 # Local Ansible inventory
 infra/ansible/inventory.ini
 fetch-raw-html.sh
