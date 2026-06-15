@@ -1,0 +1,57 @@
+---
+- name: Create application directory
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: Copy production Docker Compose file
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../docker-compose.prod.yml"
+    dest: "{{ app_dir }}/docker-compose.yml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+
+- name: Install initial HTTP-only Nginx config for ACME challenge
+  ansible.builtin.template:
+    src: nginx-http.conf.j2
+    dest: "{{ app_dir }}/nginx.conf"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+
+- name: Write production environment file
+  ansible.builtin.template:
+    src: app.env.j2
+    dest: "{{ app_dir }}/.env"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+  no_log: true
+
+- name: Log in to GitHub Container Registry when credentials are provided
+  ansible.builtin.shell: |
+    set -euo pipefail
+    printf '%s' "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+  args:
+    executable: /bin/bash
+  environment:
+    GHCR_USER: "{{ ghcr_user }}"
+    GHCR_TOKEN: "{{ ghcr_token }}"
+  no_log: true
+  when:
+    - ghcr_user | length > 0
+    - ghcr_token | length > 0
+
+- name: Pull application images
+  ansible.builtin.command: docker compose pull
+  args:
+    chdir: "{{ app_dir }}"
+
+- name: Start application containers
+  ansible.builtin.command: docker compose up -d
+  args:
+    chdir: "{{ app_dir }}"
