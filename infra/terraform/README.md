@@ -7,23 +7,23 @@ It creates and keeps:
 - one Ubuntu 22.04 Linux VM
 - inbound TCP ports `22`, `80`, and `443`
 - one static Azure Public IP
-- one managed data disk attached to the VM
 - basic networking: resource group, VNet, subnet, NIC, NSG
 - remote Terraform state in Azure Blob Storage
 
 ## Current operating model
 
-The VM is **not disposable**.
+Terraform manages one Ubuntu 22.04 VM and the supporting Azure resources.
+The VM can be intentionally recreated when the OS image or VM definition changes, while the static public IP and NIC are kept stable.
 
-Originally the idea was to create a fresh VM for every deployment, but Azure VM capacity in the allowed regions proved unreliable. The current approach is:
+The current approach is:
 
-1. Terraform creates the VM and supporting Azure resources once.
+1. Terraform creates the VM and supporting Azure resources.
 2. Terraform keeps managing the infrastructure definition.
-3. Ansible/application deployment updates the existing VM.
+3. Ansible/application deployment updates the VM.
 4. The VM may be stopped/deallocated with Azure CLI when not needed.
-5. The static public IP and data disk are kept stable.
+5. The static public IP is kept stable across VM recreation.
 
-Do **not** change `deployment_id`, `location`, VM name, resource names, or disk/network names casually. These changes can force resource replacement, which is now blocked by lifecycle protection.
+Do **not** change `location`, resource names, or disk/network names casually. These changes can force replacement of protected resources.
 
 ## Protected resources
 
@@ -42,12 +42,12 @@ This is intentional. It protects against accidental deletion of:
 - subnet
 - public IP
 - network interface
-- managed data disk
-- VM
 
-Because of this, `terraform destroy` is not part of the normal workflow for this project.
+The VM itself is not protected by `prevent_destroy`, so intentional OS image or VM definition changes can recreate the VM while keeping the protected network and data resources.
 
-If you really need to destroy/recreate the environment, remove the relevant `prevent_destroy` blocks first and understand that the public IP and data disk may be lost.
+Because of the protected supporting resources, `terraform destroy` is not part of the normal workflow for this project.
+
+If you really need to destroy/recreate the whole environment, remove the relevant `prevent_destroy` blocks first and understand that the public IP may be lost.
 
 ## Remote state backend
 
@@ -107,14 +107,13 @@ project_name = "project95"
 environment  = "prod"
 location     = "polandcentral"
 
-# Keep stable. Do not change after the VM exists.
-deployment_id = "001"
-
 admin_username       = "azureuser"
 admin_ssh_public_key = "ssh-rsa AAAA..."
 
 vm_size = "Standard_D2s_v3"
 ```
+
+The VM image version is pinned in `main.tf` under `source_image_reference`.
 
 `terraform.tfvars` is ignored by Git and must not be committed.
 
@@ -150,7 +149,7 @@ Deallocate the VM to stop compute billing:
 ```bash
 az vm deallocate \
   --resource-group rg-project95-prod \
-  --name vm-project95-prod-001
+  --name vm-project95-prod
 ```
 
 Start it again:
@@ -158,7 +157,7 @@ Start it again:
 ```bash
 az vm start \
   --resource-group rg-project95-prod \
-  --name vm-project95-prod-001
+  --name vm-project95-prod
 ```
 
 Check power state:
@@ -166,18 +165,12 @@ Check power state:
 ```bash
 az vm get-instance-view \
   --resource-group rg-project95-prod \
-  --name vm-project95-prod-001 \
+  --name vm-project95-prod \
   --query "instanceView.statuses[?starts_with(code, 'PowerState/')].displayStatus" \
   -o tsv
 ```
 
 Running `terraform apply` after deallocating the VM should not start it again, because VM power state is operational state, not Terraform-managed desired configuration.
-
-## Data disk
-
-Terraform creates an independent managed data disk and attaches it to the VM.
-
-The disk is intentionally left unformatted/unmounted. Ansible should handle partitioning, formatting, and mounting.
 
 ## If resources already exist but are missing from state
 
@@ -186,9 +179,6 @@ Import them instead of recreating them.
 Examples:
 
 ```bash
-terraform import azurerm_managed_disk.data \
-  /subscriptions/<sub-id>/resourceGroups/rg-project95-prod/providers/Microsoft.Compute/disks/disk-project95-prod-data
-
 terraform import azurerm_virtual_network.main \
   /subscriptions/<sub-id>/resourceGroups/rg-project95-prod/providers/Microsoft.Network/virtualNetworks/vnet-project95-prod
 

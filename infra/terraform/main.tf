@@ -119,31 +119,13 @@ resource "azurerm_network_interface" "vm" {
   }
 }
 
-resource "azurerm_managed_disk" "data" {
-  name                 = "disk-${local.name_prefix}-data"
-  location             = azurerm_resource_group.main.location
-  resource_group_name  = azurerm_resource_group.main.name
-  storage_account_type = "Premium_LRS"
-  create_option        = "Empty"
-  disk_size_gb         = var.data_disk_size_gb
-  tags                 = local.common_tags
-
-  lifecycle {
-    prevent_destroy = true
-  }
-}
-
 resource "azurerm_linux_virtual_machine" "vm" {
-  name                = "vm-${local.name_prefix}-${var.deployment_id}"
+  name                = "vm-${local.name_prefix}"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
   size                = var.vm_size
   admin_username      = var.admin_username
   tags                = local.common_tags
-
-  lifecycle {
-    prevent_destroy = true
-  }
 
   disable_password_authentication = true
   network_interface_ids           = [azurerm_network_interface.vm.id]
@@ -163,13 +145,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
     publisher = "Canonical"
     offer     = "0001-com-ubuntu-server-jammy"
     sku       = "22_04-lts-gen2"
-    version   = "latest"
+    version   = "22.04.202606110"
   }
 }
 
-resource "azurerm_virtual_machine_data_disk_attachment" "data" {
-  managed_disk_id    = azurerm_managed_disk.data.id
-  virtual_machine_id = azurerm_linux_virtual_machine.vm.id
-  lun                = var.data_disk_lun
-  caching            = "ReadWrite"
-}

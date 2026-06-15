@@ -13,13 +13,7 @@ variable "environment" {
 variable "location" {
   description = "Azure region in which resources are created."
   type        = string
-  default     = "francecentral"
-}
-
-variable "deployment_id" {
-  description = "Stable VM suffix. Keep this unchanged to keep using the same VM. Changing it would require VM replacement and is blocked by prevent_destroy."
-  type        = string
-  default     = "001"
+  default     = "polandcentral"
 }
 
 variable "admin_username" {
@@ -56,18 +50,6 @@ variable "os_disk_size_gb" {
   description = "OS disk size in GiB."
   type        = number
   default     = 30
-}
-
-variable "data_disk_size_gb" {
-  description = "Persistent independent data disk size in GiB."
-  type        = number
-  default     = 64
-}
-
-variable "data_disk_lun" {
-  description = "LUN used to attach the persistent data disk to the VM."
-  type        = number
-  default     = 0
 }
 
 variable "tags" {

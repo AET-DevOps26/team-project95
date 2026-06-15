@@ -18,7 +18,3 @@ output "ssh_command" {
   value       = "ssh ${var.admin_username}@${azurerm_public_ip.vm.ip_address}"
 }
 
-output "data_disk_id" {
-  description = "Persistent managed data disk id."
-  value       = azurerm_managed_disk.data.id
-}

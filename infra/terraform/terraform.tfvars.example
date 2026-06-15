@@ -2,10 +2,6 @@ project_name = "devops-project"
 environment  = "prod"
 location     = "westeurope"
 
-# Set this to the CI pipeline/build id when you want Terraform to replace the VM
-# while keeping the static public IP, NIC and data disk.
-deployment_id = "001"
-
 admin_username       = "azureuser"
 admin_ssh_public_key = "ssh-ed25519 AAAA... replace-with-your-public-key"
 
@@ -13,9 +9,8 @@ admin_ssh_public_key = "ssh-ed25519 AAAA... replace-with-your-public-key"
 ssh_source_address_prefixes = ["0.0.0.0/0"]
 web_source_address_prefixes = ["0.0.0.0/0"]
 
-vm_size           = "Standard_B2s"
-os_disk_size_gb   = 30
-data_disk_size_gb = 64
+vm_size         = "Standard_B2s"
+os_disk_size_gb = 30
 
 tags = {
   owner = "replace-me"
