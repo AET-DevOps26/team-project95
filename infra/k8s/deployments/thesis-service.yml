@@ -20,7 +20,7 @@ spec:
           image: ghcr.io/aet-devops26/team-project95/thesis-service:latest
           ports:
             - containerPort: 8080
-              name: thesis-service-port
+              name: http
           env:
             - name: THESIS_DB_HOST
               value: thesis-db

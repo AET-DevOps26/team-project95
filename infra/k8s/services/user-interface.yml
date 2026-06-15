@@ -11,4 +11,4 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: user-interface-port
+      targetPort: http

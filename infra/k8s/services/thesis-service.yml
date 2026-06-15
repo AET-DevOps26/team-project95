@@ -11,4 +11,4 @@ spec:
   ports:
     - protocol: TCP
       port: 8080
-      targetPort: thesis-service-port
+      targetPort: http
