@@ -87,7 +87,7 @@ class FilterControllerIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.chairs", hasSize(1)))
         .andExpect(jsonPath("$.tags", contains("LLM")))
-        .andExpect(jsonPath("$.researchAreas", contains("NLP")))
+        .andExpect(jsonPath("$.researchAreas", hasItem("NLP")))
         .andExpect(jsonPath("$.researchAreas", not(hasItem("Orphan Area"))))
         .andExpect(jsonPath("$.degreeTypes", hasItem("MASTER")));
   }

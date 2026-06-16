@@ -16,7 +16,7 @@ public interface ResearchAreaRepository extends JpaRepository<ResearchArea, Long
 
   @Query(
       "select distinct researchArea.name from ResearchArea researchArea "
-          + "join researchArea.thesisProposals thesisProposal "
+          + "join researchArea.thesisProposals "
           + "order by researchArea.name")
   List<String> findDistinctNamesLinkedToTheses();
 }
