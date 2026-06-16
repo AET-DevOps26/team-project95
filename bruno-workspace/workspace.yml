@@ -1,0 +1,14 @@
+opencollection: 1.0.0
+info:
+  name: "bruno-workspace"
+  type: workspace
+
+collections:
+  - name: "Thesis Discovery API"
+    path: "collections/thesis-discovery-api"
+
+specs:
+  - name: "openapi-v1"
+    path: "../api/openapi-v1.yml"
+
+docs: ''

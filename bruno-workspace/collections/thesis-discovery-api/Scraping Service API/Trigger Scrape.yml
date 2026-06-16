@@ -1,0 +1,22 @@
+info:
+  name: Trigger Scrape
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{scrapingServiceUrl}}/internal/v1/scraping-service/scrape"
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 202", function() {
+          expect(res.status).to.equal(202);
+        });
+        test("Body contains started flag", function() {
+          expect(res.body).to.have.property("started");
+        });
+
+settings:
+  encodeUrl: true

@@ -1,0 +1,51 @@
+info:
+  name: Replace Source Endpoint Theses
+  type: http
+  seq: 3
+
+http:
+  method: PUT
+  url: "{{thesisServiceUrl}}/internal/v1/thesis-service/source-endpoints/{{sourceEndpointId}}/theses"
+  body:
+    type: json
+    data: |-
+      {
+        "theses": [
+          {
+            "title": "Semantic Search for Thesis Discovery",
+            "degreeType": "MASTER",
+            "originalDescription": "This thesis investigates semantic search for university thesis proposals.",
+            "aiOverview": "Build and evaluate a semantic search pipeline for thesis discovery.",
+            "researchArea": "Artificial Intelligence",
+            "sourceUrl": "https://example-chair.tum.de/theses/semantic-search",
+            "status": "OPEN",
+            "advisors": [
+              {
+                "name": "Max Mustermann",
+                "email": "max.mustermann@example.com",
+                "profileUrl": "https://example-chair.tum.de/team/max"
+              }
+            ],
+            "tags": ["Semantic Search", "LLM", "Information Retrieval"]
+          }
+        ]
+      }
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Status is 200 or 400", function() {
+          expect(res.status).to.be.oneOf([200, 400]);
+        });
+        test("Response has expected shape", function() {
+          if (res.status === 200) {
+            expect(res.body).to.have.property("sourceEndpointId");
+            expect(res.body).to.have.property("insertedRelationalTheses");
+          } else {
+            expect(res.body).to.have.property("message");
+          }
+        });
+
+settings:
+  encodeUrl: true

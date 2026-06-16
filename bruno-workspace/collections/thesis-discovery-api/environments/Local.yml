@@ -1,0 +1,15 @@
+variables:
+  - name: thesisServiceUrl
+    value: http://localhost:8080
+  - name: scrapingServiceUrl
+    value: http://localhost:8081
+  - name: vectorSearchServiceUrl
+    value: http://localhost:8082
+  - name: genaiServiceUrl
+    value: http://localhost:8000
+  - name: thesisId
+    value: "1"
+  - name: sourceEndpointId
+    value: "10"
+  - name: chairId
+    value: "3"
