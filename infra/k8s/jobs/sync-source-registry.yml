@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sync-source-registry
+  namespace: open-thesis-radar
+  labels:
+    app: thesis-service
+    job: sync-source-registry
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        app: thesis-service
+        job: sync-source-registry
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: sync-source-registry
+          image: ghcr.io/aet-devops26/team-project95/thesis-service:latest
+          command: ["java", "-jar", "app.jar", "--sync-source-registry"]
+          env:
+            - name: THESIS_DB_HOST
+              value: thesis-db
+            - name: THESIS_DB_PORT
+              value: "5432"
+            - name: THESIS_DB_NAME
+              value: thesis_db
+            - name: THESIS_DB_USER
+              value: thesis_user
+            - name: THESIS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: thesis-db-secret
+                  key: password
+            - name: THESIS_VECTOR_SEARCH_URL
+              value: http://vector-search-service:8082
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
