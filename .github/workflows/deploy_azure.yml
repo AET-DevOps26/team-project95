@@ -22,16 +22,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-images:
-    name: Build and publish latest GHCR images
-    uses: ./.github/workflows/build_images.yml
-    with:
-      push: true
-    secrets: inherit
-
   deploy:
     name: Terraform apply and Ansible deploy
-    needs: build-images
     runs-on: ubuntu-latest
     environment: production
 
