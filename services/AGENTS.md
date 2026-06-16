@@ -27,11 +27,13 @@ If you hit local build or compile errors, resolve the root issue (e.g., updating
 ## 🛠️ Global Development Standards
 
 ### Java / Spring Boot Microservices
+
 - **Build Tool**: Maven. Manage dependency versions in the parent [pom.xml](file:///home/tomas/TUM/Master/1FS/DevOps/team-project95/services/pom.xml).
 - **API Specs & DTOs**: Generated via `openapi-generator-maven-plugin` from [openapi-v1.yml](file:///home/tomas/TUM/Master/1FS/DevOps/team-project95/api/openapi-v1.yml). Always edit the YAML spec first, then run `mvn clean compile` to regenerate classes.
 - **Testing**: Preconfigured integration testing using JUnit 5 and Testcontainers (PostgreSQL integration testing is preconfigured).
 
 ### Python Microservice (`genai-service`)
+
 - **Web Framework**: FastAPI with Pydantic for validation.
 - **AI Integrations**: LangChain, LangChain-OpenAI, LangChain-Ollama.
 - **Formatting & Linting**: Ruff (target version py311). Check code using `ruff check` and `ruff format`.
