@@ -3,10 +3,6 @@ name: Deploy Infrastructure and App
 on:
   workflow_dispatch:
     inputs:
-      app_domain:
-        description: "Domain to deploy. Leave empty to use openthesisradar.<public-ip>.nip.io"
-        required: false
-        default: ""
       enable_certbot:
         description: "Request/configure Let's Encrypt certificates"
         required: true
@@ -117,15 +113,10 @@ jobs:
         id: deploy-env
         env:
           PUBLIC_IP: ${{ steps.tfout.outputs.public_ip }}
-          INPUT_APP_DOMAIN: ${{ inputs.app_domain }}
         run: |
           set -euo pipefail
           image_repository="ghcr.io/${GITHUB_REPOSITORY,,}"
-          if [ -n "$INPUT_APP_DOMAIN" ]; then
-            app_domain="${INPUT_APP_DOMAIN,,}"
-          else
-            app_domain="openthesisradar.${PUBLIC_IP}.nip.io"
-          fi
+          app_domain="openthesisradar.${PUBLIC_IP}.nip.io"
           echo "IMAGE_REPOSITORY=$image_repository" >> "$GITHUB_ENV"
           echo "APP_DOMAIN=$app_domain" >> "$GITHUB_ENV"
 
