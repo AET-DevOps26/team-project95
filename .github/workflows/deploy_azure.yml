@@ -74,7 +74,17 @@ jobs:
         working-directory: infra/terraform
         run: |
           public_ip="$(terraform output -raw public_ip_address)"
+          resource_group_name="$(terraform output -raw resource_group_name)"
+          vm_name="$(terraform output -raw vm_name)"
           echo "public_ip=$public_ip" >> "$GITHUB_OUTPUT"
+          echo "resource_group_name=$resource_group_name" >> "$GITHUB_OUTPUT"
+          echo "vm_name=$vm_name" >> "$GITHUB_OUTPUT"
+
+      - name: Start Azure VM
+        run: |
+          az vm start \
+            --resource-group "${{ steps.tfout.outputs.resource_group_name }}" \
+            --name "${{ steps.tfout.outputs.vm_name }}"
 
       - name: Install Ansible
         run: |
