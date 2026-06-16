@@ -3,6 +3,7 @@ import os
 import re
 from functools import lru_cache
 from typing import Any, Optional
+from urllib.parse import unquote, urlparse
 
 from bs4 import BeautifulSoup
 from fastapi import FastAPI, Request
@@ -10,7 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
-from langchain_openai import ChatOpenAI
+from langchain_openai import AzureChatOpenAI
 from pydantic import BaseModel, Field, ValidationError
 
 logging.basicConfig(
@@ -20,8 +21,42 @@ logging.basicConfig(
 logger = logging.getLogger("genai-service")
 
 MAX_INPUT_CHARS = 40000
-DEFAULT_OPENAI_MODEL = "gpt-5-mini"
+DEFAULT_MAX_COMPLETION_TOKENS = 30000
+DEFAULT_AZURE_OPENAI_DEPLOYMENT = "gpt-5.4"
+DEFAULT_AZURE_OPENAI_API_VERSION = "2024-12-01-preview"
 DEFAULT_OLLAMA_MODEL = "llama3.1"
+
+NOISE_SELECTORS = [
+    "header",
+    "footer",
+    "nav",
+    "aside",
+    "form",
+    "button",
+    "svg",
+    "picture",
+    "iframe",
+    "[role='navigation']",
+    "[role='banner']",
+    "[role='contentinfo']",
+    ".c-content-area__sitenav",
+    ".c-content-area__aside",
+    ".navbar",
+    ".breadcrumb",
+    ".cookie",
+    ".search",
+    ".sidebar",
+    ".pagination",
+    ".social",
+]
+
+CONTENT_SELECTORS = [
+    "#content",
+    "main .c-content-area__main",
+    ".c-content-area__main",
+    "main",
+    "article",
+]
 
 
 class AdvisorInput(BaseModel):
@@ -156,52 +191,103 @@ def get_required_env(name: str) -> str:
     return value
 
 
-def preprocess_input(raw_html: str, extracted_plain_text: Optional[str]) -> str:
-    if extracted_plain_text and extracted_plain_text.strip():
-        text = extracted_plain_text
-    else:
-        soup = BeautifulSoup(raw_html, "html.parser")
-        for tag in soup(["script", "style", "noscript"]):
+def get_fragment_container(soup: BeautifulSoup, source_url: Optional[str]) -> Optional[BeautifulSoup]:
+    if not source_url:
+        return None
+
+    fragment = unquote(urlparse(source_url).fragment)
+    if not fragment:
+        return None
+
+    anchor = soup.find(id=fragment)
+    if not anchor:
+        return None
+
+    container = anchor
+    if getattr(anchor, "name", None) not in {"article", "section", "div", "main"}:
+        container = anchor.find_parent(["article", "section", "div", "main"]) or anchor
+    if not container.get_text(strip=True):
+        return None
+
+    return BeautifulSoup(str(container), "html.parser")
+
+
+def extract_relevant_html(soup: BeautifulSoup, source_url: Optional[str] = None) -> BeautifulSoup:
+    for tag in soup(["script", "style", "noscript", "template"]):
+        tag.decompose()
+
+    for selector in NOISE_SELECTORS:
+        for tag in soup.select(selector):
             tag.decompose()
-        text = soup.get_text(separator="\n")
 
-    lines = [line.strip() for line in text.splitlines()]
+    fragment_content = get_fragment_container(soup, source_url)
+    if fragment_content:
+        return fragment_content
+
+    for selector in CONTENT_SELECTORS:
+        content = soup.select_one(selector)
+        if content and content.get_text(strip=True):
+            return BeautifulSoup(str(content), "html.parser")
+
+    return soup
+
+
+def normalize_text(text: str) -> str:
+    lines = [re.sub(r"[ \t]+", " ", line.strip()) for line in text.splitlines()]
     lines = [line for line in lines if line]
-    cleaned = "\n".join(lines)
-    cleaned = re.sub(r"[ \t]+", " ", cleaned)
-    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
 
+    deduplicated_lines: list[str] = []
+    seen_short_lines: set[str] = set()
+    for line in lines:
+        # Navigation and table boilerplate tends to repeat as short labels. Keep long
+        # descriptive lines even if repeated because repeated thesis sections can be meaningful.
+        if len(line) <= 80:
+            line_key = line.casefold()
+            if line_key in seen_short_lines:
+                continue
+            seen_short_lines.add(line_key)
+        deduplicated_lines.append(line)
+
+    cleaned = "\n".join(deduplicated_lines)
+    cleaned = re.sub(r"\n{3,}", "\n\n", cleaned).strip()
     return cleaned[:MAX_INPUT_CHARS]
+
+
+def preprocess_input(
+    raw_html: str, extracted_plain_text: Optional[str], source_url: Optional[str] = None
+) -> str:
+    if extracted_plain_text and extracted_plain_text.strip():
+        return normalize_text(extracted_plain_text)
+
+    soup = BeautifulSoup(raw_html, "html.parser")
+    relevant_soup = extract_relevant_html(soup, source_url)
+    text = relevant_soup.get_text(separator="\n")
+    return normalize_text(text)
 
 
 @lru_cache(maxsize=1)
 def get_llm():
-    provider = (get_env("GENAI_MODEL_PROVIDER", "openai") or "openai").lower()
-    default_model = DEFAULT_OPENAI_MODEL if provider == "openai" else DEFAULT_OLLAMA_MODEL
-    model_name = get_env("GENAI_MODEL_NAME", default_model) or default_model
+    use_ollama = (get_env("GENAI_USE_OLLAMA", "false") or "false").lower() == "true"
+    max_tokens = int(get_env("GENAI_MAX_COMPLETION_TOKENS", str(DEFAULT_MAX_COMPLETION_TOKENS)))
 
-    logger.info("Initializing LLM provider=%s model=%s", provider, model_name)
-
-    if provider == "openai":
-        api_key = get_required_env("OPENAI_API_KEY")
-        return ChatOpenAI(
-            model=model_name,
-            api_key=api_key,
-            max_completion_tokens=30000,
-            temperature=0,
-        )
-
-    if provider == "ollama":
-        base_url = get_env("OLLAMA_BASE_URL", "http://localhost:11434")
+    if use_ollama:
+        model = get_env("GENAI_MODEL_NAME", DEFAULT_OLLAMA_MODEL) or DEFAULT_OLLAMA_MODEL
+        logger.info("Initializing LLM provider=ollama model=%s", model)
         return ChatOllama(
-            model=model_name,
-            base_url=base_url,
+            model=model,
+            base_url=get_env("OLLAMA_BASE_URL", "http://localhost:11434"),
             temperature=0,
         )
 
-    raise ConfigError(
-        message="GenAI service configuration error.",
-        details={"unsupportedProvider": provider},
+    deployment = get_env("AZURE_OPENAI_CHAT_DEPLOYMENT") or DEFAULT_AZURE_OPENAI_DEPLOYMENT
+    logger.info("Initializing LLM provider=azure-openai deployment=%s", deployment)
+    return AzureChatOpenAI(
+        azure_endpoint=get_required_env("AZURE_OPENAI_ENDPOINT"),
+        azure_deployment=deployment,
+        api_key=get_required_env("AZURE_OPENAI_API_KEY"),
+        api_version=get_env("AZURE_OPENAI_API_VERSION", DEFAULT_AZURE_OPENAI_API_VERSION),
+        max_completion_tokens=max_tokens,
+        temperature=0,
     )
 
 
@@ -274,7 +360,7 @@ def normalize_thesis(thesis: DraftThesisProposalInput, source_url: str) -> Thesi
 
 
 def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
-    cleaned_text = preprocess_input(request.rawHtml, request.extractedPlainText)
+    cleaned_text = preprocess_input(request.rawHtml, request.extractedPlainText, request.sourceUrl)
     logger.info(
         "Extraction request sourceEndpointId=%s sourceUrl=%s rawChars=%s cleanedChars=%s",
         request.sourceEndpointId,

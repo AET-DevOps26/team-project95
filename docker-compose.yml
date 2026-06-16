@@ -19,9 +19,13 @@ services:
     ports:
       - "8000:8000"
     environment:
-      GENAI_MODEL_PROVIDER: ${GENAI_MODEL_PROVIDER:-openai}
-      GENAI_MODEL_NAME: ${GENAI_MODEL_NAME:-gpt-4o-mini}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GENAI_USE_OLLAMA: ${GENAI_USE_OLLAMA:-false}
+      GENAI_MAX_COMPLETION_TOKENS: ${GENAI_MAX_COMPLETION_TOKENS:-30000}
+      AZURE_OPENAI_ENDPOINT: ${AZURE_OPENAI_ENDPOINT:-}
+      AZURE_OPENAI_API_KEY: ${AZURE_OPENAI_API_KEY:-}
+      AZURE_OPENAI_CHAT_DEPLOYMENT: ${AZURE_OPENAI_CHAT_DEPLOYMENT:-gpt-5.4}
+      AZURE_OPENAI_API_VERSION: ${AZURE_OPENAI_API_VERSION:-2024-12-01-preview}
+      GENAI_MODEL_NAME: ${GENAI_MODEL_NAME:-llama3.1}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
     healthcheck:
       test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]

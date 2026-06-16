@@ -42,6 +42,66 @@ def test_preprocess_input_strips_html_noise_and_collapses_whitespace():
     assert cleaned == "Open Thesis\nSemantic Search for Theses"
 
 
+def test_preprocess_input_prefers_main_content_and_removes_navigation():
+    raw_html = """
+    <html>
+      <body>
+        <header>University Header</header>
+        <nav>Teaching\nOld Lectures\nMenu</nav>
+        <main>
+          <div id="content">
+            <h1>Open Thesis Topics</h1>
+            <p>Build a thesis discovery system.</p>
+          </div>
+        </main>
+        <footer>Legal notice</footer>
+      </body>
+    </html>
+    """
+
+    cleaned = preprocess_input(raw_html, extracted_plain_text=None)
+
+    assert "University Header" not in cleaned
+    assert "Old Lectures" not in cleaned
+    assert "Legal notice" not in cleaned
+    assert cleaned == "Open Thesis Topics\nBuild a thesis discovery system."
+
+
+def test_preprocess_input_prefers_source_url_fragment_when_present():
+    raw_html = """
+    <main>
+      <section id="old-topic"><h2>Archived Topic</h2></section>
+      <section id="c55667"><h2>Open Fragment Topic</h2><p>Current thesis details.</p></section>
+    </main>
+    """
+
+    cleaned = preprocess_input(
+        raw_html,
+        extracted_plain_text=None,
+        source_url="https://example.com/theses/#c55667",
+    )
+
+    assert "Archived Topic" not in cleaned
+    assert cleaned == "Open Fragment Topic\nCurrent thesis details."
+
+
+def test_preprocess_input_deduplicates_repeated_short_lines():
+    raw_html = """
+    <main>
+      <p>MA</p><p>MA</p><p>BA</p><p>BA</p>
+      <p>Unique thesis description with enough detail to keep.</p>
+    </main>
+    """
+
+    cleaned = preprocess_input(raw_html, extracted_plain_text=None)
+
+    assert cleaned.splitlines() == [
+        "MA",
+        "BA",
+        "Unique thesis description with enough detail to keep.",
+    ]
+
+
 def test_preprocess_input_prefers_extracted_plain_text():
     cleaned = preprocess_input(
         raw_html="<h1>Ignored HTML</h1>",
