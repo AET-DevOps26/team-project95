@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{scrapingServiceUrl}}/internal/v1/health"
+  url: "{{scrapingServiceUrl}}/health"
 
 runtime:
   scripts:

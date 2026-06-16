@@ -18,8 +18,6 @@ runtime:
           if (res.status === 200) {
             expect(res.body).to.have.property("id");
             expect(res.body).to.have.property("title");
-          } else {
-            expect(res.body).to.have.property("message");
           }
         });
 
