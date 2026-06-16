@@ -3,7 +3,6 @@ package com.project95.thesis.thesis.controller;
 import com.project95.thesis.management.dto.AvailableFiltersResponseDto;
 import com.project95.thesis.management.dto.ChairDto;
 import com.project95.thesis.thesis.domain.Chair;
-import com.project95.thesis.thesis.domain.ResearchArea;
 import com.project95.thesis.thesis.domain.Tag;
 import com.project95.thesis.thesis.repository.ChairRepository;
 import com.project95.thesis.thesis.repository.ResearchAreaRepository;
@@ -48,10 +47,7 @@ public class FilterController {
     response.setTags(
         tagRepository.findAll().stream().map(Tag::getName).collect(Collectors.toList()));
 
-    response.setResearchAreas(
-        researchAreaRepository.findAll().stream()
-            .map(ResearchArea::getName)
-            .collect(Collectors.toList()));
+    response.setResearchAreas(researchAreaRepository.findDistinctNamesLinkedToTheses());
 
     response.setDegreeTypes(List.of("BACHELOR", "MASTER", "INTERNSHIP", "IDP"));
 

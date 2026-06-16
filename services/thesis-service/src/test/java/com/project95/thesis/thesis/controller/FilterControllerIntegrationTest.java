@@ -58,6 +58,7 @@ class FilterControllerIntegrationTest {
 
     Tag tag = tagRepository.save(new Tag("LLM"));
     ResearchArea area = researchAreaRepository.save(new ResearchArea("NLP"));
+    researchAreaRepository.save(new ResearchArea("Orphan Area"));
 
     ThesisProposal t = new ThesisProposal();
     t.setTitle("Test Thesis");
@@ -87,6 +88,7 @@ class FilterControllerIntegrationTest {
         .andExpect(jsonPath("$.chairs", hasSize(1)))
         .andExpect(jsonPath("$.tags", contains("LLM")))
         .andExpect(jsonPath("$.researchAreas", contains("NLP")))
+        .andExpect(jsonPath("$.researchAreas", not(hasItem("Orphan Area"))))
         .andExpect(jsonPath("$.degreeTypes", hasItem("MASTER")));
   }
 }
