@@ -191,7 +191,9 @@ def get_required_env(name: str) -> str:
     return value
 
 
-def get_fragment_container(soup: BeautifulSoup, source_url: Optional[str]) -> Optional[BeautifulSoup]:
+def get_fragment_container(
+    soup: BeautifulSoup, source_url: Optional[str]
+) -> Optional[BeautifulSoup]:
     if not source_url:
         return None
 
