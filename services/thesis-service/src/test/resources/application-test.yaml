@@ -6,12 +6,21 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
-    show-sql: true
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
   flyway:
     enabled: false
   sql:
     init:
       mode: never
+
+logging:
+  level:
+    org.hibernate.SQL: WARN
+    org.hibernate.orm.jdbc.bind: WARN
+    org.springframework.test.context: WARN
 
 app:
   client:
