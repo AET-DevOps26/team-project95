@@ -16,6 +16,7 @@ import com.project95.thesis.thesis.repository.TagRepository;
 import com.project95.thesis.thesis.repository.ThesisProposalRepository;
 import java.net.URI;
 import java.util.List;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +39,7 @@ class ThesisManagementServiceIntegrationTest {
 
   @BeforeEach
   void setUp() {
-    thesisRepository.deleteAll();
-    sourceEndpointRepository.deleteAll();
-    chairRepository.deleteAll();
-    tagRepository.deleteAll();
-    researchAreaRepository.deleteAll();
-    advisorRepository.deleteAll();
+    deleteAllRows();
 
     Chair chair = chairRepository.save(new Chair("Rollback Chair", "https://chair.example.com"));
     sourceEndpoint = new SourceEndpoint();
@@ -59,6 +55,11 @@ class ThesisManagementServiceIntegrationTest {
     existing.setChair(chair);
     existing.setSourceEndpoint(sourceEndpoint);
     thesisRepository.save(existing);
+  }
+
+  @AfterEach
+  void tearDown() {
+    deleteAllRows();
   }
 
   @Test
@@ -98,5 +99,14 @@ class ThesisManagementServiceIntegrationTest {
     assertThat(thesisRepository.findAll())
         .extracting(ThesisProposal::getTitle)
         .containsExactly("Existing Thesis");
+  }
+
+  private void deleteAllRows() {
+    thesisRepository.deleteAll();
+    sourceEndpointRepository.deleteAll();
+    chairRepository.deleteAll();
+    tagRepository.deleteAll();
+    researchAreaRepository.deleteAll();
+    advisorRepository.deleteAll();
   }
 }
