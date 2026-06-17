@@ -46,6 +46,10 @@ resource "azurerm_network_security_group" "vm" {
   resource_group_name = azurerm_resource_group.main.name
   tags                = local.common_tags
 
+  lifecycle {
+    prevent_destroy = true
+  }
+
   security_rule {
     name                       = "allow-ssh"
     priority                   = 100
@@ -86,6 +90,10 @@ resource "azurerm_network_security_group" "vm" {
 resource "azurerm_subnet_network_security_group_association" "main" {
   subnet_id                 = azurerm_subnet.main.id
   network_security_group_id = azurerm_network_security_group.vm.id
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 resource "azurerm_public_ip" "vm" {
@@ -126,6 +134,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
   size                = var.vm_size
   admin_username      = var.admin_username
   tags                = local.common_tags
+
+  lifecycle {
+    prevent_destroy = true
+  }
 
   disable_password_authentication = true
   network_interface_ids           = [azurerm_network_interface.vm.id]

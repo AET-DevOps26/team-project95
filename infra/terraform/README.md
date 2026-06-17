@@ -40,12 +40,13 @@ This is intentional. It protects against accidental deletion of:
 - resource group
 - virtual network
 - subnet
+- network security group
+- subnet/network security group association
 - public IP
 - network interface
+- virtual machine
 
-The VM itself is not protected by `prevent_destroy`, so intentional OS image or VM definition changes can recreate the VM while keeping the protected network and data resources.
-
-Because of the protected supporting resources, `terraform destroy` is not part of the normal workflow for this project.
+Because of the protected resources, `terraform destroy` is not part of the normal workflow for this project.
 
 If you really need to destroy/recreate the whole environment, remove the relevant `prevent_destroy` blocks first and understand that the public IP may be lost.
 
