@@ -21,7 +21,6 @@ jobs:
   deploy:
     name: Terraform apply and Ansible deploy
     runs-on: ubuntu-latest
-    environment: production
 
     env:
       TF_IN_AUTOMATION: "true"
