@@ -1,52 +1,55 @@
 # Infrastructure deployment
 
-This directory contains the Terraform and Ansible configuration used by the GitHub Actions deployment workflow.
+This directory contains the Terraform and Ansible setup for the Azure production environment.
 
-The production deployment entrypoint is:
+## Workflow model
 
-```text
-.github/workflows/deploy_azure.yml
-```
+Infrastructure changes are checked in two stages:
 
-It provisions/updates the Azure VM infrastructure with Terraform and then deploys the application to the VM with Ansible.
+1. **Pull request:** `ci.yml` calls `.github/workflows/terraform_plan.yml` when `github.event_name == 'pull_request'`.
+   - The plan workflow logs into Azure.
+   - It initializes the remote Terraform backend.
+   - It runs `terraform validate`.
+   - It runs `terraform plan -no-color`.
+   - The PR author/reviewers can inspect the workflow logs before merging.
 
+2. **After merge to `main`:** deployment is done by `.github/workflows/deploy_azure.yml`.
+   - Terraform runs `terraform apply -auto-approve` from the merged `main` revision.
+   - Terraform updates the Azure infrastructure.
+   - The workflow reads Terraform outputs such as the VM public IP.
+   - The VM is started if necessary.
+   - Ansible deploys the application to the VM.
 
-## Required GitHub secrets
+The Ansible playbooks configure Docker on the VM, write the production environment file, pull the GHCR images, start the Docker Compose stack, and optionally configure Certbot/HTTPS. See [`ansible/README.md`](ansible/README.md) for local Ansible usage and operational commands.
 
-The deployment workflow depends on the following repository or environment secrets.
+The PR plan is meant as a review gate: infrastructure changes should be visible in CI before they are merged. The apply step is still automated because GitHub Actions cannot answer Terraform's interactive `yes` prompt.
 
-| Secret | Used for |
-| --- | --- |
-| `AZURE_CREDENTIALS` | Azure service principal credentials used by `azure/login`. |
-| `AZURE_TF_BACKEND_RESOURCE_GROUP` | Azure resource group containing the Terraform remote state storage account. |
-| `AZURE_TF_BACKEND_STORAGE_ACCOUNT` | Azure Storage Account used for Terraform remote state. |
-| `AZURE_TF_BACKEND_CONTAINER` | Blob container used for Terraform remote state. |
-| `AZURE_TF_BACKEND_KEY` | Blob key/path for the Terraform state file. |
-| `AZURE_VM_SSH_PUBLIC_KEY` | Public SSH key injected into the Azure VM by Terraform. |
-| `AZURE_VM_SSH_PRIVATE_KEY` | Private SSH key used by Ansible to connect to the VM. |
-| `CERTBOT_EMAIL` | Email address used for Let's Encrypt certificate registration when Certbot is enabled. |
-| `THESIS_DB_PASSWORD` | Production password for the thesis PostgreSQL database. |
-| `VECTOR_DB_PASSWORD` | Production password for the vector-search PostgreSQL database. |
-| `AZURE_OPENAI_API_KEY` | API key used by the vector-search service for embeddings. |
-| `OPENAI_API_KEY` | API key used by the GenAI service when the default OpenAI provider is used. |
+## GitHub secrets
 
-The workflow also uses the built-in `GITHUB_TOKEN` as `GHCR_TOKEN` so the VM can pull GitHub Container Registry images.
+The workflows depend on the following GitHub repository or environment secrets.
 
-## Workflow input
-
-The workflow has one manual input:
-
-| Input | Default | Meaning |
+| Secret | Used by | Purpose |
 | --- | --- | --- |
-| `enable_certbot` | `true` | Whether Ansible should request/configure Let's Encrypt certificates. |
+| `AZURE_CREDENTIALS` | Terraform plan, deploy | Azure service principal credentials for `azure/login`. |
+| `AZURE_TF_BACKEND_RESOURCE_GROUP` | Terraform plan, deploy | Resource group containing the Terraform state storage account. |
+| `AZURE_TF_BACKEND_STORAGE_ACCOUNT` | Terraform plan, deploy | Azure Storage Account used for Terraform remote state. |
+| `AZURE_TF_BACKEND_CONTAINER` | Terraform plan, deploy | Blob container used for Terraform remote state. |
+| `AZURE_TF_BACKEND_KEY` | Terraform plan, deploy | Blob key/path for the Terraform state file. |
+| `AZURE_VM_SSH_PUBLIC_KEY` | Terraform plan, deploy | Public SSH key configured on the Azure VM. Passed as `TF_VAR_admin_ssh_public_key`. |
+| `AZURE_VM_SSH_PRIVATE_KEY` | Deploy | Private SSH key used by Ansible to connect to the Azure VM. |
+| `CERTBOT_EMAIL` | Deploy | Email address used for Let's Encrypt certificate registration. Required when Certbot is enabled. |
+| `THESIS_DB_PASSWORD` | Deploy | Production password for the thesis PostgreSQL database. |
+| `VECTOR_DB_PASSWORD` | Deploy | Production password for the vector-search PostgreSQL database. |
+| `AZURE_OPENAI_API_KEY` | Deploy | API key used by the vector-search service for embeddings. |
+| `OPENAI_API_KEY` | Deploy | API key used by the GenAI service when using the OpenAI provider. |
 
-If `enable_certbot` is `true`, `CERTBOT_EMAIL` must be set.
+The deploy workflow also uses GitHub's built-in token as `GHCR_TOKEN` so the VM can pull images from GitHub Container Registry.
 
 ## Terraform backend
 
-Terraform state is stored remotely in Azure Blob Storage. The backend storage account/container must already exist before the workflow runs.
+Terraform state is stored remotely in Azure Blob Storage. The backend storage resources must already exist before either workflow runs.
 
-The backend is configured at runtime from these secrets:
+Both the plan and deploy workflows initialize Terraform with:
 
 ```text
 AZURE_TF_BACKEND_RESOURCE_GROUP
@@ -55,27 +58,24 @@ AZURE_TF_BACKEND_CONTAINER
 AZURE_TF_BACKEND_KEY
 ```
 
-See [`terraform/README.md`](terraform/README.md) for local Terraform setup and backend bootstrap commands.
+See [`terraform/README.md`](terraform/README.md) for local backend setup and Terraform usage.
 
-## Image tags
+## Deployment input
 
-Application images are built by the CI workflow and pushed to GitHub Container Registry.
+`deploy_azure.yml` has one manual input:
 
-The deployment should use a commit SHA image tag so all services are deployed from the same repository revision. The reusable image build workflow already publishes SHA tags.
+| Input | Default | Meaning |
+| --- | --- | --- |
+| `enable_certbot` | `true` | Whether Ansible should request/configure Let's Encrypt certificates. |
 
-## Infrastructure deletion protection
+## Safety notes
 
-Important Azure resources use Terraform lifecycle protection:
+Important Azure resources are protected with Terraform `prevent_destroy` lifecycle rules. This prevents accidental destruction of the production VM and supporting network resources during automated applies.
 
-```hcl
-lifecycle {
-  prevent_destroy = true
-}
+Application images are deployed with the commit SHA tag:
+
+```yaml
+IMAGE_TAG: ${{ github.sha }}
 ```
 
-This is intentional to prevent accidental deletion/replacement of the production VM and its supporting networking resources during automated deployment.
-
-## Local operation
-
-- Terraform details: [`terraform/README.md`](terraform/README.md)
-- Ansible details: [`ansible/README.md`](ansible/README.md)
+This keeps the deployed service images aligned with the Git commit being deployed.
