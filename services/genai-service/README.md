@@ -7,10 +7,14 @@ Minimal FastAPI + LangChain service for thesis extraction.
 - `POST /internal/v1/genai-service/extract-theses`
 
 ## Environment variables
-- `GENAI_MODEL_PROVIDER=openai|ollama`
-- `GENAI_MODEL_NAME=...`
-- `OPENAI_API_KEY=...`
-- `OLLAMA_BASE_URL=...`
+- `GENAI_USE_OLLAMA=false`
+- `GENAI_MAX_COMPLETION_TOKENS=30000`
+- `AZURE_OPENAI_ENDPOINT=...`
+- `AZURE_OPENAI_API_KEY=...`
+- `AZURE_OPENAI_CHAT_DEPLOYMENT=...`
+- `AZURE_OPENAI_API_VERSION=...`
+- `GENAI_MODEL_NAME=...` if using Ollama
+- `OLLAMA_BASE_URL=...` if using Ollama
 
 ## Run locally
 ```bash
