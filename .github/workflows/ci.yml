@@ -130,5 +130,19 @@ jobs:
       packages: write
     uses: ./.github/workflows/build_images.yml
     with:
-      push: ${{ github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+      push: ${{ github.event_name == 'pull_request' || github.ref == 'refs/heads/main' }}
+    secrets: inherit
+
+  test-deploy-azure:
+    name: Test Azure deploy
+    if: github.event_name == 'pull_request'
+    needs:
+      - terraform-plan
+      - docker-images
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/test_deploy_azure.yml
+    with:
+      enable_certbot: false
     secrets: inherit
