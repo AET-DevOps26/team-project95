@@ -110,6 +110,14 @@ jobs:
       - name: Validate Compose configuration
         run: docker compose config
 
+  terraform-plan:
+    name: Terraform plan
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: read
+    uses: ./.github/workflows/terraform_plan.yml
+    secrets: inherit
+
   docker-images:
     name: Build Docker images
     needs:

@@ -31,7 +31,7 @@ variable "admin_ssh_public_key" {
 variable "vm_size" {
   description = "Azure VM size."
   type        = string
-  default     = "Standard_D2s"
+  default     = "Standard_D2s_v3"
 }
 
 variable "ssh_source_address_prefixes" {
@@ -55,5 +55,7 @@ variable "os_disk_size_gb" {
 variable "tags" {
   description = "Tags applied to all resources."
   type        = map(string)
-  default     = {}
+  default = {
+    owner = "ge95pad"
+  }
 }

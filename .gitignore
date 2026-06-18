@@ -97,6 +97,8 @@ docker-compose.override.yml
 crash.log
 crash.*.log
 
-# Local Ansible inventory
+# Local Ansible inventory and generated credentials
 infra/ansible/inventory.ini
+azure_credentials.json
+sp_raw.json
 fetch-raw-html.sh
