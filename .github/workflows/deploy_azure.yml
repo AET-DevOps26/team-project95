@@ -89,7 +89,7 @@ jobs:
         run: |
           python -m pip install --user ansible-core==2.21.0
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-       ansible --version
+          ansible --version
 
       - name: Prepare SSH key and inventory
         env:
