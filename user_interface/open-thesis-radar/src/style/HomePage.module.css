@@ -10,7 +10,7 @@
 .topBar {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 20000;
   overflow: hidden;
   border-bottom: 1px solid color-mix(in srgb, var(--color-border-soft), transparent 15%);
   background:

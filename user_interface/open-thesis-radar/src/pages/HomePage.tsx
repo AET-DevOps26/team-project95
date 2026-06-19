@@ -149,14 +149,11 @@ export default function HomePage() {
     <main className={styles.page}>
       <header className={styles.topBar}>
         <div className={styles.topBarInner}>
-          <div className={styles.logo}>Thesis Radar</div>
+          <div className={styles.logo}>Open Thesis Radar</div>
           <nav className={styles.topNav} aria-label="Home page navigation">
             <button className={styles.navButton} type="button" onClick={scrollToSearch}>
               Search
             </button>
-            <Link className={styles.navButton} to="/thesis">
-              Mock thesis
-            </Link>
           </nav>
         </div>
       </header>
@@ -174,9 +171,6 @@ export default function HomePage() {
               <button className={`${styles.primaryAction} ${styles.clickableButton}`} type="button" onClick={scrollToSearch}>
                 Search theses
               </button>
-              <Link className={`${styles.secondaryAction} ${styles.clickableButton}`} to="/thesis">
-                Open mock thesis
-              </Link>
             </div>
           </div>
 
