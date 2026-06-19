@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Thesis Radar favicon</title>
+  <desc id="desc">A rounded square icon containing a blue radar screen with concentric circles, scan beam, and radar blips.</desc>
+  <defs>
+    <linearGradient id="blue" x1="86" y1="84" x2="428" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b66d8"/>
+      <stop offset="1" stop-color="#1f86e5"/>
+    </linearGradient>
+    <linearGradient id="beam" x1="256" y1="256" x2="434" y2="132" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b66d8" stop-opacity="0.42"/>
+      <stop offset="0.58" stop-color="#4f9cff" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#9cc9ff" stop-opacity="0.02"/>
+    </linearGradient>
+    <filter id="softShadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="10" stdDeviation="16" flood-color="#0b3d91" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <circle cx="256" cy="256" r="218" fill="none" stroke="url(#blue)" stroke-width="14"/>
+
+    <circle cx="256" cy="256" r="68" fill="none" stroke="#9bc7fb" stroke-width="9"/>
+    <circle cx="256" cy="256" r="122" fill="none" stroke="#9bc7fb" stroke-width="9"/>
+    <circle cx="256" cy="256" r="176" fill="none" stroke="#9bc7fb" stroke-width="9"/>
+
+    <path d="M256 256 L380 90 A218 218 0 0 1 472 256 Z" fill="url(#beam)"/>
+    <line x1="256" y1="256" x2="380" y2="90" stroke="#2d7ee8" stroke-width="8" stroke-linecap="round"/>
+
+    <circle cx="256" cy="256" r="30" fill="url(#blue)" stroke="#fff" stroke-width="12"/>
+
+    <g fill="url(#blue)" stroke="#fff" stroke-width="12">
+      <circle cx="172" cy="172" r="20"/>
+      <circle cx="330" cy="330" r="20"/>
+      <circle cx="158" cy="380" r="20"/>
+    </g>
+
+    <g stroke="url(#blue)" stroke-width="9" stroke-linecap="round">
+      <line x1="256" y1="79" x2="256" y2="105"/>
+      <line x1="256" y1="407" x2="256" y2="433"/>
+      <line x1="79" y1="256" x2="105" y2="256"/>
+      <line x1="407" y1="256" x2="433" y2="256"/>
+    </g>
+  </g>
+</svg>
