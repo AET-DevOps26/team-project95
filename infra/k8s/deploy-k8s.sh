@@ -21,9 +21,15 @@ echo "==> Applying secrets..."
 if [ -f "$SCRIPT_DIR/secrets.yaml" ]; then
   kubectl apply -f "$SCRIPT_DIR/secrets.yaml"
 else
-  echo "ERROR: $SCRIPT_DIR/secrets.yaml not found."
-  echo "       Copy $SCRIPT_DIR/secrets.example.yaml, fill in values, and save as secrets.yaml"
-  exit 1
+  echo "==> $SCRIPT_DIR/secrets.yaml not found; checking required Secrets already exist..."
+  for secret in thesis-db-secret vector-db-secret azure-openai-secret; do
+    if ! kubectl get secret "$secret" -n "$NAMESPACE" >/dev/null 2>&1; then
+      echo "ERROR: Required Secret '$secret' is missing in namespace '$NAMESPACE'."
+      echo "       Copy $SCRIPT_DIR/secrets.example.yaml, fill in values, and save as secrets.yaml for initial setup."
+      exit 1
+    fi
+  done
+  echo "==> Required Secrets already exist; skipping local secrets.yaml apply."
 fi
 
 echo "==> Installing/upgrading Helm releases (databases)..."
