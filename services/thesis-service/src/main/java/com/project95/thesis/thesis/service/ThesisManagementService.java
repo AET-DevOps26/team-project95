@@ -116,17 +116,7 @@ public class ThesisManagementService {
             : advisorRepository.findAllByEmailIn(allAdvisorEmails).stream()
                 .collect(Collectors.toMap(Advisor::getEmail, a -> a));
 
-    // De-duplicate theses in the request by title to ensure consistency
-    Map<String, ThesisProposalInputDto> uniqueThesesMap = new LinkedHashMap<>();
     for (ThesisProposalInputDto dto : request.getTheses()) {
-      String title = normalize(dto.getTitle());
-      if (title == null) {
-        throw new IllegalArgumentException("Thesis title must not be blank");
-      }
-      uniqueThesesMap.putIfAbsent(title.toLowerCase(), dto);
-    }
-
-    for (ThesisProposalInputDto dto : uniqueThesesMap.values()) {
       ThesisProposal thesis = new ThesisProposal();
       thesis.setChair(chair);
       thesis.setSourceEndpoint(sourceEndpoint);

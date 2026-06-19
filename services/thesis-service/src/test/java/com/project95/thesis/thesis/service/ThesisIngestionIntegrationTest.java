@@ -126,21 +126,6 @@ class ThesisIngestionIntegrationTest {
     assertThat(saved.getResearchAreas()).hasSize(1);
   }
 
-  @Test
-  void replaceTheses_HandlesDuplicatesInRequest() {
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
-    // Two identical theses (except for minor casing in title)
-    request.setTheses(List.of(
-        createInputDto("DUPLICATE TITLE"),
-        createInputDto("duplicate title")
-    ));
-
-    thesisManagementService.replaceThesesInDatabase(endpoint.getId(), request);
-
-    // Assert: Only one was inserted
-    assertThat(thesisRepository.count()).isEqualTo(1);
-    assertThat(thesisRepository.findAll().get(0).getTitle()).isEqualTo("DUPLICATE TITLE");
-  }
 
   private void createThesis(String title) {
     ThesisProposal t = new ThesisProposal();
