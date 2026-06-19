@@ -111,6 +111,18 @@
               <modelPackage>com.project95.thesis.management.dto</modelPackage>
               <modelNameSuffix>Dto</modelNameSuffix>
               
+              <apisToGenerate>
+                api/v1/theses,
+                api/v1/theses/search,
+                api/v1/theses/{thesisId},
+                api/v1/chairs,
+                api/v1/filters,
+                internal/v1/thesis-service/source-endpoints,
+                internal/v1/thesis-service/scrape-runs,
+                internal/v1/thesis-service/source-endpoints/{sourceEndpointId}/theses,
+                internal/v1/health
+              </apisToGenerate>
+              
               <configOptions>
                 <interfaceOnly>true</interfaceOnly>
                 <useSpringBoot3>true</useSpringBoot3>
