@@ -41,6 +41,12 @@ ghcr.io/<owner>/<repository>/<image>:<commit-sha>
 
 The database images are external public images and are not built by the project.
 
+Kubernetes application manifests use an `IMAGE_TAG` placeholder instead of `latest`. By default, `deploy-k8s.sh` uses the latest remote `main` commit SHA as the image tag. You can override it explicitly, for example:
+
+```bash
+IMAGE_TAG=<commit-sha> ./deploy-k8s.sh
+```
+
 ## Important runtime configuration
 
 ### Frontend
@@ -104,10 +110,12 @@ Notes:
 
 Required configuration:
 
-- `GENAI_MODEL_PROVIDER`
-- `GENAI_MODEL_NAME`
-- `OPENAI_API_KEY` if using OpenAI
-- `OLLAMA_BASE_URL` if using Ollama
+- `GENAI_USE_OLLAMA`
+- `AZURE_OPENAI_ENDPOINT`
+- `AZURE_OPENAI_API_KEY`
+- `AZURE_OPENAI_CHAT_DEPLOYMENT`
+- `AZURE_OPENAI_API_VERSION`
+- `GENAI_MAX_COMPLETION_TOKENS`
 
 Notes:
 

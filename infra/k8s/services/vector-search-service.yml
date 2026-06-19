@@ -6,6 +6,7 @@ metadata:
   labels:
     app: vector-search-service
 spec:
+  type: ClusterIP
   selector:
     app: vector-search-service
   ports:

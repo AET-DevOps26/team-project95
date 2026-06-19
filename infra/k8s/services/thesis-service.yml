@@ -6,6 +6,7 @@ metadata:
   labels:
     app: thesis-service
 spec:
+  type: ClusterIP
   selector:
     app: thesis-service
   ports:

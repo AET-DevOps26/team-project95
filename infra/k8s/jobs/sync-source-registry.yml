@@ -17,7 +17,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: sync-source-registry
-          image: ghcr.io/aet-devops26/team-project95/thesis-service:latest
+          image: ghcr.io/aet-devops26/team-project95/thesis-service:IMAGE_TAG
           command: ["java", "-jar", "app.jar", "--sync-source-registry"]
           env:
             - name: THESIS_DB_HOST

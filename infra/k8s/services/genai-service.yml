@@ -6,6 +6,7 @@ metadata:
   labels:
     app: genai-service
 spec:
+  type: ClusterIP
   selector:
     app: genai-service
   ports:

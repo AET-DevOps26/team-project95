@@ -17,20 +17,29 @@ spec:
     spec:
       containers:
         - name: genai-service-container
-          image: ghcr.io/aet-devops26/team-project95/genai-service:latest
+          image: ghcr.io/aet-devops26/team-project95/genai-service:IMAGE_TAG
           ports:
             - containerPort: 8000
               name: http
           env:
-            - name: GENAI_MODEL_PROVIDER
-              value: openai
-            - name: GENAI_MODEL_NAME
-              value: gpt-5.4
-            - name: OPENAI_API_KEY
+            - name: GENAI_USE_OLLAMA
+              value: "false"
+            - name: AZURE_OPENAI_ENDPOINT
               valueFrom:
                 secretKeyRef:
-                  name: openai-secret
+                  name: azure-openai-secret
+                  key: endpoint
+            - name: AZURE_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: azure-openai-secret
                   key: api-key
+            - name: AZURE_OPENAI_CHAT_DEPLOYMENT
+              value: gpt-5.4
+            - name: AZURE_OPENAI_API_VERSION
+              value: 2024-12-01-preview
+            - name: GENAI_MAX_COMPLETION_TOKENS
+              value: "30000"
           livenessProbe:
             httpGet:
               path: /internal/v1/health
