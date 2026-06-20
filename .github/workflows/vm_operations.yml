@@ -3,39 +3,63 @@ name: VM Operations
 on:
   workflow_dispatch:
     inputs:
-      operation:
-        description: "Operation to run"
+      help:
+        description: "Codes: 0=off/stop, 1=on/start, 2=restart, 3=no change. If VM is 0/1/2, service selections are ignored; stopping VM stops services, starting/restarting VM brings services up with Ansible."
+        required: false
+        type: choice
+        options:
+          - "I understand"
+        default: "I understand"
+      vm:
+        description: "VM operation"
         required: true
         type: choice
         options:
-          - start
-          - stop
-          - restart
+          - "3"
+          - "0"
+          - "1"
+          - "2"
+        default: "3"
       user_interface:
-        description: "Apply operation to user-interface"
-        required: false
-        type: boolean
-        default: false
+        description: "user-interface operation"
+        required: true
+        type: choice
+        options:
+          - "3"
+          - "0"
+          - "1"
+          - "2"
+        default: "3"
       thesis_service:
-        description: "Apply operation to thesis-service"
-        required: false
-        type: boolean
-        default: false
+        description: "thesis-service operation"
+        required: true
+        type: choice
+        options:
+          - "3"
+          - "0"
+          - "1"
+          - "2"
+        default: "3"
       genai_service:
-        description: "Apply operation to genai-service"
-        required: false
-        type: boolean
-        default: false
+        description: "genai-service operation"
+        required: true
+        type: choice
+        options:
+          - "3"
+          - "0"
+          - "1"
+          - "2"
+        default: "3"
       vector_search_service:
-        description: "Apply operation to vector-search-service"
-        required: false
-        type: boolean
-        default: false
-      vm:
-        description: "Apply operation to the Azure VM itself"
-        required: false
-        type: boolean
-        default: false
+        description: "vector-search-service operation"
+        required: true
+        type: choice
+        options:
+          - "3"
+          - "0"
+          - "1"
+          - "2"
+        default: "3"
 
 permissions:
   contents: read
@@ -46,30 +70,33 @@ concurrency:
 
 jobs:
   operate:
-    name: ${{ inputs.operation }} selected VM targets
+    name: Run selected VM operations
     runs-on: ubuntu-latest
 
     env:
       TF_IN_AUTOMATION: "true"
       TF_INPUT: "false"
       ADMIN_USERNAME: azureuser
-      OPERATION: ${{ inputs.operation }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Validate selected targets
+      - name: Validate selected operations
         shell: bash
         run: |
           set -euo pipefail
-          if [[ "${{ inputs.user_interface }}" != "true" \
-            && "${{ inputs.thesis_service }}" != "true" \
-            && "${{ inputs.genai_service }}" != "true" \
-            && "${{ inputs.vector_search_service }}" != "true" \
-            && "${{ inputs.vm }}" != "true" ]]; then
-            echo "Select at least one target."
+          if [[ "${{ inputs.vm }}" == "3" \
+            && "${{ inputs.user_interface }}" == "3" \
+            && "${{ inputs.thesis_service }}" == "3" \
+            && "${{ inputs.genai_service }}" == "3" \
+            && "${{ inputs.vector_search_service }}" == "3" ]]; then
+            echo "Select at least one operation. Use 0=off/stop, 1=on/start, 2=restart, 3=no change."
             exit 1
+          fi
+
+          if [[ "${{ inputs.vm }}" != "3" ]]; then
+            echo "VM operation selected. Service operations will be ignored by design."
           fi
 
       - name: Log in to Azure
@@ -100,42 +127,51 @@ jobs:
           echo "resource_group_name=$(terraform output -raw resource_group_name)" >> "$GITHUB_OUTPUT"
           echo "vm_name=$(terraform output -raw vm_name)" >> "$GITHUB_OUTPUT"
 
-      - name: Prepare selected Docker services
-        id: targets
+      - name: Prepare operation plan
+        id: plan
         shell: bash
         run: |
           set -euo pipefail
-          services=()
 
-          # workflow target name -> docker compose service name
-          [[ "${{ inputs.user_interface }}" == "true" ]] && services+=("frontend")
-          [[ "${{ inputs.thesis_service }}" == "true" ]] && services+=("thesis-service")
-          [[ "${{ inputs.genai_service }}" == "true" ]] && services+=("genai-service")
-          [[ "${{ inputs.vector_search_service }}" == "true" ]] && services+=("vector-search-service")
+          needs_ssh=false
+          has_service_ops=false
+          vm_action=none
 
-          printf 'services=%s\n' "${services[*]}" >> "$GITHUB_OUTPUT"
-          if (( ${#services[@]} > 0 )); then
-            echo "has_services=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_services=false" >> "$GITHUB_OUTPUT"
+          case "${{ inputs.vm }}" in
+            0) vm_action=stop ;;
+            1) vm_action=start; needs_ssh=true ;;
+            2) vm_action=restart; needs_ssh=true ;;
+            3) vm_action=none ;;
+          esac
+
+          if [[ "$vm_action" == "none" ]]; then
+            [[ "${{ inputs.user_interface }}" != "3" ]] && has_service_ops=true
+            [[ "${{ inputs.thesis_service }}" != "3" ]] && has_service_ops=true
+            [[ "${{ inputs.genai_service }}" != "3" ]] && has_service_ops=true
+            [[ "${{ inputs.vector_search_service }}" != "3" ]] && has_service_ops=true
+            [[ "$has_service_ops" == "true" ]] && needs_ssh=true
           fi
 
+          echo "vm_action=$vm_action" >> "$GITHUB_OUTPUT"
+          echo "needs_ssh=$needs_ssh" >> "$GITHUB_OUTPUT"
+          echo "has_service_ops=$has_service_ops" >> "$GITHUB_OUTPUT"
+
       - name: Start Azure VM
-        if: inputs.vm && inputs.operation == 'start'
+        if: steps.plan.outputs.vm_action == 'start'
         run: |
           az vm start \
             --resource-group "${{ steps.tfout.outputs.resource_group_name }}" \
             --name "${{ steps.tfout.outputs.vm_name }}"
 
       - name: Restart Azure VM
-        if: inputs.vm && inputs.operation == 'restart'
+        if: steps.plan.outputs.vm_action == 'restart'
         run: |
           az vm restart \
             --resource-group "${{ steps.tfout.outputs.resource_group_name }}" \
             --name "${{ steps.tfout.outputs.vm_name }}"
 
       - name: Prepare SSH key and inventory
-        if: steps.targets.outputs.has_services == 'true'
+        if: steps.plan.outputs.needs_ssh == 'true'
         env:
           SSH_PRIVATE_KEY: ${{ secrets.AZURE_VM_SSH_PRIVATE_KEY }}
           PUBLIC_IP: ${{ steps.tfout.outputs.public_ip }}
@@ -151,7 +187,7 @@ jobs:
           EOF
 
       - name: Wait for SSH
-        if: steps.targets.outputs.has_services == 'true'
+        if: steps.plan.outputs.needs_ssh == 'true'
         env:
           PUBLIC_IP: ${{ steps.tfout.outputs.public_ip }}
         run: |
@@ -166,27 +202,79 @@ jobs:
           exit 1
 
       - name: Install Ansible
-        if: steps.targets.outputs.has_services == 'true'
+        if: steps.plan.outputs.needs_ssh == 'true'
         run: |
           python -m pip install --user ansible-core==2.21.0
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
           ansible --version
 
-      - name: Operate selected Docker services
-        if: steps.targets.outputs.has_services == 'true'
-        env:
-          SERVICES: ${{ steps.targets.outputs.services }}
-          ACTION: ${{ inputs.operation }}
-        shell: bash
+      - name: Bring services up after VM operation
+        if: steps.plan.outputs.vm_action == 'start' || steps.plan.outputs.vm_action == 'restart'
         run: |
-          set -euo pipefail
-          for service in $SERVICES; do
-            echo "Running ${ACTION} on ${service}"
-            SERVICE="$service" ACTION="$ACTION" ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ops.yml
-          done
+          ansible app \
+            -i infra/ansible/inventory.ini \
+            -b \
+            -m ansible.builtin.shell \
+            -a "cd /open-thesis-radar && docker compose up -d"
+
+      - name: Operate user-interface
+        if: steps.plan.outputs.has_service_ops == 'true' && inputs.user_interface != '3'
+        env:
+          SERVICE: frontend
+          SERVICE_OPERATION: ${{ inputs.user_interface }}
+        run: |
+          case "$SERVICE_OPERATION" in
+            0) ACTION=stop ;;
+            1) ACTION=start ;;
+            2) ACTION=restart ;;
+          esac
+          export ACTION
+          ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ops.yml
+
+      - name: Operate thesis-service
+        if: steps.plan.outputs.has_service_ops == 'true' && inputs.thesis_service != '3'
+        env:
+          SERVICE: thesis-service
+          SERVICE_OPERATION: ${{ inputs.thesis_service }}
+        run: |
+          case "$SERVICE_OPERATION" in
+            0) ACTION=stop ;;
+            1) ACTION=start ;;
+            2) ACTION=restart ;;
+          esac
+          export ACTION
+          ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ops.yml
+
+      - name: Operate genai-service
+        if: steps.plan.outputs.has_service_ops == 'true' && inputs.genai_service != '3'
+        env:
+          SERVICE: genai-service
+          SERVICE_OPERATION: ${{ inputs.genai_service }}
+        run: |
+          case "$SERVICE_OPERATION" in
+            0) ACTION=stop ;;
+            1) ACTION=start ;;
+            2) ACTION=restart ;;
+          esac
+          export ACTION
+          ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ops.yml
+
+      - name: Operate vector-search-service
+        if: steps.plan.outputs.has_service_ops == 'true' && inputs.vector_search_service != '3'
+        env:
+          SERVICE: vector-search-service
+          SERVICE_OPERATION: ${{ inputs.vector_search_service }}
+        run: |
+          case "$SERVICE_OPERATION" in
+            0) ACTION=stop ;;
+            1) ACTION=start ;;
+            2) ACTION=restart ;;
+          esac
+          export ACTION
+          ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ops.yml
 
       - name: Stop Azure VM
-        if: inputs.vm && inputs.operation == 'stop'
+        if: steps.plan.outputs.vm_action == 'stop'
         run: |
           az vm deallocate \
             --resource-group "${{ steps.tfout.outputs.resource_group_name }}" \
