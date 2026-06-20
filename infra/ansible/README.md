@@ -96,11 +96,11 @@ Required secret configuration:
 ```bash
 export THESIS_DB_PASSWORD="change-me"
 export VECTOR_DB_PASSWORD="change-me"
+export AZURE_OPENAI_ENDPOINT="https://<resource-name>.openai.azure.com"
 export AZURE_OPENAI_API_KEY="change-me"
-export OPENAI_API_KEY="change-me"
 ```
 
-`OPENAI_API_KEY` is required when `GENAI_MODEL_PROVIDER=openai`, which is the default. Non-secret values such as database names and timeouts have deployment defaults.
+By default, the GenAI service uses Azure OpenAI with `AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-5.4` and `AZURE_OPENAI_API_VERSION=2024-12-01-preview`. Set `GENAI_USE_OLLAMA=true`, `GENAI_MODEL_NAME`, and `OLLAMA_BASE_URL` to use Ollama for GenAI instead. The vector-search service still uses Azure OpenAI embeddings. Non-secret values such as database names, deployments, and timeouts have deployment defaults.
 
 ### 4. First test without Certbot
 

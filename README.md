@@ -46,9 +46,13 @@ Important environment variables include:
 
 | Variable                            | Purpose                                        |
 | ----------------------------------- | ---------------------------------------------- |
-| `OPENAI_API_KEY`                    | OpenAI API key used by the GenAI service       |
-| `GENAI_MODEL_PROVIDER`              | `openai` or `ollama`                           |
-| `GENAI_MODEL_NAME`                  | Model used for thesis extraction and summaries |
+| `GENAI_USE_OLLAMA`                  | Set to `true` to use Ollama instead of Azure OpenAI for GenAI |
+| `GENAI_MAX_COMPLETION_TOKENS`       | Maximum GenAI chat completion tokens           |
+| `AZURE_OPENAI_ENDPOINT`             | Azure OpenAI endpoint for GenAI and embeddings |
+| `AZURE_OPENAI_API_KEY`              | Azure OpenAI API key for GenAI and embeddings  |
+| `AZURE_OPENAI_CHAT_DEPLOYMENT`      | Azure OpenAI chat deployment for GenAI         |
+| `AZURE_OPENAI_API_VERSION`          | Azure OpenAI API version for GenAI             |
+| `GENAI_MODEL_NAME`                  | Ollama model name when `GENAI_USE_OLLAMA=true` |
 | `OLLAMA_BASE_URL`                   | Ollama endpoint when using local models        |
 | `THESIS_DB_NAME`                    | Thesis PostgreSQL database name                |
 | `THESIS_DB_USER`                    | Thesis PostgreSQL user                         |
@@ -56,8 +60,6 @@ Important environment variables include:
 | `VECTOR_DB_NAME`                    | Vector PostgreSQL database name                |
 | `VECTOR_DB_USER`                    | Vector PostgreSQL user                         |
 | `VECTOR_DB_PASSWORD`                | Vector PostgreSQL password                     |
-| `AZURE_OPENAI_ENDPOINT`             | Embedding provider endpoint for vector search  |
-| `AZURE_OPENAI_API_KEY`              | API key for embeddings                         |
 | `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` | Embedding deployment name                      |
 | `PGVECTOR_DIMENSIONS`               | Embedding vector dimensions                    |
 

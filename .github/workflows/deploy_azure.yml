@@ -32,8 +32,8 @@ jobs:
       ENABLE_CERTBOT: ${{ inputs.enable_certbot }}
       THESIS_DB_PASSWORD: ${{ secrets.THESIS_DB_PASSWORD }}
       VECTOR_DB_PASSWORD: ${{ secrets.VECTOR_DB_PASSWORD }}
+      AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
       AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
       GHCR_USER: ${{ github.actor }}
       GHCR_TOKEN: ${{ github.token }}
 
