@@ -4,6 +4,7 @@ import scrollIcon from '/assets/icons/chevrons-down.svg';
 import FilterDropdown from '../components/FilterDropdown';
 import { getAvailableFilters } from '../api/filters';
 import { listTheses, searchTheses } from '../api/theses';
+import { readThesisListCache, writeThesisListCache } from '../storage/thesisListCache';
 import type { components } from '../api';
 // import { MOCK_FILTERS } from '../mocks/theses';
 import { useSearchState } from '../state/searchState';
@@ -25,9 +26,12 @@ function thesisMatchesSelectedFilters(thesis: ThesisSearchResult, selectedFilter
 }
 
 export default function HomePage() {
+  const cachedThesisList = useMemo(() => readThesisListCache(), []);
   const [filters, setFilters] = useState<components['schemas']['AvailableFiltersResponse'] | null>(null);
-  const [allTheses, setAllTheses] = useState<ThesisSearchResult[]>([]);
+  const [allTheses, setAllTheses] = useState<ThesisSearchResult[]>(cachedThesisList?.theses ?? []);
+  const [thesisTotalCount, setThesisTotalCount] = useState(cachedThesisList?.totalCount ?? 0);
   const [serverSearchResults, setServerSearchResults] = useState<ThesisSearchResult[] | null>(null);
+  const [isLoadingTheses, setIsLoadingTheses] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [resultsError, setResultsError] = useState<string | null>(null);
   const searchSectionRef = useRef<HTMLElement | null>(null);
@@ -75,14 +79,19 @@ export default function HomePage() {
     }
 
     async function loadTheses() {
+      setIsLoadingTheses(true);
       setResultsError(null);
 
       try {
         const response = await listTheses();
         setAllTheses(response);
+        setThesisTotalCount(response.length);
+        writeThesisListCache(response);
       } catch (error) {
         console.error('Failed to load theses', error);
         setResultsError(error instanceof Error ? error.message : 'Failed to load thesis proposals.');
+      } finally {
+        setIsLoadingTheses(false);
       }
     }
 
@@ -293,7 +302,13 @@ export default function HomePage() {
           <div>
             <h3 className={styles.resultsTitle}>Thesis proposals</h3>
             <p className={styles.resultsMeta}>
-              {isSearching ? 'Searching thesis service…' : `${displayedTheses.length} thesis proposals shown`}
+              {isSearching
+                ? 'Searching thesis service…'
+                : serverSearchResults
+                  ? `${displayedTheses.length} thesis proposals shown`
+                  : isLoadingTheses && thesisTotalCount === 0
+                    ? 'Loading thesis proposals…'
+                    : `${thesisTotalCount} thesis proposals available${isLoadingTheses ? ' · refreshing…' : ''}`}
             </p>
           </div>
         </div>
@@ -301,24 +316,29 @@ export default function HomePage() {
         {resultsError && <p className={styles.resultsError}>{resultsError}</p>}
 
         {displayedTheses.length > 0 ? (
-          <div className={styles.resultsGrid}>
-            {displayedTheses.map((thesis) => (
-              <Link className={styles.resultCard} to={`/thesis/${thesis.id}`} key={thesis.id}>
-                <div className={styles.resultTopline}>
-                  <span>{thesis.degreeType ?? 'Degree type open'}</span>
-                  <span>{thesis.status}</span>
-                </div>
-                <h4 className={styles.resultTitle}>{thesis.title}</h4>
-                <p className={styles.resultChair}>{thesis.chairName ?? 'Chair not specified'}</p>
-                <p className={styles.resultSummary}>{thesis.aiOverview ?? thesis.originalDescription ?? 'No summary available.'}</p>
-                <div className={styles.resultTags}>
-                  {(thesis.tags ?? []).slice(0, 4).map((tag) => (
-                    <span className={styles.resultTag} key={tag}>{tag}</span>
-                  ))}
-                </div>
-              </Link>
-            ))}
-          </div>
+          <>
+            <div className={styles.resultsGrid}>
+              {displayedTheses.map((thesis) => (
+                <Link className={styles.resultCard} to={`/thesis/${thesis.id}`} key={thesis.id}>
+                  <div className={styles.resultTopline}>
+                    <span>{thesis.degreeType ?? 'Degree type open'}</span>
+                    <span>{thesis.status}</span>
+                  </div>
+                  <h4 className={styles.resultTitle}>{thesis.title}</h4>
+                  <p className={styles.resultChair}>{thesis.chairName ?? 'Chair not specified'}</p>
+                  <p className={styles.resultSummary}>{thesis.aiOverview ?? thesis.originalDescription ?? 'No summary available.'}</p>
+                  <div className={styles.resultTags}>
+                    {(thesis.tags ?? []).slice(0, 4).map((tag) => (
+                      <span className={styles.resultTag} key={tag}>{tag}</span>
+                    ))}
+                  </div>
+                </Link>
+              ))}
+            </div>
+            {isLoadingTheses && <div className={styles.loadingState} role="status"><span className={styles.loadingSpinner} />Refreshing thesis proposals…</div>}
+          </>
+        ) : isLoadingTheses && !serverSearchResults ? (
+          <div className={styles.loadingState} role="status"><span className={styles.loadingSpinner} />Loading thesis proposals…</div>
         ) : (
           <div className={styles.emptyState}>
             <h3 className={styles.emptyTitle}>{serverSearchResults ? 'No matching theses' : 'No thesis proposals loaded'}</h3>

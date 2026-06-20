@@ -733,6 +733,31 @@
   gap: 18px;
 }
 
+.loadingState {
+  max-width: 1200px;
+  margin: 18px auto 0;
+  padding: 18px 22px;
+  border: 1px solid var(--color-border-soft);
+  border-radius: var(--radius-lg);
+  background: rgba(251, 253, 255, 0.82);
+  color: #40547e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-weight: 800;
+  animation: contentRise 220ms var(--ease-out) both;
+}
+
+.loadingSpinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid #d6e4fa;
+  border-top-color: var(--color-primary);
+  border-radius: 999px;
+  animation: spin 780ms linear infinite;
+}
+
 .resultCard {
   min-height: 300px;
   border: 1px solid var(--color-border-soft);
@@ -840,6 +865,10 @@
 @keyframes cardIn {
   from { opacity: 0; transform: translateY(10px) scale(0.985); }
   to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 @keyframes menuOpen {
