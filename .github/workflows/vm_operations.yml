@@ -1,0 +1,193 @@
+name: VM Operations
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: "Operation to run"
+        required: true
+        type: choice
+        options:
+          - start
+          - stop
+          - restart
+      user_interface:
+        description: "Apply operation to user-interface"
+        required: false
+        type: boolean
+        default: false
+      thesis_service:
+        description: "Apply operation to thesis-service"
+        required: false
+        type: boolean
+        default: false
+      genai_service:
+        description: "Apply operation to genai-service"
+        required: false
+        type: boolean
+        default: false
+      vector_search_service:
+        description: "Apply operation to vector-search-service"
+        required: false
+        type: boolean
+        default: false
+      vm:
+        description: "Apply operation to the Azure VM itself"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vm-operations
+  cancel-in-progress: false
+
+jobs:
+  operate:
+    name: ${{ inputs.operation }} selected VM targets
+    runs-on: ubuntu-latest
+
+    env:
+      TF_IN_AUTOMATION: "true"
+      TF_INPUT: "false"
+      ADMIN_USERNAME: azureuser
+      OPERATION: ${{ inputs.operation }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Validate selected targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ inputs.user_interface }}" != "true" \
+            && "${{ inputs.thesis_service }}" != "true" \
+            && "${{ inputs.genai_service }}" != "true" \
+            && "${{ inputs.vector_search_service }}" != "true" \
+            && "${{ inputs.vm }}" != "true" ]]; then
+            echo "Select at least one target."
+            exit 1
+          fi
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Terraform init
+        working-directory: infra/terraform
+        run: |
+          terraform init \
+            -backend-config="resource_group_name=${{ secrets.AZURE_TF_BACKEND_RESOURCE_GROUP }}" \
+            -backend-config="storage_account_name=${{ secrets.AZURE_TF_BACKEND_STORAGE_ACCOUNT }}" \
+            -backend-config="container_name=${{ secrets.AZURE_TF_BACKEND_CONTAINER }}" \
+            -backend-config="key=${{ secrets.AZURE_TF_BACKEND_KEY }}"
+
+      - name: Read Terraform outputs
+        id: tfout
+        working-directory: infra/terraform
+        run: |
+          set -euo pipefail
+          echo "public_ip=$(terraform output -raw public_ip_address)" >> "$GITHUB_OUTPUT"
+          echo "resource_group_name=$(terraform output -raw resource_group_name)" >> "$GITHUB_OUTPUT"
+          echo "vm_name=$(terraform output -raw vm_name)" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare selected Docker services
+        id: targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          services=()
+
+          # workflow target name -> docker compose service name
+          [[ "${{ inputs.user_interface }}" == "true" ]] && services+=("frontend")
+          [[ "${{ inputs.thesis_service }}" == "true" ]] && services+=("thesis-service")
+          [[ "${{ inputs.genai_service }}" == "true" ]] && services+=("genai-service")
+          [[ "${{ inputs.vector_search_service }}" == "true" ]] && services+=("vector-search-service")
+
+          printf 'services=%s\n' "${services[*]}" >> "$GITHUB_OUTPUT"
+          if (( ${#services[@]} > 0 )); then
+            echo "has_services=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_services=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Start Azure VM
+        if: inputs.vm && inputs.operation == 'start'
+        run: |
+          az vm start \
+            --resource-group "${{ steps.tfout.outputs.resource_group_name }}" \
+            --name "${{ steps.tfout.outputs.vm_name }}"
+
+      - name: Restart Azure VM
+        if: inputs.vm && inputs.operation == 'restart'
+        run: |
+          az vm restart \
+            --resource-group "${{ steps.tfout.outputs.resource_group_name }}" \
+            --name "${{ steps.tfout.outputs.vm_name }}"
+
+      - name: Prepare SSH key and inventory
+        if: steps.targets.outputs.has_services == 'true'
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.AZURE_VM_SSH_PRIVATE_KEY }}
+          PUBLIC_IP: ${{ steps.tfout.outputs.public_ip }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/azure_vm_key
+          chmod 600 ~/.ssh/azure_vm_key
+
+          cat > infra/ansible/inventory.ini <<EOF
+          [app]
+          ${PUBLIC_IP} ansible_user=${ADMIN_USERNAME} ansible_ssh_private_key_file=~/.ssh/azure_vm_key ansible_python_interpreter=/usr/bin/python3 ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'
+          EOF
+
+      - name: Wait for SSH
+        if: steps.targets.outputs.has_services == 'true'
+        env:
+          PUBLIC_IP: ${{ steps.tfout.outputs.public_ip }}
+        run: |
+          set -euo pipefail
+          for attempt in {1..30}; do
+            if ssh -i ~/.ssh/azure_vm_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=10 "${ADMIN_USERNAME}@${PUBLIC_IP}" true; then
+              exit 0
+            fi
+            echo "SSH not ready yet (${attempt}/30); waiting..."
+            sleep 10
+          done
+          exit 1
+
+      - name: Install Ansible
+        if: steps.targets.outputs.has_services == 'true'
+        run: |
+          python -m pip install --user ansible-core==2.21.0
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          ansible --version
+
+      - name: Operate selected Docker services
+        if: steps.targets.outputs.has_services == 'true'
+        env:
+          SERVICES: ${{ steps.targets.outputs.services }}
+          ACTION: ${{ inputs.operation }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for service in $SERVICES; do
+            echo "Running ${ACTION} on ${service}"
+            SERVICE="$service" ACTION="$ACTION" ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ops.yml
+          done
+
+      - name: Stop Azure VM
+        if: inputs.vm && inputs.operation == 'stop'
+        run: |
+          az vm deallocate \
+            --resource-group "${{ steps.tfout.outputs.resource_group_name }}" \
+            --name "${{ steps.tfout.outputs.vm_name }}"
