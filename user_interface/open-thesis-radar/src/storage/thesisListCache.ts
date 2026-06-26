@@ -18,5 +18,9 @@ export function readThesisListCache(): ThesisListCache | null {
 
 // Stores the real list total and only the first visible thesis preview items.
 export function writeThesisListCache(theses: ThesisSearchResult[]) {
-  localStorage.setItem(CACHE_KEY, JSON.stringify({ totalCount: theses.length, theses: theses.slice(0, CACHE_LIMIT), cachedAt: new Date().toISOString() }));
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ totalCount: theses.length, theses: theses.slice(0, CACHE_LIMIT), cachedAt: new Date().toISOString() }));
+  } catch {
+    // Ignore unavailable or full browser storage so fresh API results still render normally.
+  }
 }
