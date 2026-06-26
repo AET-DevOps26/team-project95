@@ -40,8 +40,8 @@ The workflows depend on the following GitHub repository or environment secrets.
 | `CERTBOT_EMAIL` | Deploy | Email address used for Let's Encrypt certificate registration. Required when Certbot is enabled. |
 | `THESIS_DB_PASSWORD` | Deploy | Production password for the thesis PostgreSQL database. |
 | `VECTOR_DB_PASSWORD` | Deploy | Production password for the vector-search PostgreSQL database. |
-| `AZURE_OPENAI_API_KEY` | Deploy | API key used by the vector-search service for embeddings. |
-| `OPENAI_API_KEY` | Deploy | API key used by the GenAI service when using the OpenAI provider. |
+| `AZURE_OPENAI_ENDPOINT` | Deploy | Azure OpenAI endpoint used by the GenAI service and vector-search service. |
+| `AZURE_OPENAI_API_KEY` | Deploy | API key used by the GenAI service and vector-search service. |
 
 The deploy workflow also uses GitHub's built-in token as `GHCR_TOKEN` so the VM can pull images from GitHub Container Registry.
 

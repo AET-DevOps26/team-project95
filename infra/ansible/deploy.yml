@@ -19,14 +19,16 @@
     vector_db_password: "{{ lookup('env', 'VECTOR_DB_PASSWORD') }}"
     client_connect_timeout: "{{ lookup('env', 'CLIENT_CONNECT_TIMEOUT') | default('4000', true) }}"
     client_read_timeout: "{{ lookup('env', 'CLIENT_READ_TIMEOUT') | default('300000', true) }}"
-    azure_openai_endpoint: "{{ lookup('env', 'AZURE_OPENAI_ENDPOINT') | default('https://api.openai.com', true) }}"
+    azure_openai_endpoint: "{{ lookup('env', 'AZURE_OPENAI_ENDPOINT') }}"
     azure_openai_api_key: "{{ lookup('env', 'AZURE_OPENAI_API_KEY') }}"
     azure_openai_embedding_deployment: "{{ lookup('env', 'AZURE_OPENAI_EMBEDDING_DEPLOYMENT') | default('text-embedding-ada-002', true) }}"
     azure_openai_embedding_model: "{{ lookup('env', 'AZURE_OPENAI_EMBEDDING_MODEL') | default('text-embedding-ada-002', true) }}"
     pgvector_dimensions: "{{ lookup('env', 'PGVECTOR_DIMENSIONS') | default('1536', true) }}"
-    genai_model_provider: "{{ lookup('env', 'GENAI_MODEL_PROVIDER') | default('openai', true) | lower }}"
-    genai_model_name: "{{ lookup('env', 'GENAI_MODEL_NAME') | default('gpt-4o-mini', true) }}"
-    openai_api_key: "{{ lookup('env', 'OPENAI_API_KEY') }}"
+    genai_use_ollama: "{{ lookup('env', 'GENAI_USE_OLLAMA') | default('false', true) | lower }}"
+    genai_max_completion_tokens: "{{ lookup('env', 'GENAI_MAX_COMPLETION_TOKENS') | default('30000', true) }}"
+    azure_openai_chat_deployment: "{{ lookup('env', 'AZURE_OPENAI_CHAT_DEPLOYMENT') | default('gpt-5.4', true) }}"
+    azure_openai_api_version: "{{ lookup('env', 'AZURE_OPENAI_API_VERSION') | default('2024-12-01-preview', true) }}"
+    genai_model_name: "{{ lookup('env', 'GENAI_MODEL_NAME') | default('llama3.1', true) }}"
     ollama_base_url: "{{ lookup('env', 'OLLAMA_BASE_URL') | default('http://host.docker.internal:11434', true) }}"
   pre_tasks:
     - name: Validate required deployment environment variables
@@ -36,9 +38,9 @@
           - image_repository | length > 0
           - thesis_db_password | length > 0
           - vector_db_password | length > 0
+          - azure_openai_endpoint | length > 0
           - azure_openai_api_key | length > 0
-          - openai_api_key | length > 0
-        fail_msg: "Set APP_DOMAIN, IMAGE_REPOSITORY, THESIS_DB_PASSWORD, VECTOR_DB_PASSWORD, AZURE_OPENAI_API_KEY, and OPENAI_API_KEY before running this playbook."
+        fail_msg: "Set APP_DOMAIN, IMAGE_REPOSITORY, THESIS_DB_PASSWORD, VECTOR_DB_PASSWORD, AZURE_OPENAI_ENDPOINT, and AZURE_OPENAI_API_KEY before running this playbook."
 
     - name: Validate Certbot environment variables when Certbot is enabled
       ansible.builtin.assert:
