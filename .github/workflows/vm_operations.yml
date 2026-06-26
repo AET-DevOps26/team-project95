@@ -65,7 +65,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: vm-operations
+  group: production-deploy
   cancel-in-progress: false
 
 jobs:
