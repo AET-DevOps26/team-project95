@@ -103,12 +103,13 @@ services:
       retries: 5
 
   vector-db:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:0.8.3-pg18
     container_name: vector-postgres-db
     environment:
       POSTGRES_DB: ${VECTOR_DB_NAME:-vector_search_db}
       POSTGRES_USER: ${VECTOR_DB_USER:-vector_user}
       POSTGRES_PASSWORD: ${VECTOR_DB_PASSWORD:-vector_password}
+      PGDATA: /var/lib/postgresql/data
     ports:
       - "5433:5432"
     volumes:
@@ -120,12 +121,13 @@ services:
       retries: 5
 
   thesis-db:
-    image: postgres:16-alpine
+    image: postgres:18.4-alpine
     container_name: thesis-postgres-db
     environment:
       POSTGRES_DB: ${THESIS_DB_NAME:-thesis_db}
       POSTGRES_USER: ${THESIS_DB_USER:-thesis_user}
       POSTGRES_PASSWORD: ${THESIS_DB_PASSWORD:-thesis_password}
+      PGDATA: /var/lib/postgresql/data
     ports:
       - "5432:5432"
     volumes:

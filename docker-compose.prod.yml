@@ -80,13 +80,14 @@ services:
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
 
   thesis-db:
-    image: postgres:16-alpine
+    image: postgres:18.4-alpine
     container_name: open-thesis-radar-thesis-db
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${THESIS_DB_NAME:-thesis_db}
       POSTGRES_USER: ${THESIS_DB_USER:-thesis_user}
       POSTGRES_PASSWORD: ${THESIS_DB_PASSWORD:?THESIS_DB_PASSWORD is required}
+      PGDATA: /var/lib/postgresql/data
     volumes:
       - thesis-postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -96,13 +97,14 @@ services:
       retries: 10
 
   vector-db:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:0.8.3-pg18
     container_name: open-thesis-radar-vector-db
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${VECTOR_DB_NAME:-vector_search_db}
       POSTGRES_USER: ${VECTOR_DB_USER:-vector_user}
       POSTGRES_PASSWORD: ${VECTOR_DB_PASSWORD:?VECTOR_DB_PASSWORD is required}
+      PGDATA: /var/lib/postgresql/data
     volumes:
       - vector-postgres-data:/var/lib/postgresql/data
     healthcheck:
