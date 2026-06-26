@@ -3,11 +3,18 @@
 .env.*
 !.env.example
 !.env.sample
+infra/kubernetes/secrets.yaml
+infra/k8s/secrets.yaml
+infra/k8s/helm/open-thesis-radar/charts/
 
 # Agents
 GEMINI.md
 AUDIT_REPORT.md
+AGENTS.md
 tmp_docs/
+
+# Generated images
+out-images/
 
 # OS files
 .DS_Store

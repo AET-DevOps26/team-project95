@@ -1,0 +1,14 @@
+fullnameOverride: thesis-db
+auth:
+  username: thesis_user
+  database: thesis_db
+  existingSecret: thesis-db-secret
+  secretKeys:
+    adminPasswordKey: password # takes from secret
+    userPasswordKey: password
+primary:
+  resourcesPreset: nano # cpu: 100M-150M memory: 128Mi-192Mi
+  persistence:
+    size: 8Gi
+metrics:
+  enabled: true # for prometheus later

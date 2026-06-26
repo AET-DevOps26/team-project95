@@ -1,0 +1,21 @@
+fullnameOverride: vector-db
+
+auth:
+  username: vector_user
+  database: vector_search_db
+  existingSecret: vector-db-secret
+  secretKeys:
+    adminPasswordKey: password
+    userPasswordKey: password
+
+primary:
+  resourcesPreset: nano
+  persistence:
+    size: 10Gi
+  initdb:
+    scripts:
+      create-vector-extension.sql: |
+        CREATE EXTENSION IF NOT EXISTS vector;
+
+metrics:
+  enabled: true
