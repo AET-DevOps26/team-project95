@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{thesisServiceUrl}}/internal/v1/health"
+  url: "{{thesisServiceUrl}}/health"
 
 runtime:
   scripts:
