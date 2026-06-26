@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-interface-deployment
+  labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "user-interface" "component" "frontend") | nindent 4 }}
+spec:
+  replicas: {{ .Values.userInterface.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: user-interface
+      app.kubernetes.io/instance: {{ .Release.Name | quote }}
+  template:
+    metadata:
+      labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "user-interface" "component" "frontend") | nindent 8 }}
+    spec:
+      containers:
+        - name: user-interface-container
+          image: "{{ .Values.images.frontend.repository }}:{{ include "open-thesis-radar.imageTag" . }}"
+          ports:
+            - containerPort: 80
+              name: http
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+{{- toYaml .Values.userInterface.resources | nindent 12 }}

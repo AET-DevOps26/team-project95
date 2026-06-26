@@ -1,0 +1,172 @@
+# global.imageTag is the immutable image tag to deploy. Prefer a commit SHA.
+global:
+  imageTag: ""
+
+images:
+  frontend:
+    repository: "ghcr.io/aet-devops26/team-project95/frontend"
+  thesisService:
+    repository: "ghcr.io/aet-devops26/team-project95/thesis-service"
+  scrapingService:
+    repository: "ghcr.io/aet-devops26/team-project95/scraping-service"
+  genaiService:
+    repository: "ghcr.io/aet-devops26/team-project95/genai-service"
+  vectorSearchService:
+    repository: "ghcr.io/aet-devops26/team-project95/vector-search-service"
+
+secrets:
+  # For production, prefer create: false and create these Secrets externally.
+  # For a one-command course/demo deployment, set create: true and pass real
+  # values through an uncommitted values file or --set flags.
+  create: false
+  thesisDb:
+    name: "thesis-db-secret"
+    username: "thesis_user"
+    password: "CHANGE_ME"
+  vectorDb:
+    name: "vector-db-secret"
+    username: "vector_user"
+    password: "CHANGE_ME"
+  azureOpenAi:
+    name: "azure-openai-secret"
+    endpoint: "CHANGE_ME"
+    apiKey: "CHANGE_ME"
+
+ingress:
+  enabled: true
+  host: "open-thesis-radar.stud.k8s.aet.cit.tum.de"
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  tls:
+    enabled: true
+    secretName: "open-thesis-radar-tls"
+
+thesisService:
+  replicaCount: 1
+  db:
+    host: "thesis-db"
+    port: "5432"
+    name: "thesis_db"
+    user: "thesis_user"
+  vectorSearchUrl: "http://vector-search-service:8082"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+vectorSearchService:
+  replicaCount: 1
+  pgvector:
+    url: "jdbc:postgresql://vector-db:5432/vector_search_db"
+    username: "vector_user"
+    dimensions: "1536"
+  azureOpenAi:
+    embeddingDeployment: "text-embedding-ada-002"
+    embeddingModel: "text-embedding-ada-002"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+genaiService:
+  replicaCount: 1
+  useOllama: "false"
+  azureOpenAi:
+    chatDeployment: "gpt-5.4"
+    apiVersion: "2024-12-01-preview"
+  maxCompletionTokens: "30000"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
+scrapingService:
+  replicaCount: 1
+  thesisServiceUrl: "http://thesis-service:8080"
+  genaiServiceUrl: "http://genai-service:8000"
+  clientConnectTimeout: "4000"
+  clientReadTimeout: "300000"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+userInterface:
+  replicaCount: 1
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "32Mi"
+    limits:
+      cpu: "500m"
+      memory: "64Mi"
+
+syncSourceRegistry:
+  enabled: false
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+thesis-db:
+  enabled: true
+  fullnameOverride: "thesis-db"
+  image:
+    # PostgreSQL app image digest for app version 18.4.0; avoids floating latest.
+    digest: "sha256:f67b10b185d344b15e9999b57bdbedb13b9a4c33aa3a939467ee519cec49d40e"
+  auth:
+    username: "thesis_user"
+    database: "thesis_db"
+    existingSecret: "thesis-db-secret"
+    secretKeys:
+      adminPasswordKey: "password"
+      userPasswordKey: "password"
+  primary:
+    resourcesPreset: "nano"
+    persistence:
+      size: "8Gi"
+  metrics:
+    enabled: true
+    image:
+      digest: "sha256:4397aaaa6cf99a37ced6e7bada638fa3a02600326a9e71572d7f4e36f3fba736"
+
+vector-db:
+  enabled: true
+  fullnameOverride: "vector-db"
+  image:
+    # PostgreSQL app image digest for app version 18.4.0; avoids floating latest.
+    digest: "sha256:f67b10b185d344b15e9999b57bdbedb13b9a4c33aa3a939467ee519cec49d40e"
+  auth:
+    username: "vector_user"
+    database: "vector_search_db"
+    existingSecret: "vector-db-secret"
+    secretKeys:
+      adminPasswordKey: "password"
+      userPasswordKey: "password"
+  primary:
+    resourcesPreset: "nano"
+    persistence:
+      size: "10Gi"
+    initdb:
+      scripts:
+        create-vector-extension.sql: |
+          CREATE EXTENSION IF NOT EXISTS vector;
+  metrics:
+    enabled: true
+    image:
+      digest: "sha256:4397aaaa6cf99a37ced6e7bada638fa3a02600326a9e71572d7f4e36f3fba736"

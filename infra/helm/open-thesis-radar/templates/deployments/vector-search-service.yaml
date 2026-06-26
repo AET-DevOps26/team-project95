@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vector-search-service-deployment
+  labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "vector-search-service" "component" "backend") | nindent 4 }}
+spec:
+  replicas: {{ .Values.vectorSearchService.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: vector-search-service
+      app.kubernetes.io/instance: {{ .Release.Name | quote }}
+  template:
+    metadata:
+      labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "vector-search-service" "component" "backend") | nindent 8 }}
+    spec:
+      containers:
+        - name: vector-search-service-container
+          image: "{{ .Values.images.vectorSearchService.repository }}:{{ include "open-thesis-radar.imageTag" . }}"
+          ports:
+            - containerPort: 8082
+              name: http
+          env:
+            - name: PGVECTOR_URL
+              value: {{ .Values.vectorSearchService.pgvector.url | quote }}
+            - name: PGVECTOR_USERNAME
+              value: {{ .Values.vectorSearchService.pgvector.username | quote }}
+            - name: PGVECTOR_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.vectorDb.name }}
+                  key: {{ index .Values "vector-db" "auth" "secretKeys" "userPasswordKey" }}
+            - name: PGVECTOR_DIMENSIONS
+              value: {{ .Values.vectorSearchService.pgvector.dimensions | quote }}
+            - name: AZURE_OPENAI_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.azureOpenAi.name }}
+                  key: endpoint
+            - name: AZURE_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.azureOpenAi.name }}
+                  key: api-key
+            - name: AZURE_OPENAI_EMBEDDING_DEPLOYMENT
+              value: {{ .Values.vectorSearchService.azureOpenAi.embeddingDeployment | quote }}
+            - name: AZURE_OPENAI_EMBEDDING_MODEL
+              value: {{ .Values.vectorSearchService.azureOpenAi.embeddingModel | quote }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8082
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+{{- toYaml .Values.vectorSearchService.resources | nindent 12 }}

@@ -1,0 +1,18 @@
+apiVersion: v2
+name: open-thesis-radar
+description: Open Thesis Radar application stack
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+
+dependencies:
+  - name: postgresql
+    alias: thesis-db
+    version: "18.7.8"
+    repository: https://charts.bitnami.com/bitnami
+    condition: thesis-db.enabled
+  - name: postgresql
+    alias: vector-db
+    version: "18.7.8"
+    repository: https://charts.bitnami.com/bitnami
+    condition: vector-db.enabled

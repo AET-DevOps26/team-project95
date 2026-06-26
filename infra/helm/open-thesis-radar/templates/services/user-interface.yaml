@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-interface
+  labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "user-interface" "component" "frontend") | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: user-interface
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: http

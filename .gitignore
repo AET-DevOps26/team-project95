@@ -6,6 +6,8 @@
 infra/kubernetes/secrets.yaml
 infra/k8s/secrets.yaml
 infra/k8s/helm/open-thesis-radar/charts/
+infra/helm/open-thesis-radar/charts/
+infra/helm/open-thesis-radar/values-secret.local.yaml
 
 # Agents
 GEMINI.md

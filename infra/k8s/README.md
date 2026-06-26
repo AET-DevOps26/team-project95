@@ -1,5 +1,13 @@
 # Kubernetes Deployment Inventory
 
+> Recommended deployment path: use the Helm chart in `infra/helm/open-thesis-radar`.
+>
+> Example one-command deployment:
+>
+> ```bash
+> IMAGE_TAG=<commit-sha> ./infra/helm/deploy-helm.sh
+> ```
+
 This is the current deployment inventory derived from `docker-compose.yml`, Dockerfiles, CI workflows, and application configuration.
 
 ## Target namespace

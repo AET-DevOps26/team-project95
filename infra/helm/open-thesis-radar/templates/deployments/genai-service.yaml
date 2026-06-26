@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: genai-service-deployment
+  labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "genai-service" "component" "backend") | nindent 4 }}
+spec:
+  replicas: {{ .Values.genaiService.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: genai-service
+      app.kubernetes.io/instance: {{ .Release.Name | quote }}
+  template:
+    metadata:
+      labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "genai-service" "component" "backend") | nindent 8 }}
+    spec:
+      containers:
+        - name: genai-service-container
+          image: "{{ .Values.images.genaiService.repository }}:{{ include "open-thesis-radar.imageTag" . }}"
+          ports:
+            - containerPort: 8000
+              name: http
+          env:
+            - name: GENAI_USE_OLLAMA
+              value: {{ .Values.genaiService.useOllama | quote }}
+            - name: AZURE_OPENAI_ENDPOINT
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.azureOpenAi.name }}
+                  key: endpoint
+            - name: AZURE_OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.azureOpenAi.name }}
+                  key: api-key
+            - name: AZURE_OPENAI_CHAT_DEPLOYMENT
+              value: {{ .Values.genaiService.azureOpenAi.chatDeployment | quote }}
+            - name: AZURE_OPENAI_API_VERSION
+              value: {{ .Values.genaiService.azureOpenAi.apiVersion | quote }}
+            - name: GENAI_MAX_COMPLETION_TOKENS
+              value: {{ .Values.genaiService.maxCompletionTokens | quote }}
+          livenessProbe:
+            httpGet:
+              path: /internal/v1/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /internal/v1/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          resources:
+{{- toYaml .Values.genaiService.resources | nindent 12 }}
