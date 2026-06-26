@@ -14,7 +14,7 @@ runtime:
         test("Status is 200 or 404", function() {
           expect(res.status).to.be.oneOf([200, 404]);
         });
-        test("Response has expected shape", function() {
+        test("Successful response has expected thesis shape", function() {
           if (res.status === 200) {
             expect(res.body).to.have.property("id");
             expect(res.body).to.have.property("title");
