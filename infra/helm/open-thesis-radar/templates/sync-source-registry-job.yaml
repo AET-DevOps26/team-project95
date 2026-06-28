@@ -1,0 +1,43 @@
+{{- if .Values.syncSourceRegistry.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sync-source-registry
+  labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "thesis-service" "component" "backend") | nindent 4 }}
+    app.kubernetes.io/job: sync-source-registry
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "thesis-service" "component" "backend") | nindent 8 }}
+        app.kubernetes.io/job: sync-source-registry
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: sync-source-registry
+          image: "{{ .Values.images.thesisService.repository }}:{{ include "open-thesis-radar.imageTag" . }}"
+          command: ["java", "-jar", "app.jar", "--sync-source-registry"]
+          env:
+            - name: THESIS_DB_HOST
+              value: {{ .Values.thesisService.db.host | quote }}
+            - name: THESIS_DB_PORT
+              value: {{ .Values.thesisService.db.port | quote }}
+            - name: THESIS_DB_NAME
+              value: {{ .Values.thesisService.db.name | quote }}
+            - name: THESIS_DB_USER
+              value: {{ .Values.thesisService.db.user | quote }}
+            - name: THESIS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.thesisDb.name }}
+                  key: {{ index .Values "thesis-db" "auth" "secretKeys" "userPasswordKey" }}
+            - name: THESIS_VECTOR_SEARCH_URL
+              value: {{ .Values.thesisService.vectorSearchUrl | quote }}
+          resources:
+{{- toYaml .Values.syncSourceRegistry.resources | nindent 12 }}
+{{- end }}

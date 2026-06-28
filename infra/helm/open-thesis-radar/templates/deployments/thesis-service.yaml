@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: thesis-service-deployment
+  labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "thesis-service" "component" "backend") | nindent 4 }}
+spec:
+  replicas: {{ .Values.thesisService.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: thesis-service
+      app.kubernetes.io/instance: {{ .Release.Name | quote }}
+  template:
+    metadata:
+      labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "thesis-service" "component" "backend") | nindent 8 }}
+    spec:
+      containers:
+        - name: thesis-service-container
+          image: "{{ .Values.images.thesisService.repository }}:{{ include "open-thesis-radar.imageTag" . }}"
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: THESIS_DB_HOST
+              value: {{ .Values.thesisService.db.host | quote }}
+            - name: THESIS_DB_PORT
+              value: {{ .Values.thesisService.db.port | quote }}
+            - name: THESIS_DB_NAME
+              value: {{ .Values.thesisService.db.name | quote }}
+            - name: THESIS_DB_USER
+              value: {{ .Values.thesisService.db.user | quote }}
+            - name: THESIS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.thesisDb.name }}
+                  key: {{ index .Values "thesis-db" "auth" "secretKeys" "userPasswordKey" }}
+            - name: THESIS_VECTOR_SEARCH_URL
+              value: {{ .Values.thesisService.vectorSearchUrl | quote }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+{{- toYaml .Values.thesisService.resources | nindent 12 }}

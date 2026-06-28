@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scraping-service-deployment
+  labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "scraping-service" "component" "backend") | nindent 4 }}
+spec:
+  replicas: {{ .Values.scrapingService.replicaCount }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: scraping-service
+      app.kubernetes.io/instance: {{ .Release.Name | quote }}
+  template:
+    metadata:
+      labels:
+{{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "scraping-service" "component" "backend") | nindent 8 }}
+    spec:
+      containers:
+        - name: scraping-service-container
+          image: "{{ .Values.images.scrapingService.repository }}:{{ include "open-thesis-radar.imageTag" . }}"
+          ports:
+            - containerPort: 8081
+              name: http
+          env:
+            - name: APP_SERVICES_MAIN_THESIS
+              value: {{ .Values.scrapingService.thesisServiceUrl | quote }}
+            - name: APP_SERVICES_GENAI
+              value: {{ .Values.scrapingService.genaiServiceUrl | quote }}
+            - name: CLIENT_CONNECT_TIMEOUT
+              value: {{ .Values.scrapingService.clientConnectTimeout | quote }}
+            - name: CLIENT_READ_TIMEOUT
+              value: {{ .Values.scrapingService.clientReadTimeout | quote }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+{{- toYaml .Values.scrapingService.resources | nindent 12 }}
