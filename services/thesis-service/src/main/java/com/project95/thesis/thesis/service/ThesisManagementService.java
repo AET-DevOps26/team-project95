@@ -68,6 +68,11 @@ public class ThesisManagementService {
                         "SourceEndpoint not found with ID: " + sourceEndpointId));
     Chair chair = sourceEndpoint.getChair();
 
+    if (request.getLastContentHash() != null) {
+      sourceEndpoint.setLastContentHash(request.getLastContentHash());
+      sourceEndpointRepository.save(sourceEndpoint);
+    }
+
     // 4. Perform side-effect-heavy shared entity synchronization
     entityLookupService.ensureSharedEntitiesExist(request);
 

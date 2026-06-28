@@ -25,6 +25,8 @@ import com.project95.thesis.thesis.repository.ChairRepository;
 import com.project95.thesis.thesis.repository.ScrapeRunRepository;
 import com.project95.thesis.thesis.repository.SourceEndpointRepository;
 import com.project95.thesis.thesis.repository.ThesisProposalRepository;
+import com.project95.thesis.thesis.utils.HtmlNormalizer;
+import com.project95.thesis.thesis.utils.Utils;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -233,6 +235,46 @@ class InternalThesisControllerIntegrationTest {
     assertThat(proposals.get(0).getTitle()).isEqualTo("Vector Search Resilient Thesis");
 
     mockServer.verify();
+  }
+
+  @Test
+  void detectChanges_NoPreviousHash_ReturnsChangedTrue() throws Exception {
+    com.project95.thesis.management.dto.DetectChangesRequestDto request = new com.project95.thesis.management.dto.DetectChangesRequestDto();
+    request.setRawHtml("<html><body><h1>AI Thesis</h1></body></html>");
+
+    mockMvc
+        .perform(
+            post("/thesis-internal/v1/source-endpoints/" + activeEndpoint.getId() + "/detect-changes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.changed").value(true))
+        .andExpect(jsonPath("$.contentHash").isNotEmpty())
+        .andExpect(jsonPath("$.sanitizedHtml").value(containsString("AI Thesis")));
+  }
+
+  @Test
+  void detectChanges_MatchingHash_ReturnsChangedFalse() throws Exception {
+    // 1. Calculate and set the hash in the DB
+    String sanitizedHtml = HtmlNormalizer.sanitizeHtml("<html><body><h1>AI Thesis</h1></body></html>");
+    String normalizedText = HtmlNormalizer.getNormalizedText(sanitizedHtml);
+    String hash = Utils.sha256(normalizedText);
+
+    activeEndpoint.setLastContentHash(hash);
+    sourceEndpointRepository.save(activeEndpoint);
+
+    // 2. Perform request with same HTML content
+    com.project95.thesis.management.dto.DetectChangesRequestDto request = new com.project95.thesis.management.dto.DetectChangesRequestDto();
+    request.setRawHtml("<html><body><h1>AI Thesis</h1></body></html>");
+
+    mockMvc
+        .perform(
+            post("/thesis-internal/v1/source-endpoints/" + activeEndpoint.getId() + "/detect-changes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.changed").value(false))
+        .andExpect(jsonPath("$.contentHash").value(hash));
   }
 
   private static SourceEndpoint endpoint(Chair chair, String url, String status) {

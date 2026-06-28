@@ -61,6 +61,13 @@
       <artifactId>swagger-annotations</artifactId>
     </dependency>
 
+    <!-- HTML Parsing and Sanitization -->
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.17.2</version>
+    </dependency>
+
     <!-- Extra Test Dependencies -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
@@ -120,7 +127,8 @@
                 internal/v1/thesis-service/source-endpoints,
                 internal/v1/thesis-service/scrape-runs,
                 internal/v1/thesis-service/source-endpoints/{sourceEndpointId}/theses,
-                internal/v1/health
+                internal/v1/health,
+                thesis-internal/v1/source-endpoints/{sourceEndpointId}/detect-changes
               </apisToGenerate>
               
               <configOptions>

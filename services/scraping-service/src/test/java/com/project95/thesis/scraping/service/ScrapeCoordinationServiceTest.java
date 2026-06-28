@@ -49,6 +49,15 @@ class ScrapeCoordinationServiceTest {
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess("<html><h1>AI Thesis</h1></html>", MediaType.TEXT_HTML));
 
+    // 2b. Mock detect-changes call to Thesis Service
+    mockServer
+        .expect(requestTo("/thesis-internal/v1/source-endpoints/1/detect-changes"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            withSuccess(
+                "{\"changed\":true,\"sanitizedHtml\":\"<html><h1>AI Thesis</h1></html>\",\"contentHash\":\"some-hash\"}",
+                MediaType.APPLICATION_JSON));
+
     // 3. Mock the GenAI Python Service extraction POST request
     mockServer
         .expect(requestTo("/internal/v1/genai-service/extract-theses"))

@@ -78,12 +78,44 @@ public class ScrapeCoordinationService {
         throw new RuntimeException("Received empty HTML from source URL");
       }
 
+      // Query thesis-service to detect if there was a hash change
+      DetectChangesRequestDto detectRequest = new DetectChangesRequestDto();
+      detectRequest.setRawHtml(rawHtml);
+
+      DetectChangesResponseDto detectResponse =
+          thesisServiceClient
+              .post()
+              .uri("/thesis-internal/v1/source-endpoints/" + endpoint.getId() + "/detect-changes")
+              .body(detectRequest)
+              .retrieve()
+              .body(DetectChangesResponseDto.class);
+
+      if (detectResponse != null && Boolean.FALSE.equals(detectResponse.getChanged())) {
+        log.info("Endpoint content is unchanged (hash matches) for {}. Skipping GenAI extraction.", endpoint.getUrl());
+        OffsetDateTime finishedAt = OffsetDateTime.now(ZoneOffset.UTC);
+        
+        logScrapeRun(
+            endpoint.getId(),
+            startedAt,
+            finishedAt,
+            ScrapeRunLogRequestDto.StatusEnum.SUCCESS,
+            null,
+            rawHtml,
+            0);
+        return;
+      }
+
+      // Content changed, proceed with GenAI extraction using token-optimized sanitized HTML
+      String sanitizedHtml = (detectResponse != null && detectResponse.getSanitizedHtml() != null)
+          ? detectResponse.getSanitizedHtml()
+          : rawHtml;
+
       GenAIExtractionRequestDto genAiRequest = new GenAIExtractionRequestDto();
       genAiRequest.setSourceEndpointId(endpoint.getId());
       genAiRequest.setChairId(endpoint.getChairId());
       genAiRequest.setChairName(endpoint.getChairName());
       genAiRequest.setSourceUrl(endpoint.getUrl());
-      genAiRequest.setRawHtml(rawHtml);
+      genAiRequest.setRawHtml(sanitizedHtml);
 
       genAiResponse =
           genAiServiceClient
@@ -104,6 +136,9 @@ public class ScrapeCoordinationService {
           new SourceEndpointThesesReplacementRequestDto();
       sanitizeThesesForSubmission(genAiResponse.getTheses());
       requestBody.setTheses(genAiResponse.getTheses());
+      if (detectResponse != null) {
+        requestBody.setLastContentHash(detectResponse.getContentHash());
+      }
 
       submitThesesReplacement(endpoint.getId(), requestBody);
 
