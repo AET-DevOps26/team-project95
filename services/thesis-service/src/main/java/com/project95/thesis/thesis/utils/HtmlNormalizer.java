@@ -17,11 +17,15 @@ public final class HtmlNormalizer {
    * Also converts hyperlinks to inline text format so URL values are preserved.
    */
   public static String sanitizeHtml(String rawHtml) {
+    return sanitizeHtml(rawHtml, null);
+  }
+
+  public static String sanitizeHtml(String rawHtml, String baseUrl) {
     if (rawHtml == null || rawHtml.isBlank()) {
       return "";
     }
 
-    Document doc = Jsoup.parse(rawHtml);
+    Document doc = baseUrl != null ? Jsoup.parse(rawHtml, baseUrl) : Jsoup.parse(rawHtml);
     
     // Remove layout and noise tags
     doc.select("script, style, iframe, noscript, svg, picture, header, footer, nav, aside, form").remove();
@@ -34,7 +38,7 @@ public final class HtmlNormalizer {
         .addAttributes("a", "href")
         .removeProtocols("a", "href", "ftp", "http", "https", "mailto");
 
-    return Jsoup.clean(doc.body().html(), safelist);
+    return baseUrl != null ? Jsoup.clean(doc.body().html(), baseUrl, safelist) : Jsoup.clean(doc.body().html(), safelist);
   }
 
   /**

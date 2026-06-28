@@ -39,7 +39,7 @@ public class ThesisInternalController {
                     new IllegalArgumentException(
                         "Source endpoint not found with ID: " + sourceEndpointId));
 
-    String sanitizedHtml = HtmlNormalizer.sanitizeHtml(request.getRawHtml());
+    String sanitizedHtml = HtmlNormalizer.sanitizeHtml(request.getRawHtml(), endpoint.getUrl());
     String normalizedText = HtmlNormalizer.getNormalizedText(sanitizedHtml);
     String newHash = Utils.sha256(normalizedText);
     String oldHash = endpoint.getLastContentHash();
