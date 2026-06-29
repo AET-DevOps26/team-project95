@@ -81,11 +81,13 @@ class ScrapeControllerIntegrationTest {
 
     // 2b. Mock Thesis Service detecting changes
     thesisServer
-        .expect(requestTo("http://localhost:8080/thesis-internal/v1/source-endpoints/1/detect-changes"))
+        .expect(
+            requestTo("http://localhost:8080/thesis-internal/v1/source-endpoints/1/detect-changes"))
         .andExpect(method(HttpMethod.POST))
         .andRespond(
             withSuccess(
-                "{\"changed\":true,\"sanitizedHtml\":\"<html><h1>AI Thesis</h1></html>\",\"contentHash\":\"some-hash\"}",
+                "{\"changed\":true,\"sanitizedHtml\":\"<html><h1>AI"
+                    + " Thesis</h1></html>\",\"contentHash\":\"some-hash\"}",
                 MediaType.APPLICATION_JSON));
 
     // 3. Mock GenAI Service extracting theses

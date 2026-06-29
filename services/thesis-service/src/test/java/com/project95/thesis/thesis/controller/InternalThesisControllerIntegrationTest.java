@@ -239,12 +239,15 @@ class InternalThesisControllerIntegrationTest {
 
   @Test
   void detectChanges_NoPreviousHash_ReturnsChangedTrue() throws Exception {
-    com.project95.thesis.management.dto.DetectChangesRequestDto request = new com.project95.thesis.management.dto.DetectChangesRequestDto();
+    com.project95.thesis.management.dto.DetectChangesRequestDto request =
+        new com.project95.thesis.management.dto.DetectChangesRequestDto();
     request.setRawHtml("<html><body><h1>AI Thesis</h1></body></html>");
 
     mockMvc
         .perform(
-            post("/thesis-internal/v1/source-endpoints/" + activeEndpoint.getId() + "/detect-changes")
+            post("/thesis-internal/v1/source-endpoints/"
+                    + activeEndpoint.getId()
+                    + "/detect-changes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())
@@ -256,7 +259,8 @@ class InternalThesisControllerIntegrationTest {
   @Test
   void detectChanges_MatchingHash_ReturnsChangedFalse() throws Exception {
     // 1. Calculate and set the hash in the DB
-    String sanitizedHtml = HtmlNormalizer.sanitizeHtml("<html><body><h1>AI Thesis</h1></body></html>");
+    String sanitizedHtml =
+        HtmlNormalizer.sanitizeHtml("<html><body><h1>AI Thesis</h1></body></html>");
     String normalizedText = HtmlNormalizer.getNormalizedText(sanitizedHtml);
     String hash = Utils.sha256(normalizedText);
 
@@ -264,12 +268,15 @@ class InternalThesisControllerIntegrationTest {
     sourceEndpointRepository.save(activeEndpoint);
 
     // 2. Perform request with same HTML content
-    com.project95.thesis.management.dto.DetectChangesRequestDto request = new com.project95.thesis.management.dto.DetectChangesRequestDto();
+    com.project95.thesis.management.dto.DetectChangesRequestDto request =
+        new com.project95.thesis.management.dto.DetectChangesRequestDto();
     request.setRawHtml("<html><body><h1>AI Thesis</h1></body></html>");
 
     mockMvc
         .perform(
-            post("/thesis-internal/v1/source-endpoints/" + activeEndpoint.getId() + "/detect-changes")
+            post("/thesis-internal/v1/source-endpoints/"
+                    + activeEndpoint.getId()
+                    + "/detect-changes")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())

@@ -91,9 +91,11 @@ public class ScrapeCoordinationService {
               .body(DetectChangesResponseDto.class);
 
       if (detectResponse != null && Boolean.FALSE.equals(detectResponse.getChanged())) {
-        log.info("Endpoint content is unchanged (hash matches) for {}. Skipping GenAI extraction.", endpoint.getUrl());
+        log.info(
+            "Endpoint content is unchanged (hash matches) for {}. Skipping GenAI extraction.",
+            endpoint.getUrl());
         OffsetDateTime finishedAt = OffsetDateTime.now(ZoneOffset.UTC);
-        
+
         logScrapeRun(
             endpoint.getId(),
             startedAt,
@@ -106,9 +108,10 @@ public class ScrapeCoordinationService {
       }
 
       // Content changed, proceed with GenAI extraction using token-optimized sanitized HTML
-      String sanitizedHtml = (detectResponse != null && detectResponse.getSanitizedHtml() != null)
-          ? detectResponse.getSanitizedHtml()
-          : rawHtml;
+      String sanitizedHtml =
+          (detectResponse != null && detectResponse.getSanitizedHtml() != null)
+              ? detectResponse.getSanitizedHtml()
+              : rawHtml;
 
       GenAIExtractionRequestDto genAiRequest = new GenAIExtractionRequestDto();
       genAiRequest.setSourceEndpointId(endpoint.getId());

@@ -8,23 +8,24 @@ class HtmlNormalizerTest {
 
   @Test
   void sanitizeHtml_StripsNoiseAndPrunesDocument() {
-    String html = "<html>"
-        + "<head><style>body { color: red; }</style></head>"
-        + "<body>"
-        + "  <header>Navigation Bar</header>"
-        + "  <main>"
-        + "    <h1>Open Thesis Positions</h1>"
-        + "    <script>console.log('hello');</script>"
-        + "    <p>We are looking for motivated students.</p>"
-        + "  </main>"
-        + "  <footer>Copyright 2026</footer>"
-        + "</body></html>";
+    String html =
+        "<html>"
+            + "<head><style>body { color: red; }</style></head>"
+            + "<body>"
+            + "  <header>Navigation Bar</header>"
+            + "  <main>"
+            + "    <h1>Open Thesis Positions</h1>"
+            + "    <script>console.log('hello');</script>"
+            + "    <p>We are looking for motivated students.</p>"
+            + "  </main>"
+            + "  <footer>Copyright 2026</footer>"
+            + "</body></html>";
 
     String sanitized = HtmlNormalizer.sanitizeHtml(html);
-    
+
     assertThat(sanitized).contains("Open Thesis Positions");
     assertThat(sanitized).contains("We are looking for motivated students.");
-    
+
     // Header, footer, script, and style must be stripped
     assertThat(sanitized).doesNotContain("Navigation Bar");
     assertThat(sanitized).doesNotContain("console.log");
@@ -34,7 +35,9 @@ class HtmlNormalizerTest {
 
   @Test
   void sanitizeHtml_InlinesHyperlinksWithAbsoluteUrls() {
-    String html = "<p>Please contact <a href=\"/people/john-doe\">John Doe</a> or read the <a href=\"https://example.com/guidelines.pdf\">guidelines</a>.</p>";
+    String html =
+        "<p>Please contact <a href=\"/people/john-doe\">John Doe</a> or read the <a"
+            + " href=\"https://example.com/guidelines.pdf\">guidelines</a>.</p>";
     String baseUrl = "https://tum.de/chair";
 
     String sanitized = HtmlNormalizer.sanitizeHtml(html, baseUrl);

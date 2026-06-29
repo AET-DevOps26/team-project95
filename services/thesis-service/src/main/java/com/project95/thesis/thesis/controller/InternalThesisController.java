@@ -6,8 +6,6 @@ import com.project95.thesis.thesis.domain.SourceEndpoint;
 import com.project95.thesis.thesis.repository.SourceEndpointRepository;
 import com.project95.thesis.thesis.service.ScrapeRunService;
 import com.project95.thesis.thesis.service.ThesisCoordinationService;
-import com.project95.thesis.thesis.utils.HtmlNormalizer;
-import com.project95.thesis.thesis.utils.Utils;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;

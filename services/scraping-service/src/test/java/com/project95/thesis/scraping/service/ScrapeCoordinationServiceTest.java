@@ -55,7 +55,8 @@ class ScrapeCoordinationServiceTest {
         .andExpect(method(HttpMethod.POST))
         .andRespond(
             withSuccess(
-                "{\"changed\":true,\"sanitizedHtml\":\"<html><h1>AI Thesis</h1></html>\",\"contentHash\":\"some-hash\"}",
+                "{\"changed\":true,\"sanitizedHtml\":\"<html><h1>AI"
+                    + " Thesis</h1></html>\",\"contentHash\":\"some-hash\"}",
                 MediaType.APPLICATION_JSON));
 
     // 3. Mock the GenAI Python Service extraction POST request
