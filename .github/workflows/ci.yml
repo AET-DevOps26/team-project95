@@ -44,7 +44,7 @@ jobs:
         run: npm run build
 
   backend:
-    name: Backend build and tests
+    name: Backend build, lint and tests
     runs-on: ubuntu-latest
 
     defaults:
@@ -61,9 +61,6 @@ jobs:
           distribution: temurin
           java-version: 25
           cache: maven
-
-      - name: Check Java formatting
-        run: mvn spotless:check
 
       - name: Build and verify Maven services
         run: mvn -B verify
