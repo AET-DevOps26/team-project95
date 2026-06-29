@@ -20,17 +20,16 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("flyway-test")
 class ThesisIngestionIntegrationTest {
 
-  @Container
-  @ServiceConnection
+  @Container @ServiceConnection
   static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
 
   @Autowired private ThesisManagementService thesisManagementService;
@@ -61,11 +60,9 @@ class ThesisIngestionIntegrationTest {
     assertThat(thesisRepository.count()).isEqualTo(1);
 
     // 2. Act: Replace with 2 new ones
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
-    request.setTheses(List.of(
-        createInputDto("New Thesis 1"),
-        createInputDto("New Thesis 2")
-    ));
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
+    request.setTheses(List.of(createInputDto("New Thesis 1"), createInputDto("New Thesis 2")));
 
     thesisManagementService.replaceThesesInDatabase(endpoint.getId(), request);
 
@@ -83,13 +80,15 @@ class ThesisIngestionIntegrationTest {
     assertThat(thesisRepository.count()).isEqualTo(1);
 
     // 2. Act: Attempt replacement but one is invalid (null title)
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
     ThesisProposalInputDto invalid = createInputDto("Valid");
     invalid.setTitle(null); // This will trigger IllegalArgumentException in service
 
     request.setTheses(List.of(createInputDto("Valid 1"), invalid));
 
-    assertThatThrownBy(() -> thesisManagementService.replaceThesesInDatabase(endpoint.getId(), request))
+    assertThatThrownBy(
+            () -> thesisManagementService.replaceThesesInDatabase(endpoint.getId(), request))
         .isInstanceOf(IllegalArgumentException.class);
 
     // 3. Assert: ROLLBACK occurred. Old thesis still exists, no new ones inserted.
@@ -102,7 +101,8 @@ class ThesisIngestionIntegrationTest {
     createThesis("To be deleted");
     assertThat(thesisRepository.count()).isEqualTo(1);
 
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of());
 
     thesisManagementService.replaceThesesInDatabase(endpoint.getId(), request);
@@ -113,7 +113,8 @@ class ThesisIngestionIntegrationTest {
   @Test
   @Transactional
   void replaceTheses_SharedEntitiesLinking() {
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
     ThesisProposalInputDto input = createInputDto("Shared Entity Test");
     input.setTags(List.of("Tag1", "Tag2"));
     input.setResearchArea("Area1");
@@ -125,7 +126,6 @@ class ThesisIngestionIntegrationTest {
     assertThat(saved.getTags()).hasSize(2);
     assertThat(saved.getResearchAreas()).hasSize(1);
   }
-
 
   private void createThesis(String title) {
     ThesisProposal t = new ThesisProposal();

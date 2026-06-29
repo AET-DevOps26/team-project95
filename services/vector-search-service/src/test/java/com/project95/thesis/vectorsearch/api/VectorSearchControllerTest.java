@@ -20,9 +20,9 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter.Expression;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -78,11 +78,7 @@ class VectorSearchControllerTest {
             .id("doc-1001")
             .text("Semantic search thesis")
             .metadata(
-                Map.of(
-                    ThesisVectorMetadata.THESIS_ID,
-                    1001L,
-                    ThesisVectorMetadata.CHAIR_ID,
-                    3L))
+                Map.of(ThesisVectorMetadata.THESIS_ID, 1001L, ThesisVectorMetadata.CHAIR_ID, 3L))
             .score(0.87D)
             .build();
     when(vectorStore.similaritySearch(any(SearchRequest.class))).thenReturn(List.of(document));

@@ -44,8 +44,8 @@ import org.springframework.web.client.RestClient;
 class PublicThesisSearchIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
-  private final ObjectMapper objectMapper = new ObjectMapper()
-      .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+  private final ObjectMapper objectMapper =
+      new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
   @Autowired private ThesisProposalRepository thesisRepository;
   @Autowired private ChairRepository chairRepository;
@@ -119,7 +119,9 @@ class PublicThesisSearchIntegrationTest {
         .perform(get("/api/v1/theses"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$", hasSize(2)))
-        .andExpect(jsonPath("$[*].title", containsInAnyOrder("First Thesis Title", "Second Thesis Title")));
+        .andExpect(
+            jsonPath(
+                "$[*].title", containsInAnyOrder("First Thesis Title", "Second Thesis Title")));
   }
 
   @Test
@@ -135,9 +137,7 @@ class PublicThesisSearchIntegrationTest {
 
   @Test
   void getThesisById_NotFound() throws Exception {
-    mockMvc
-        .perform(get("/api/v1/theses/99999"))
-        .andExpect(status().isNotFound());
+    mockMvc.perform(get("/api/v1/theses/99999")).andExpect(status().isNotFound());
   }
 
   @Test
@@ -239,8 +239,12 @@ class PublicThesisSearchIntegrationTest {
 
     String vectorSearchResponseJson =
         "{\"results\":["
-            + "{\"thesisId\":" + savedThesis2.getId() + ",\"score\":0.9},"
-            + "{\"thesisId\":" + savedThesis1.getId() + ",\"score\":0.6}"
+            + "{\"thesisId\":"
+            + savedThesis2.getId()
+            + ",\"score\":0.9},"
+            + "{\"thesisId\":"
+            + savedThesis1.getId()
+            + ",\"score\":0.6}"
             + "]}";
 
     mockServer

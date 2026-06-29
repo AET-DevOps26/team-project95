@@ -52,8 +52,8 @@ import org.springframework.web.client.RestClient;
 class InternalThesisControllerIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
-  private final ObjectMapper objectMapper = new ObjectMapper()
-      .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+  private final ObjectMapper objectMapper =
+      new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
   @Autowired private ChairRepository chairRepository;
   @Autowired private SourceEndpointRepository sourceEndpointRepository;
@@ -84,7 +84,8 @@ class InternalThesisControllerIntegrationTest {
     chairRepository.deleteAll();
 
     chair = chairRepository.save(new Chair("AI Chair", "https://ai.example.com/"));
-    activeEndpoint = sourceEndpointRepository.save(endpoint(chair, "https://ai.example.com/active/", "ACTIVE"));
+    activeEndpoint =
+        sourceEndpointRepository.save(endpoint(chair, "https://ai.example.com/active/", "ACTIVE"));
   }
 
   @Test
@@ -127,7 +128,8 @@ class InternalThesisControllerIntegrationTest {
     assertThat(runs.get(0).getCandidatesFound()).isEqualTo(3);
 
     // Verify lastScrapedAt updated on endpoint
-    SourceEndpoint updatedEndpoint = sourceEndpointRepository.findById(activeEndpoint.getId()).orElseThrow();
+    SourceEndpoint updatedEndpoint =
+        sourceEndpointRepository.findById(activeEndpoint.getId()).orElseThrow();
     assertThat(updatedEndpoint.getLastScrapedAt()).isNotNull();
   }
 
@@ -153,19 +155,26 @@ class InternalThesisControllerIntegrationTest {
     inputDto.setSourceUrl(URI.create("https://ai.example.com/vector-search"));
     inputDto.setStatus("OPEN");
 
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(inputDto));
 
     // Mock vector-search-service response
     String vectorSyncResponseJson = "{\"insertedVectorEntries\":1,\"replacedVectorEntries\":1}";
     mockServer
-        .expect(requestTo("http://localhost:8082/internal/v1/vector-search-service/source-endpoints/" + activeEndpoint.getId() + "/index"))
+        .expect(
+            requestTo(
+                "http://localhost:8082/internal/v1/vector-search-service/source-endpoints/"
+                    + activeEndpoint.getId()
+                    + "/index"))
         .andExpect(method(HttpMethod.POST))
         .andRespond(withSuccess(vectorSyncResponseJson, MediaType.APPLICATION_JSON));
 
     mockMvc
         .perform(
-            put("/internal/v1/thesis-service/source-endpoints/" + activeEndpoint.getId() + "/theses")
+            put("/internal/v1/thesis-service/source-endpoints/"
+                    + activeEndpoint.getId()
+                    + "/theses")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())
@@ -183,25 +192,33 @@ class InternalThesisControllerIntegrationTest {
   }
 
   @Test
-  void replaceChairTheses_VectorSyncFailure_CommitsRelationalDataAndReturnsWarning() throws Exception {
+  void replaceChairTheses_VectorSyncFailure_CommitsRelationalDataAndReturnsWarning()
+      throws Exception {
     ThesisProposalInputDto inputDto = new ThesisProposalInputDto();
     inputDto.setTitle("Vector Search Resilient Thesis");
     inputDto.setDegreeType("MASTER");
     inputDto.setSourceUrl(URI.create("https://ai.example.com/vector-search-resilient"));
     inputDto.setStatus("OPEN");
 
-    SourceEndpointThesesReplacementRequestDto request = new SourceEndpointThesesReplacementRequestDto();
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(inputDto));
 
     // Mock vector-search-service throwing 500 error
     mockServer
-        .expect(requestTo("http://localhost:8082/internal/v1/vector-search-service/source-endpoints/" + activeEndpoint.getId() + "/index"))
+        .expect(
+            requestTo(
+                "http://localhost:8082/internal/v1/vector-search-service/source-endpoints/"
+                    + activeEndpoint.getId()
+                    + "/index"))
         .andExpect(method(HttpMethod.POST))
         .andRespond(withServerError());
 
     mockMvc
         .perform(
-            put("/internal/v1/thesis-service/source-endpoints/" + activeEndpoint.getId() + "/theses")
+            put("/internal/v1/thesis-service/source-endpoints/"
+                    + activeEndpoint.getId()
+                    + "/theses")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())

@@ -159,4 +159,3 @@ class ThesisManagementServiceTest {
     verify(thesisRepository, never()).deleteBySourceEndpointId(any());
   }
 }
-

@@ -8,10 +8,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 @SpringBootTest(properties = "spring.ai.model.embedding=none")
 class VectorSearchServiceApplicationTests {
 
-    @MockitoBean
-    private VectorStore vectorStore;
+  @MockitoBean private VectorStore vectorStore;
 
-    @Test
-    void contextLoads() {
-    }
+  @Test
+  void contextLoads() {}
 }

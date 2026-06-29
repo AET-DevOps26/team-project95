@@ -69,7 +69,8 @@ class ScrapeControllerIntegrationTest {
         .andExpect(method(HttpMethod.GET))
         .andRespond(
             withSuccess(
-                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI Chair\",\"url\":\"http://chair.example.com/theses\",\"status\":\"ACTIVE\"}]}",
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair.example.com/theses\",\"status\":\"ACTIVE\"}]}",
                 MediaType.APPLICATION_JSON));
 
     // 2. Mock Scraping Client fetching raw HTML
@@ -84,12 +85,14 @@ class ScrapeControllerIntegrationTest {
         .andExpect(method(HttpMethod.POST))
         .andRespond(
             withSuccess(
-                "{\"theses\":[{\"title\":\"AI Thesis\",\"sourceUrl\":\"http://chair.example.com/theses\",\"degreeType\":\"MASTER\",\"status\":\"OPEN\"}]}",
+                "{\"theses\":[{\"title\":\"AI"
+                    + " Thesis\",\"sourceUrl\":\"http://chair.example.com/theses\",\"degreeType\":\"MASTER\",\"status\":\"OPEN\"}]}",
                 MediaType.APPLICATION_JSON));
 
     // 4. Mock Thesis Service replacing proposals
     thesisServer
-        .expect(requestTo("http://localhost:8080/internal/v1/thesis-service/source-endpoints/1/theses"))
+        .expect(
+            requestTo("http://localhost:8080/internal/v1/thesis-service/source-endpoints/1/theses"))
         .andExpect(method(HttpMethod.PUT))
         .andRespond(withSuccess());
 
@@ -123,7 +126,8 @@ class ScrapeControllerIntegrationTest {
         .andExpect(method(HttpMethod.GET))
         .andRespond(
             withSuccess(
-                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI Chair\",\"url\":\"http://chair.example.com/theses\",\"status\":\"ACTIVE\"}]}",
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair.example.com/theses\",\"status\":\"ACTIVE\"}]}",
                 MediaType.APPLICATION_JSON));
 
     // 2. Mock Scraping Client failing (e.g., website down)
@@ -139,9 +143,7 @@ class ScrapeControllerIntegrationTest {
         .andRespond(withSuccess());
 
     // Act: trigger scraping
-    mockMvc
-        .perform(post("/internal/v1/scraping-service/scrape"))
-        .andExpect(status().isAccepted());
+    mockMvc.perform(post("/internal/v1/scraping-service/scrape")).andExpect(status().isAccepted());
 
     // Wait for the asynchronous background task to complete execution
     Thread.sleep(1200);
@@ -149,6 +151,7 @@ class ScrapeControllerIntegrationTest {
     // Assert: verify that the failure log was routed and no GenAI or ingestion PUT was fired
     thesisServer.verify();
     scrapingServer.verify();
-    genAiServer.verify(); // No expected calls, should pass verification since no expectations were registered
+    genAiServer.verify(); // No expected calls, should pass verification since no expectations were
+    // registered
   }
 }

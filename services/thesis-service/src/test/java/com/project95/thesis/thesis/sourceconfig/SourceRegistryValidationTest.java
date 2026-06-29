@@ -25,7 +25,8 @@ class SourceRegistryValidationTest {
   void validate_AcceptsCommittedSourceEndpointRegistry() throws Exception {
     try (InputStream inputStream = getClass().getResourceAsStream("/source-endpoints.json")) {
       assertThat(inputStream).isNotNull();
-      List<ChairEntry> registry = new ObjectMapper().readValue(inputStream, new TypeReference<>() {});
+      List<ChairEntry> registry =
+          new ObjectMapper().readValue(inputStream, new TypeReference<>() {});
 
       assertThatCode(() -> validator.validate(registry)).doesNotThrowAnyException();
       assertThat(registry).isNotEmpty();
