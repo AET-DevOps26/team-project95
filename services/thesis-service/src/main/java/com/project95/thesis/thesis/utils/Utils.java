@@ -23,17 +23,8 @@ public class Utils {
     }
     try {
       java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
-      byte[] encodedhash = digest.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-      
-      StringBuilder hexString = new StringBuilder(2 * encodedhash.length);
-      for (byte b : encodedhash) {
-        String hex = Integer.toHexString(0xff & b);
-        if (hex.length() == 1) {
-          hexString.append('0');
-        }
-        hexString.append(hex);
-      }
-      return hexString.toString();
+      byte[] hash = digest.digest(input.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      return java.util.HexFormat.of().formatHex(hash);
     } catch (java.security.NoSuchAlgorithmException e) {
       throw new IllegalStateException("SHA-256 algorithm not available", e);
     }
