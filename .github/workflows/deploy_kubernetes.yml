@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ github.event.workflow_run.head_sha }}
 
@@ -28,7 +28,7 @@ jobs:
         uses: azure/setup-helm@v5
 
       - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
+        uses: azure/setup-kubectl@v5
 
       - name: Configure kubeconfig
         env:
@@ -67,3 +67,11 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
         run: ./infra/helm/deploy-helm.sh
+
+      - name: Verify Kubernetes rollout
+        run: |
+          kubectl rollout status deployment/thesis-service --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/vector-search-service --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/genai-service --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/scraping-service --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/user-interface --namespace open-thesis-radar --timeout=300s
