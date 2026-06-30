@@ -160,6 +160,7 @@ class InternalThesisControllerIntegrationTest {
     SourceEndpointThesesReplacementRequestDto request =
         new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(inputDto));
+    request.setLastContentHash("success-hash");
 
     // Mock vector-search-service response
     String vectorSyncResponseJson = "{\"insertedVectorEntries\":1,\"replacedVectorEntries\":1}";
@@ -190,6 +191,10 @@ class InternalThesisControllerIntegrationTest {
     assertThat(proposals).hasSize(1);
     assertThat(proposals.get(0).getTitle()).isEqualTo("Vector Search Thesis");
 
+    SourceEndpoint updatedEndpoint =
+        sourceEndpointRepository.findById(activeEndpoint.getId()).orElseThrow();
+    assertThat(updatedEndpoint.getLastContentHash()).isEqualTo("success-hash");
+
     mockServer.verify();
   }
 
@@ -205,6 +210,7 @@ class InternalThesisControllerIntegrationTest {
     SourceEndpointThesesReplacementRequestDto request =
         new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(inputDto));
+    request.setLastContentHash("failure-hash");
 
     // Mock vector-search-service throwing 500 error
     mockServer
@@ -233,6 +239,10 @@ class InternalThesisControllerIntegrationTest {
     List<ThesisProposal> proposals = thesisRepository.findAll();
     assertThat(proposals).hasSize(1);
     assertThat(proposals.get(0).getTitle()).isEqualTo("Vector Search Resilient Thesis");
+
+    SourceEndpoint updatedEndpoint =
+        sourceEndpointRepository.findById(activeEndpoint.getId()).orElseThrow();
+    assertThat(updatedEndpoint.getLastContentHash()).isNull();
 
     mockServer.verify();
   }

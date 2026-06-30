@@ -68,11 +68,6 @@ public class ThesisManagementService {
                         "SourceEndpoint not found with ID: " + sourceEndpointId));
     Chair chair = sourceEndpoint.getChair();
 
-    if (request.getLastContentHash() != null) {
-      sourceEndpoint.setLastContentHash(request.getLastContentHash());
-      sourceEndpointRepository.save(sourceEndpoint);
-    }
-
     // 4. Perform side-effect-heavy shared entity synchronization
     entityLookupService.ensureSharedEntitiesExist(request);
 
@@ -179,5 +174,21 @@ public class ThesisManagementService {
     entityList = thesisRepository.saveAll(entityList);
 
     return new IngestionResult(entityList, deletedCount);
+  }
+
+  @Transactional
+  public void updateLastContentHash(Long sourceEndpointId, String hash) {
+    if (sourceEndpointId == null || hash == null) {
+      return;
+    }
+    SourceEndpoint sourceEndpoint =
+        sourceEndpointRepository
+            .findById(sourceEndpointId)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "SourceEndpoint not found with ID: " + sourceEndpointId));
+    sourceEndpoint.setLastContentHash(hash);
+    sourceEndpointRepository.save(sourceEndpoint);
   }
 }

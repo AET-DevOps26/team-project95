@@ -3,6 +3,8 @@ package com.project95.thesis.thesis.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -73,6 +75,8 @@ class ThesisCoordinationServiceTest {
         .andExpect(method(HttpMethod.POST))
         .andRespond(withSuccess(vectorResponseJson, MediaType.APPLICATION_JSON));
 
+    request.setLastContentHash("success-hash");
+
     // Act
     SourceEndpointThesesReplacementResponseDto response =
         service.executeScrapeIngestionPipeline(sourceEndpointId, request);
@@ -80,6 +84,54 @@ class ThesisCoordinationServiceTest {
     // Assert
     assertThat(response.getInsertedRelationalTheses()).isEqualTo(1);
     assertThat(response.getReplacedVectorEntries()).isEqualTo(1);
+    verify(thesisManagementService).updateLastContentHash(sourceEndpointId, "success-hash");
+    mockServer.verify();
+  }
+
+  @Test
+  void executeScrapeIngestionPipeline_VectorServiceFailure_DoesNotUpdateContentHash() {
+    // Arrange
+    Long sourceEndpointId = 1L;
+    SourceEndpointThesesReplacementRequestDto request =
+        new SourceEndpointThesesReplacementRequestDto();
+    request.setLastContentHash("failure-hash");
+
+    com.project95.thesis.thesis.domain.Chair chair = new com.project95.thesis.thesis.domain.Chair();
+    chair.setId(sourceEndpointId);
+
+    ThesisProposal persistentThesis = new ThesisProposal();
+    persistentThesis.setId(100L);
+    persistentThesis.setTitle("Vector Sync Failure Test");
+    persistentThesis.setChair(chair);
+
+    com.project95.thesis.thesis.domain.SourceEndpoint endpoint =
+        new com.project95.thesis.thesis.domain.SourceEndpoint();
+    endpoint.setId(sourceEndpointId);
+    persistentThesis.setSourceEndpoint(endpoint);
+
+    IngestionResult ingestionResult = new IngestionResult(List.of(persistentThesis), 12L);
+
+    when(thesisManagementService.replaceThesesInDatabase(eq(sourceEndpointId), any()))
+        .thenReturn(ingestionResult);
+
+    mockServer
+        .expect(
+            requestTo(
+                "http://vector-service/internal/v1/vector-search-service/source-endpoints/1/index"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            org.springframework.test.web.client.response.MockRestResponseCreators
+                .withServerError());
+
+    // Act
+    SourceEndpointThesesReplacementResponseDto response =
+        service.executeScrapeIngestionPipeline(sourceEndpointId, request);
+
+    // Assert
+    assertThat(response.getInsertedRelationalTheses()).isEqualTo(1);
+    assertThat(response.getReplacedVectorEntries()).isEqualTo(0);
+    assertThat(response.getErrorMessage()).contains("Vector sync failed");
+    verify(thesisManagementService, never()).updateLastContentHash(any(), any());
     mockServer.verify();
   }
 }
