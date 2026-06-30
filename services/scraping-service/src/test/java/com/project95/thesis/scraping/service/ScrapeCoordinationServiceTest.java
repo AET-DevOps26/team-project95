@@ -87,4 +87,45 @@ class ScrapeCoordinationServiceTest {
     // Assert - ensures all the mocked server endpoints were hit in the exact order requested
     mockServer.verify();
   }
+
+  @Test
+  void runScrapeCycle_UnchangedPathShortCircuits() {
+    // 1. Mock the endpoints fetch from Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // 2. Mock fetching the raw HTML from the external website
+    mockServer
+        .expect(requestTo("http://chair.example.com/theses"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("<html><h1>AI Thesis</h1></html>", MediaType.TEXT_HTML));
+
+    // 2b. Mock detect-changes call to Thesis Service with changed = false
+    mockServer
+        .expect(requestTo("/thesis-internal/v1/source-endpoints/1/detect-changes"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            withSuccess(
+                "{\"changed\":false,\"sanitizedHtml\":\"<html><h1>AI"
+                    + " Thesis</h1></html>\",\"contentHash\":\"some-hash\"}",
+                MediaType.APPLICATION_JSON));
+
+    // 3. Mock the final SUCCESS logging (since it should still log SUCCESS, but short-circuited)
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/scrape-runs"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withSuccess());
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert - ensures no other requests (like GenAI extraction or theses PUT) were made
+    mockServer.verify();
+  }
 }

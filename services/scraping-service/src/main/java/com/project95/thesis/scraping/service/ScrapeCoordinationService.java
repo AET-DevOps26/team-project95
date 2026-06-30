@@ -90,7 +90,13 @@ public class ScrapeCoordinationService {
               .retrieve()
               .body(DetectChangesResponseDto.class);
 
-      if (detectResponse != null && Boolean.FALSE.equals(detectResponse.getChanged())) {
+      if (detectResponse == null) {
+        log.warn(
+            "Detect changes response was null for endpoint ID: {} (URL: {}). Proceeding with"
+                + " extraction.",
+            endpoint.getId(),
+            endpoint.getUrl());
+      } else if (Boolean.FALSE.equals(detectResponse.getChanged())) {
         log.info(
             "Endpoint content is unchanged (hash matches) for {}. Skipping GenAI extraction.",
             endpoint.getUrl());

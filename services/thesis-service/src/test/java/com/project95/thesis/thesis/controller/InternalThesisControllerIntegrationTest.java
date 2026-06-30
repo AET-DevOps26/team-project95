@@ -260,7 +260,8 @@ class InternalThesisControllerIntegrationTest {
   void detectChanges_MatchingHash_ReturnsChangedFalse() throws Exception {
     // 1. Calculate and set the hash in the DB
     String sanitizedHtml =
-        HtmlNormalizer.sanitizeHtml("<html><body><h1>AI Thesis</h1></body></html>");
+        HtmlNormalizer.sanitizeHtml(
+            "<html><body><h1>AI Thesis</h1></body></html>", activeEndpoint.getUrl());
     String normalizedText = HtmlNormalizer.getNormalizedText(sanitizedHtml);
     String hash = Utils.sha256(normalizedText);
 
@@ -282,6 +283,24 @@ class InternalThesisControllerIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.changed").value(false))
         .andExpect(jsonPath("$.contentHash").value(hash));
+  }
+
+  @Test
+  void detectChanges_EndpointNotFound_ReturnsNotFound() throws Exception {
+    com.project95.thesis.management.dto.DetectChangesRequestDto request =
+        new com.project95.thesis.management.dto.DetectChangesRequestDto();
+    request.setRawHtml("<html><body><h1>AI Thesis</h1></body></html>");
+
+    mockMvc
+        .perform(
+            post("/thesis-internal/v1/source-endpoints/"
+                    + (activeEndpoint.getId() + 9999L)
+                    + "/detect-changes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isNotFound())
+        .andExpect(
+            jsonPath("$.message").value(containsString("Source endpoint not found with ID:")));
   }
 
   private static SourceEndpoint endpoint(Chair chair, String url, String status) {
