@@ -1,6 +1,12 @@
 name: Deploy Kubernetes
 
 on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Image tag/SHA to deploy"
+        required: true
+        type: string
   workflow_run:
     workflows: ["CI"]
     types: [completed]
@@ -15,16 +21,17 @@ permissions:
 
 jobs:
   deploy:
-    if: github.event.workflow_run.conclusion == 'success'
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.sha || github.event.workflow_run.head_sha }}
 
       - name: Refuse stale main deployments
+        if: github.event_name == 'workflow_run'
         env:
           IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
         run: |
@@ -83,13 +90,13 @@ jobs:
 
       - name: Deploy Helm chart
         env:
-          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+          IMAGE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.image_tag || github.event.workflow_run.head_sha }}
         run: ./infra/helm/deploy-helm.sh
 
       - name: Verify Kubernetes rollout
         run: |
-          kubectl rollout status deployment/thesis-service --namespace open-thesis-radar --timeout=300s
-          kubectl rollout status deployment/vector-search-service --namespace open-thesis-radar --timeout=300s
-          kubectl rollout status deployment/genai-service --namespace open-thesis-radar --timeout=300s
-          kubectl rollout status deployment/scraping-service --namespace open-thesis-radar --timeout=300s
-          kubectl rollout status deployment/user-interface --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/thesis-service-deployment --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/vector-search-service-deployment --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/genai-service-deployment --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/scraping-service-deployment --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/user-interface-deployment --namespace open-thesis-radar --timeout=300s
