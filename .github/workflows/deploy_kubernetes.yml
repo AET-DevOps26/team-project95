@@ -1,0 +1,93 @@
+name: Deploy Kubernetes
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+concurrency:
+  group: kubernetes-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Refuse stale main deployments
+        env:
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          latest_main_sha="$(git ls-remote origin refs/heads/main | awk '{print $1}')"
+          if [ "$IMAGE_TAG" != "$latest_main_sha" ]; then
+            echo "::error::Refusing to deploy stale SHA $IMAGE_TAG; current main is $latest_main_sha."
+            exit 1
+          fi
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v5
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v5
+
+      - name: Configure kubeconfig
+        env:
+          KUBE_CONFIG_B64: ${{ secrets.KUBE_CONFIG_B64 }}
+        run: |
+          : "${KUBE_CONFIG_B64:?KUBE_CONFIG_B64 secret is required}"
+          mkdir -p ~/.kube
+          printf '%s' "$KUBE_CONFIG_B64" | base64 -d > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Sync Kubernetes secrets
+        env:
+          THESIS_DB_PASSWORD: ${{ secrets.THESIS_DB_PASSWORD }}
+          VECTOR_DB_PASSWORD: ${{ secrets.VECTOR_DB_PASSWORD }}
+          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+        run: |
+          : "${THESIS_DB_PASSWORD:?THESIS_DB_PASSWORD secret is required}"
+          : "${VECTOR_DB_PASSWORD:?VECTOR_DB_PASSWORD secret is required}"
+          : "${AZURE_OPENAI_ENDPOINT:?AZURE_OPENAI_ENDPOINT secret is required}"
+          : "${AZURE_OPENAI_API_KEY:?AZURE_OPENAI_API_KEY secret is required}"
+
+          kubectl create namespace open-thesis-radar --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl create secret generic thesis-db-secret \
+            --namespace open-thesis-radar \
+            --from-literal=password="$THESIS_DB_PASSWORD" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl create secret generic vector-db-secret \
+            --namespace open-thesis-radar \
+            --from-literal=password="$VECTOR_DB_PASSWORD" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl create secret generic azure-openai-secret \
+            --namespace open-thesis-radar \
+            --from-literal=endpoint="$AZURE_OPENAI_ENDPOINT" \
+            --from-literal=api-key="$AZURE_OPENAI_API_KEY" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Deploy Helm chart
+        env:
+          IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
+        run: ./infra/helm/deploy-helm.sh
+
+      - name: Verify Kubernetes rollout
+        run: |
+          kubectl rollout status deployment/thesis-service --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/vector-search-service --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/genai-service --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/scraping-service --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/user-interface --namespace open-thesis-radar --timeout=300s
