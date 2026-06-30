@@ -13,7 +13,9 @@ public final class ThesisVectorUtils {
 
   public static Expression sourceEndpointFilter(Long sourceEndpointId) {
     return new Expression(
-        ExpressionType.EQ, new Key(ThesisVectorMetadata.SOURCE_ENDPOINT_ID), new Value(sourceEndpointId));
+        ExpressionType.EQ,
+        new Key(ThesisVectorMetadata.SOURCE_ENDPOINT_ID),
+        new Value(sourceEndpointId));
   }
 
   public static void putIfPresent(Map<String, Object> metadata, String key, String value) {

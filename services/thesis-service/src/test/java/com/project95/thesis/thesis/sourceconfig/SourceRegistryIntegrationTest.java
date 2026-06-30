@@ -57,12 +57,15 @@ class SourceRegistryIntegrationTest {
             "chair-a",
             "Updated Chair",
             "https://example.com/updated-chair/",
-            List.of(new EndpointEntry("endpoint-a", "https://example.com/updated-endpoint/", "RETIRED")));
+            List.of(
+                new EndpointEntry(
+                    "endpoint-a", "https://example.com/updated-endpoint/", "RETIRED")));
 
     RegistryResult result = registryService.applyRegistry(List.of(updatedChair));
 
     Chair chair = chairRepository.findByRegistryKey("chair-a").orElseThrow();
-    SourceEndpoint endpoint = sourceEndpointRepository.findByRegistryKey("endpoint-a").orElseThrow();
+    SourceEndpoint endpoint =
+        sourceEndpointRepository.findByRegistryKey("endpoint-a").orElseThrow();
     assertThat(result.chairsUpdated()).isEqualTo(1);
     assertThat(result.endpointsUpdated()).isEqualTo(1);
     assertThat(chair.getName()).isEqualTo("Updated Chair");
@@ -74,23 +77,27 @@ class SourceRegistryIntegrationTest {
   @Test
   void applyRegistry_RetiresRemovedRegistryManagedEndpointsOnly() {
     registryService.applyRegistry(
-        List.of(chair("chair-a", "endpoint-a", "ACTIVE"), chair("chair-b", "endpoint-b", "ACTIVE")));
+        List.of(
+            chair("chair-a", "endpoint-a", "ACTIVE"), chair("chair-b", "endpoint-b", "ACTIVE")));
 
-    Chair unmanagedChair = chairRepository.save(new Chair("Manual Chair", "https://manual.example.com/"));
+    Chair unmanagedChair =
+        chairRepository.save(new Chair("Manual Chair", "https://manual.example.com/"));
     SourceEndpoint unmanagedEndpoint = new SourceEndpoint();
     unmanagedEndpoint.setChair(unmanagedChair);
     unmanagedEndpoint.setUrl("https://manual.example.com/theses/");
     unmanagedEndpoint.setStatus("ACTIVE");
     sourceEndpointRepository.save(unmanagedEndpoint);
 
-    RegistryResult result = registryService.applyRegistry(List.of(chair("chair-a", "endpoint-a", "ACTIVE")));
+    RegistryResult result =
+        registryService.applyRegistry(List.of(chair("chair-a", "endpoint-a", "ACTIVE")));
 
     assertThat(result.endpointsRetired()).isEqualTo(1);
     assertThat(sourceEndpointRepository.findByRegistryKey("endpoint-a").orElseThrow().getStatus())
         .isEqualTo("ACTIVE");
     assertThat(sourceEndpointRepository.findByRegistryKey("endpoint-b").orElseThrow().getStatus())
         .isEqualTo("RETIRED");
-    assertThat(sourceEndpointRepository.findById(unmanagedEndpoint.getId()).orElseThrow().getStatus())
+    assertThat(
+            sourceEndpointRepository.findById(unmanagedEndpoint.getId()).orElseThrow().getStatus())
         .isEqualTo("ACTIVE");
   }
 
@@ -103,7 +110,8 @@ class SourceRegistryIntegrationTest {
     endpoint.setStatus("ACTIVE");
     sourceEndpointRepository.save(endpoint);
 
-    RegistryResult result = registryService.applyRegistry(List.of(chair("chair-a", "endpoint-a", "ACTIVE")));
+    RegistryResult result =
+        registryService.applyRegistry(List.of(chair("chair-a", "endpoint-a", "ACTIVE")));
 
     assertThat(result.chairsInserted()).isZero();
     assertThat(result.endpointsInserted()).isZero();
@@ -120,6 +128,8 @@ class SourceRegistryIntegrationTest {
         chairKey,
         "Chair " + chairKey,
         "https://example.com/" + chairKey + "/",
-        List.of(new EndpointEntry(endpointKey, "https://example.com/" + endpointKey + "/theses/", status)));
+        List.of(
+            new EndpointEntry(
+                endpointKey, "https://example.com/" + endpointKey + "/theses/", status)));
   }
 }

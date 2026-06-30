@@ -62,14 +62,16 @@ public class ThesisVectorIndexService {
           sourceEndpointId,
           documents.size());
     } else {
-      log.info("No replacement vector documents to insert for sourceEndpointId={}", sourceEndpointId);
+      log.info(
+          "No replacement vector documents to insert for sourceEndpointId={}", sourceEndpointId);
     }
 
     // Spring AI VectorStore#delete(filter) does not expose the number of deleted rows.
     ReplaceSourceEndpointVectorsResponseDto response =
         new ReplaceSourceEndpointVectorsResponseDto(sourceEndpointId, 0, documents.size());
     log.info(
-        "Completed vector index replacement for sourceEndpointId={}. deletedCountUnavailable=true, insertedCount={}",
+        "Completed vector index replacement for sourceEndpointId={}. deletedCountUnavailable=true,"
+            + " insertedCount={}",
         sourceEndpointId,
         documents.size());
     return response;

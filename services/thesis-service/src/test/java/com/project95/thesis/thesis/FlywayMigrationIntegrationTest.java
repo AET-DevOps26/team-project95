@@ -9,30 +9,28 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;
-import org.testcontainers.postgresql.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 @SpringBootTest
 @Testcontainers
 @ActiveProfiles("flyway-test")
 class FlywayMigrationIntegrationTest {
 
-  @Container
-  @ServiceConnection
+  @Container @ServiceConnection
   static PostgreSQLContainer postgres = new PostgreSQLContainer("postgres:16-alpine");
 
-  @Autowired
-  private ChairRepository chairRepository;
+  @Autowired private ChairRepository chairRepository;
 
   @Test
   void contextLoadsAndFlywayMigrationsSucceed() {
     assertThat(postgres.isRunning()).isTrue();
-    
+
     // Verify that we can interact with the schema created by Flyway
     Chair chair = new Chair("Test Chair", "http://test.com");
     Chair saved = chairRepository.save(chair);
-    
+
     assertThat(saved.getId()).isNotNull();
     assertThat(chairRepository.findById(saved.getId())).isPresent();
   }

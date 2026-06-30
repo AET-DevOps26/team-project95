@@ -6,10 +6,7 @@ public final class SourceRegistry {
   private SourceRegistry() {}
 
   public record ChairEntry(
-      String key,
-      String name,
-      String websiteUrl,
-      List<EndpointEntry> sourceEndpoints) {}
+      String key, String name, String websiteUrl, List<EndpointEntry> sourceEndpoints) {}
 
   public record EndpointEntry(String key, String url, String status) {}
 

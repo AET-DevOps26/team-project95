@@ -205,7 +205,8 @@ public class ScrapeCoordinationService {
 
     if (advisorsWithUsableEmail.size() != originalAdvisorCount) {
       log.warn(
-          "Dropping {} advisor(s) without usable email for thesis '{}'. Thesis will still be submitted.",
+          "Dropping {} advisor(s) without usable email for thesis '{}'. Thesis will still be"
+              + " submitted.",
           originalAdvisorCount - advisorsWithUsableEmail.size(),
           thesis.getTitle());
     }

@@ -16,7 +16,8 @@ public class GlobalExceptionHandler {
   private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
   @ExceptionHandler(IllegalArgumentException.class)
-  public ResponseEntity<ErrorResponseDto> handleIllegalArgumentException(IllegalArgumentException ex) {
+  public ResponseEntity<ErrorResponseDto> handleIllegalArgumentException(
+      IllegalArgumentException ex) {
     log.warn("Invalid vector search request: {}", ex.getMessage());
     return ResponseEntity.badRequest().body(new ErrorResponseDto(ex.getMessage()));
   }

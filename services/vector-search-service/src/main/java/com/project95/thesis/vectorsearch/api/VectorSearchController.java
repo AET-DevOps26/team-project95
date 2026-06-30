@@ -1,7 +1,5 @@
 package com.project95.thesis.vectorsearch.api;
 
-import com.project95.thesis.vectorsearch.dto.SourceEndpointThesesReplacementRequestDto;
-import com.project95.thesis.vectorsearch.dto.SourceEndpointThesesReplacementResponseDto;
 import com.project95.thesis.vectorsearch.dto.GenAIExtractionRequestDto;
 import com.project95.thesis.vectorsearch.dto.GenAIExtractionResponseDto;
 import com.project95.thesis.vectorsearch.dto.HealthResponseDto;
@@ -10,6 +8,8 @@ import com.project95.thesis.vectorsearch.dto.ReplaceSourceEndpointVectorsRespons
 import com.project95.thesis.vectorsearch.dto.ScrapeRunLogRequestDto;
 import com.project95.thesis.vectorsearch.dto.ScrapeRunLogResponseDto;
 import com.project95.thesis.vectorsearch.dto.SourceEndpointListResponseDto;
+import com.project95.thesis.vectorsearch.dto.SourceEndpointThesesReplacementRequestDto;
+import com.project95.thesis.vectorsearch.dto.SourceEndpointThesesReplacementResponseDto;
 import com.project95.thesis.vectorsearch.dto.TriggerScrapeResponseDto;
 import com.project95.thesis.vectorsearch.dto.VectorSearchRequestDto;
 import com.project95.thesis.vectorsearch.dto.VectorSearchResponseDto;
@@ -40,9 +40,11 @@ public class VectorSearchController implements InternalApi {
 
   @Override
   public ResponseEntity<ReplaceSourceEndpointVectorsResponseDto> indexSourceEndpointTheses(
-      Long sourceEndpointId, ReplaceSourceEndpointVectorsRequestDto replaceSourceEndpointVectorsRequest) {
+      Long sourceEndpointId,
+      ReplaceSourceEndpointVectorsRequestDto replaceSourceEndpointVectorsRequest) {
     return ResponseEntity.ok(
-        thesisVectorIndexService.indexSourceEndpointTheses(sourceEndpointId, replaceSourceEndpointVectorsRequest));
+        thesisVectorIndexService.indexSourceEndpointTheses(
+            sourceEndpointId, replaceSourceEndpointVectorsRequest));
   }
 
   @Override
@@ -69,7 +71,8 @@ public class VectorSearchController implements InternalApi {
 
   @Override
   public ResponseEntity<SourceEndpointThesesReplacementResponseDto> replaceChairTheses(
-      Long sourceEndpointId, SourceEndpointThesesReplacementRequestDto sourceEndpointThesesReplacementRequest) {
+      Long sourceEndpointId,
+      SourceEndpointThesesReplacementRequestDto sourceEndpointThesesReplacementRequest) {
     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
   }
 

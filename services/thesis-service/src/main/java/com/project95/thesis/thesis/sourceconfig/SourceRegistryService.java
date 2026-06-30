@@ -64,7 +64,8 @@ public class SourceRegistryService {
     RegistryResult result = stats.toResult();
 
     log.info(
-        "Source endpoint registry applied. chairsInserted={}, chairsUpdated={}, endpointsInserted={}, endpointsUpdated={}, endpointsRetired={}",
+        "Source endpoint registry applied. chairsInserted={}, chairsUpdated={},"
+            + " endpointsInserted={}, endpointsUpdated={}, endpointsRetired={}",
         result.chairsInserted(),
         result.chairsUpdated(),
         result.endpointsInserted(),

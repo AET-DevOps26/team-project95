@@ -92,4 +92,3 @@ class FilterControllerIntegrationTest {
         .andExpect(jsonPath("$.degreeTypes", hasItem("MASTER")));
   }
 }
-

@@ -13,9 +13,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class SourceRegistryValidator {
   private static final Set<String> SUPPORTED_STATUSES =
-      Set.of(
-          SourceRegistryService.STATUS_ACTIVE,
-          SourceRegistryService.STATUS_RETIRED);
+      Set.of(SourceRegistryService.STATUS_ACTIVE, SourceRegistryService.STATUS_RETIRED);
 
   public void validate(List<ChairEntry> registry) {
     if (registry == null) {
@@ -38,7 +36,8 @@ public class SourceRegistryValidator {
         throw new IllegalArgumentException("Duplicate chair key in source registry: " + chairKey);
       }
       if (chair.sourceEndpoints() == null) {
-        throw new IllegalArgumentException("sourceEndpoints must not be null for chair " + chairKey);
+        throw new IllegalArgumentException(
+            "sourceEndpoints must not be null for chair " + chairKey);
       }
 
       for (EndpointEntry endpoint : chair.sourceEndpoints()) {
@@ -53,10 +52,12 @@ public class SourceRegistryValidator {
               "Unsupported endpoint status " + endpoint.status() + " for key " + endpointKey);
         }
         if (!endpointKeys.add(endpointKey)) {
-          throw new IllegalArgumentException("Duplicate endpoint key in source registry: " + endpointKey);
+          throw new IllegalArgumentException(
+              "Duplicate endpoint key in source registry: " + endpointKey);
         }
         if (!endpointUrls.add(endpointUrl)) {
-          throw new IllegalArgumentException("Duplicate endpoint URL in source registry: " + endpointUrl);
+          throw new IllegalArgumentException(
+              "Duplicate endpoint URL in source registry: " + endpointUrl);
         }
       }
     }

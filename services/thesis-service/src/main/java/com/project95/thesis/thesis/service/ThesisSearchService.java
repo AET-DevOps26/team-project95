@@ -99,7 +99,8 @@ public class ThesisSearchService {
         page.getContent().stream()
             .map(
                 entity ->
-                    mapToSearchResultDto(entity, scores != null ? scores.get(entity.getId()) : null))
+                    mapToSearchResultDto(
+                        entity, scores != null ? scores.get(entity.getId()) : null))
             .collect(Collectors.toList()));
     response.setTotalElements((int) page.getTotalElements());
     response.setPage(page.getNumber());
@@ -107,7 +108,9 @@ public class ThesisSearchService {
     return response;
   }
 
-  /** @return Map of ID -> Score on success, empty map for zero matches, or null on service failure. */
+  /**
+   * @return Map of ID -> Score on success, empty map for zero matches, or null on service failure.
+   */
   private Map<Long, Double> callVectorSearch(SearchThesesRequestDto request) {
     VectorSearchRequestDto vectorRequest = new VectorSearchRequestDto();
     vectorRequest.setQuery(request.getNaturalLanguageQuery());

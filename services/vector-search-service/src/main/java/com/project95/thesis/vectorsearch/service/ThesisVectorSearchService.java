@@ -43,7 +43,8 @@ public class ThesisVectorSearchService {
     String normalizedQuery = request.getQuery().trim();
     int resolvedLimit = resolveLimit(request.getLimit());
     log.info(
-        "Starting semantic vector search. queryLength={}, requestedLimit={}, resolvedLimit={}, filters={}",
+        "Starting semantic vector search. queryLength={}, requestedLimit={}, resolvedLimit={},"
+            + " filters={}",
         normalizedQuery.length(),
         request.getLimit(),
         resolvedLimit,
