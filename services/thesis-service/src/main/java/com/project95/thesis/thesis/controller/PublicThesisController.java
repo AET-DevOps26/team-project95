@@ -1,6 +1,6 @@
 package com.project95.thesis.thesis.controller;
 
-import com.project95.thesis.management.api.ApiApi;
+import com.project95.thesis.management.api.FrontendApiApi;
 import com.project95.thesis.management.dto.*;
 import com.project95.thesis.thesis.domain.Chair;
 import com.project95.thesis.thesis.domain.Tag;
@@ -17,7 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class PublicThesisController implements ApiApi {
+public class PublicThesisController implements FrontendApiApi {
 
   private final ThesisSearchService thesisSearchService;
   private final ThesisProposalRepository thesisRepository;
