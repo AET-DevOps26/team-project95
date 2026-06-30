@@ -75,6 +75,7 @@
                 <useJakartaEe>true</useJakartaEe>
                 <skipDefaultInterface>true</skipDefaultInterface>
                 <openApiNullable>false</openApiNullable>
+                <useTags>true</useTags>
               </configOptions>
             </configuration>
           </execution>
