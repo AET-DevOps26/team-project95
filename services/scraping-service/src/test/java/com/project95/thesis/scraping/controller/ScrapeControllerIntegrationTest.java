@@ -122,13 +122,15 @@ class ScrapeControllerIntegrationTest {
         .andExpect(jsonPath("$.started").value(true))
         .andExpect(jsonPath("$.message").value("Scrape run started."));
 
-    // Wait for the asynchronous background task to complete execution
-    Thread.sleep(1200);
-
-    // Assert: verify that all mock servers received their respective calls
-    thesisServer.verify();
-    genAiServer.verify();
-    scrapingServer.verify();
+    // Wait for the asynchronous background task to complete execution and verify mock servers
+    org.awaitility.Awaitility.await()
+        .atMost(5, java.util.concurrent.TimeUnit.SECONDS)
+        .untilAsserted(
+            () -> {
+              thesisServer.verify();
+              genAiServer.verify();
+              scrapingServer.verify();
+            });
   }
 
   @Test
@@ -160,13 +162,14 @@ class ScrapeControllerIntegrationTest {
     // Act: trigger scraping
     mockMvc.perform(post("/internal/v1/scraping-service/scrape")).andExpect(status().isAccepted());
 
-    // Wait for the asynchronous background task to complete execution
-    Thread.sleep(1200);
-
-    // Assert: verify that the failure log was routed and no GenAI or ingestion PUT was fired
-    thesisServer.verify();
-    scrapingServer.verify();
-    genAiServer.verify(); // No expected calls, should pass verification since no expectations were
-    // registered
+    // Wait for the asynchronous background task to complete execution and verify mock servers
+    org.awaitility.Awaitility.await()
+        .atMost(5, java.util.concurrent.TimeUnit.SECONDS)
+        .untilAsserted(
+            () -> {
+              thesisServer.verify();
+              scrapingServer.verify();
+              genAiServer.verify();
+            });
   }
 }
