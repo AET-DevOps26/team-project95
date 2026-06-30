@@ -25,6 +25,9 @@ public class SourceEndpoint {
   @Column(name = "last_scraped_at")
   private OffsetDateTime lastScrapedAt;
 
+  @Column(name = "last_content_hash")
+  private String lastContentHash;
+
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "chair_id", nullable = false)
   private Chair chair;
@@ -78,6 +81,14 @@ public class SourceEndpoint {
 
   public void setLastScrapedAt(OffsetDateTime lastScrapedAt) {
     this.lastScrapedAt = lastScrapedAt;
+  }
+
+  public String getLastContentHash() {
+    return lastContentHash;
+  }
+
+  public void setLastContentHash(String lastContentHash) {
+    this.lastContentHash = lastContentHash;
   }
 
   public Chair getChair() {

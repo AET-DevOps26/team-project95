@@ -175,4 +175,20 @@ public class ThesisManagementService {
 
     return new IngestionResult(entityList, deletedCount);
   }
+
+  @Transactional
+  public void updateLastContentHash(Long sourceEndpointId, String hash) {
+    if (sourceEndpointId == null || hash == null) {
+      return;
+    }
+    SourceEndpoint sourceEndpoint =
+        sourceEndpointRepository
+            .findById(sourceEndpointId)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "SourceEndpoint not found with ID: " + sourceEndpointId));
+    sourceEndpoint.setLastContentHash(hash);
+    sourceEndpointRepository.save(sourceEndpoint);
+  }
 }

@@ -107,6 +107,11 @@ public class ThesisCoordinationService {
       }
       log.info("Vector Search Service synchronizations finalized successfully.");
 
+      if (request.getLastContentHash() != null) {
+        thesisManagementService.updateLastContentHash(
+            sourceEndpointId, request.getLastContentHash());
+      }
+
     } catch (Exception e) {
       log.error(
           "CRITICAL: Relational data updated, but vector indexing sync failed for sourceEndpointId:"

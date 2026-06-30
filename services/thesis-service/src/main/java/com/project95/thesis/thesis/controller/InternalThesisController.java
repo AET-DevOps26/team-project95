@@ -54,6 +54,7 @@ public class InternalThesisController {
     }
     dto.setStatus(entity.getStatus());
     dto.setLastScrapedAt(entity.getLastScrapedAt());
+    dto.setLastContentHash(entity.getLastContentHash());
     return dto;
   }
 

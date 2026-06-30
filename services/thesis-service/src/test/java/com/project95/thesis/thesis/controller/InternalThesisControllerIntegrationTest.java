@@ -25,6 +25,8 @@ import com.project95.thesis.thesis.repository.ChairRepository;
 import com.project95.thesis.thesis.repository.ScrapeRunRepository;
 import com.project95.thesis.thesis.repository.SourceEndpointRepository;
 import com.project95.thesis.thesis.repository.ThesisProposalRepository;
+import com.project95.thesis.thesis.utils.HtmlNormalizer;
+import com.project95.thesis.thesis.utils.Utils;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -158,6 +160,7 @@ class InternalThesisControllerIntegrationTest {
     SourceEndpointThesesReplacementRequestDto request =
         new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(inputDto));
+    request.setLastContentHash("success-hash");
 
     // Mock vector-search-service response
     String vectorSyncResponseJson = "{\"insertedVectorEntries\":1,\"replacedVectorEntries\":1}";
@@ -188,6 +191,10 @@ class InternalThesisControllerIntegrationTest {
     assertThat(proposals).hasSize(1);
     assertThat(proposals.get(0).getTitle()).isEqualTo("Vector Search Thesis");
 
+    SourceEndpoint updatedEndpoint =
+        sourceEndpointRepository.findById(activeEndpoint.getId()).orElseThrow();
+    assertThat(updatedEndpoint.getLastContentHash()).isEqualTo("success-hash");
+
     mockServer.verify();
   }
 
@@ -203,6 +210,7 @@ class InternalThesisControllerIntegrationTest {
     SourceEndpointThesesReplacementRequestDto request =
         new SourceEndpointThesesReplacementRequestDto();
     request.setTheses(List.of(inputDto));
+    request.setLastContentHash("failure-hash");
 
     // Mock vector-search-service throwing 500 error
     mockServer
@@ -232,7 +240,77 @@ class InternalThesisControllerIntegrationTest {
     assertThat(proposals).hasSize(1);
     assertThat(proposals.get(0).getTitle()).isEqualTo("Vector Search Resilient Thesis");
 
+    SourceEndpoint updatedEndpoint =
+        sourceEndpointRepository.findById(activeEndpoint.getId()).orElseThrow();
+    assertThat(updatedEndpoint.getLastContentHash()).isNull();
+
     mockServer.verify();
+  }
+
+  @Test
+  void detectChanges_NoPreviousHash_ReturnsChangedTrue() throws Exception {
+    com.project95.thesis.management.dto.DetectChangesRequestDto request =
+        new com.project95.thesis.management.dto.DetectChangesRequestDto();
+    request.setRawHtml("<html><body><h1>AI Thesis</h1></body></html>");
+
+    mockMvc
+        .perform(
+            post("/thesis-internal/v1/source-endpoints/"
+                    + activeEndpoint.getId()
+                    + "/detect-changes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.changed").value(true))
+        .andExpect(jsonPath("$.contentHash").isNotEmpty())
+        .andExpect(jsonPath("$.sanitizedHtml").value(containsString("AI Thesis")));
+  }
+
+  @Test
+  void detectChanges_MatchingHash_ReturnsChangedFalse() throws Exception {
+    // 1. Calculate and set the hash in the DB
+    String sanitizedHtml =
+        HtmlNormalizer.sanitizeHtml(
+            "<html><body><h1>AI Thesis</h1></body></html>", activeEndpoint.getUrl());
+    String normalizedText = HtmlNormalizer.getNormalizedText(sanitizedHtml);
+    String hash = Utils.sha256(normalizedText);
+
+    activeEndpoint.setLastContentHash(hash);
+    sourceEndpointRepository.save(activeEndpoint);
+
+    // 2. Perform request with same HTML content
+    com.project95.thesis.management.dto.DetectChangesRequestDto request =
+        new com.project95.thesis.management.dto.DetectChangesRequestDto();
+    request.setRawHtml("<html><body><h1>AI Thesis</h1></body></html>");
+
+    mockMvc
+        .perform(
+            post("/thesis-internal/v1/source-endpoints/"
+                    + activeEndpoint.getId()
+                    + "/detect-changes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.changed").value(false))
+        .andExpect(jsonPath("$.contentHash").value(hash));
+  }
+
+  @Test
+  void detectChanges_EndpointNotFound_ReturnsNotFound() throws Exception {
+    com.project95.thesis.management.dto.DetectChangesRequestDto request =
+        new com.project95.thesis.management.dto.DetectChangesRequestDto();
+    request.setRawHtml("<html><body><h1>AI Thesis</h1></body></html>");
+
+    mockMvc
+        .perform(
+            post("/thesis-internal/v1/source-endpoints/"
+                    + (activeEndpoint.getId() + 9999L)
+                    + "/detect-changes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isNotFound())
+        .andExpect(
+            jsonPath("$.message").value(containsString("Source endpoint not found with ID:")));
   }
 
   private static SourceEndpoint endpoint(Chair chair, String url, String status) {

@@ -272,6 +272,37 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /thesis-internal/v1/source-endpoints/{sourceEndpointId}/detect-changes:
+    post:
+      tags:
+        - Thesis Service Internal API
+      summary: Detect if source endpoint content has changed
+      description: |
+        Called by the Scraping Service before calling the GenAI Service.
+        The Thesis Service normalizes the HTML, hashes it, and checks if it matches the stored hash.
+      operationId: detectChanges
+      parameters:
+        - $ref: '#/components/parameters/SourceEndpointId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DetectChangesRequest'
+      responses:
+        '200':
+          description: Change status computed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetectChangesResponse'
+        '404':
+          description: Source endpoint not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
   /internal/v1/scraping-service/scrape:
     post:
       tags:
@@ -578,6 +609,10 @@ components:
           type: string
           format: date-time
           nullable: true
+        lastContentHash:
+          type: string
+          nullable: true
+          example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
     SourceEndpointListResponse:
       type: object
@@ -773,6 +808,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ThesisProposalInput'
+        lastContentHash:
+          type: string
+          nullable: true
+          example: "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
     SourceEndpointThesesReplacementResponse:
       type: object
@@ -1036,3 +1075,29 @@ components:
           type: object
           nullable: true
           additionalProperties: true
+
+    DetectChangesRequest:
+      type: object
+      required:
+        - rawHtml
+      properties:
+        rawHtml:
+          type: string
+          description: Raw HTML of the scraped page to be normalized and checked.
+
+    DetectChangesResponse:
+      type: object
+      required:
+        - changed
+        - contentHash
+      properties:
+        changed:
+          type: boolean
+          description: True if the normalized content hash differs from the last successfully processed hash.
+        sanitizedHtml:
+          type: string
+          nullable: true
+          description: Cleaned semantic HTML that is safe and optimized for sending to GenAI.
+        contentHash:
+          type: string
+          description: The SHA-256 hash of the normalized text content.

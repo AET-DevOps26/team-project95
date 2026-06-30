@@ -39,6 +39,14 @@ public class GlobalExceptionHandler {
     return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorResponse);
   }
 
+  @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+  public ResponseEntity<ErrorResponseDto> handleResponseStatusException(
+      org.springframework.web.server.ResponseStatusException ex) {
+    ErrorResponseDto errorResponse = new ErrorResponseDto();
+    errorResponse.setMessage(ex.getReason() != null ? ex.getReason() : ex.getMessage());
+    return ResponseEntity.status(ex.getStatusCode()).body(errorResponse);
+  }
+
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ErrorResponseDto> handleGeneralException(Exception ex) {
     log.error("Unhandled exception occurred", ex);
