@@ -88,8 +88,8 @@ jobs:
 
       - name: Verify Kubernetes rollout
         run: |
-          kubectl rollout status deployment/thesis-service --namespace open-thesis-radar --timeout=300s
-          kubectl rollout status deployment/vector-search-service --namespace open-thesis-radar --timeout=300s
-          kubectl rollout status deployment/genai-service --namespace open-thesis-radar --timeout=300s
-          kubectl rollout status deployment/scraping-service --namespace open-thesis-radar --timeout=300s
-          kubectl rollout status deployment/user-interface --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/thesis-service-deployment --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/vector-search-service-deployment --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/genai-service-deployment --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/scraping-service-deployment --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/user-interface-deployment --namespace open-thesis-radar --timeout=300s
