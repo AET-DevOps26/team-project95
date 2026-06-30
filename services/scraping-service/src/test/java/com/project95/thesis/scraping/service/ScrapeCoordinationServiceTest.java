@@ -208,6 +208,10 @@ class ScrapeCoordinationServiceTest {
             content()
                 .string(
                     containsString("\"errorMessage\":\"GenAI extraction returned null response\"")))
+        .andExpect(
+            content()
+                .string(containsString("\"rawHtmlSnapshot\":\"<html><h1>AI Thesis</h1></html>\"")))
+        .andExpect(content().string(containsString("\"candidatesFound\":0")))
         .andRespond(withSuccess());
 
     // Act
@@ -257,6 +261,10 @@ class ScrapeCoordinationServiceTest {
         .andExpect(method(HttpMethod.POST))
         .andExpect(content().string(containsString("\"status\":\"FAILED\"")))
         .andExpect(content().string(containsString("\"errorMessage\":\"500 Internal Server Error")))
+        .andExpect(
+            content()
+                .string(containsString("\"rawHtmlSnapshot\":\"<html><h1>AI Thesis</h1></html>\"")))
+        .andExpect(content().string(containsString("\"candidatesFound\":0")))
         .andRespond(withSuccess());
 
     // Act
@@ -316,6 +324,10 @@ class ScrapeCoordinationServiceTest {
         .andExpect(method(HttpMethod.POST))
         .andExpect(content().string(containsString("\"status\":\"FAILED\"")))
         .andExpect(content().string(containsString("\"errorMessage\":\"500 Internal Server Error")))
+        .andExpect(
+            content()
+                .string(containsString("\"rawHtmlSnapshot\":\"<html><h1>AI Thesis</h1></html>\"")))
+        .andExpect(content().string(containsString("\"candidatesFound\":0")))
         .andRespond(withSuccess());
 
     // Act
@@ -332,6 +344,124 @@ class ScrapeCoordinationServiceTest {
         .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess("{\"endpoints\":[]}", MediaType.APPLICATION_JSON));
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert
+    mockServer.verify();
+  }
+
+  @Test
+  void runScrapeCycle_FetchEndpointsFails_GracefullyExits() {
+    // 1. Mock the endpoints fetch to fail (500)
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withServerError());
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert - verifies that we exit immediately and perform no other network calls
+    mockServer.verify();
+  }
+
+  @Test
+  void runScrapeCycle_ChairWebsiteReturnsEmptyHtml_LogsFailedRun() {
+    // 1. Mock the endpoints fetch from Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // 2. Mock fetching the raw HTML from the external website to return empty string
+    mockServer
+        .expect(requestTo("http://chair.example.com/theses"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("", MediaType.TEXT_HTML));
+
+    // 3. Mock the final FAILURE logging POST request
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/scrape-runs"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().string(containsString("\"status\":\"FAILED\"")))
+        .andExpect(
+            content()
+                .string(containsString("\"errorMessage\":\"Received empty HTML from source URL\"")))
+        .andExpect(content().string(containsString("\"candidatesFound\":0")))
+        .andRespond(withSuccess());
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert
+    mockServer.verify();
+  }
+
+  @Test
+  void runScrapeCycle_MultipleEndpoints_OneFailsOneSucceeds() {
+    // 1. Mock endpoints list response with two endpoints
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair1.example.com/theses\"},{\"id\":2,\"chairId\":20,\"chairName\":\"DB"
+                    + " Chair\",\"url\":\"http://chair2.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // -- ENDPOINT 1 (Fails to fetch HTML) --
+    // 2. Mock fetching HTML for endpoint 1 to fail (500)
+    mockServer
+        .expect(requestTo("http://chair1.example.com/theses"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withServerError());
+
+    // 3. Mock logging failure for endpoint 1
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/scrape-runs"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().string(containsString("\"sourceEndpointId\":1")))
+        .andExpect(content().string(containsString("\"status\":\"FAILED\"")))
+        .andRespond(withSuccess());
+
+    // -- ENDPOINT 2 (Succeeds) --
+    // 4. Mock fetching HTML for endpoint 2
+    mockServer
+        .expect(requestTo("http://chair2.example.com/theses"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("<html><h1>DB Thesis</h1></html>", MediaType.TEXT_HTML));
+
+    // 5. Mock GenAI extraction for endpoint 2
+    mockServer
+        .expect(requestTo("/internal/v1/genai-service/extract-theses"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            withSuccess(
+                "{\"theses\":[{\"title\":\"DB"
+                    + " Thesis\",\"sourceUrl\":\"http://chair2.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // 6. Mock submission for endpoint 2
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints/2/theses"))
+        .andExpect(method(HttpMethod.PUT))
+        .andRespond(withSuccess());
+
+    // 7. Mock logging success for endpoint 2
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/scrape-runs"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().string(containsString("\"sourceEndpointId\":2")))
+        .andExpect(content().string(containsString("\"status\":\"SUCCESS\"")))
+        .andExpect(content().string(containsString("\"candidatesFound\":1")))
+        .andRespond(withSuccess());
 
     // Act
     service.runScrapeCycle();
