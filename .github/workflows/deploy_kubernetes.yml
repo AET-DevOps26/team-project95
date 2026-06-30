@@ -53,7 +53,7 @@ jobs:
         env:
           THESIS_DB_PASSWORD: ${{ secrets.THESIS_DB_PASSWORD }}
           VECTOR_DB_PASSWORD: ${{ secrets.VECTOR_DB_PASSWORD }}
-          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+          AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
           AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
         run: |
           : "${THESIS_DB_PASSWORD:?THESIS_DB_PASSWORD secret is required}"
