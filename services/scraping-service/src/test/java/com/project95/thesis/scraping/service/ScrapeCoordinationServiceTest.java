@@ -1,7 +1,10 @@
 package com.project95.thesis.scraping.service;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import com.project95.thesis.scraping.config.ClientProperties;
@@ -126,6 +129,214 @@ class ScrapeCoordinationServiceTest {
     service.runScrapeCycle();
 
     // Assert - ensures no other requests (like GenAI extraction or theses PUT) were made
+    mockServer.verify();
+  }
+
+  @Test
+  void runScrapeCycle_ChairWebsiteRequestFails_LogsFailedRun() {
+    // 1. Mock the endpoints fetch from Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // 2. Mock fetching the raw HTML from the external website to FAIL (500)
+    mockServer
+        .expect(requestTo("http://chair.example.com/theses"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withServerError());
+
+    // 3. Mock the final FAILURE logging POST request
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/scrape-runs"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().string(containsString("\"status\":\"FAILED\"")))
+        .andExpect(content().string(containsString("\"errorMessage\":\"500 Internal Server Error")))
+        .andRespond(withSuccess());
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert
+    mockServer.verify();
+  }
+
+  @Test
+  void runScrapeCycle_GenAiReturnsEmptyResponse_LogsFailedRun() {
+    // 1. Mock the endpoints fetch from Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // 2. Mock fetching the raw HTML from the external website
+    mockServer
+        .expect(requestTo("http://chair.example.com/theses"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("<html><h1>AI Thesis</h1></html>", MediaType.TEXT_HTML));
+
+    // 2b. Mock detect-changes call to Thesis Service
+    mockServer
+        .expect(requestTo("/thesis-internal/v1/source-endpoints/1/detect-changes"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            withSuccess(
+                "{\"changed\":true,\"sanitizedHtml\":\"<html><h1>AI"
+                    + " Thesis</h1></html>\",\"contentHash\":\"some-hash\"}",
+                MediaType.APPLICATION_JSON));
+
+    // 3. Mock the GenAI Python Service extraction POST request returning null theses list
+    mockServer
+        .expect(requestTo("/internal/v1/genai-service/extract-theses"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withSuccess("{\"theses\":null}", MediaType.APPLICATION_JSON));
+
+    // 4. Mock the final FAILURE logging POST request
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/scrape-runs"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().string(containsString("\"status\":\"FAILED\"")))
+        .andExpect(
+            content()
+                .string(
+                    containsString("\"errorMessage\":\"GenAI extraction returned null response\"")))
+        .andRespond(withSuccess());
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert
+    mockServer.verify();
+  }
+
+  @Test
+  void runScrapeCycle_GenAiUnavailable_LogsFailedRun() {
+    // 1. Mock the endpoints fetch from Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // 2. Mock fetching the raw HTML from the external website
+    mockServer
+        .expect(requestTo("http://chair.example.com/theses"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("<html><h1>AI Thesis</h1></html>", MediaType.TEXT_HTML));
+
+    // 2b. Mock detect-changes call to Thesis Service
+    mockServer
+        .expect(requestTo("/thesis-internal/v1/source-endpoints/1/detect-changes"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            withSuccess(
+                "{\"changed\":true,\"sanitizedHtml\":\"<html><h1>AI"
+                    + " Thesis</h1></html>\",\"contentHash\":\"some-hash\"}",
+                MediaType.APPLICATION_JSON));
+
+    // 3. Mock the GenAI Python Service extraction POST request failing (500)
+    mockServer
+        .expect(requestTo("/internal/v1/genai-service/extract-theses"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withServerError());
+
+    // 4. Mock the final FAILURE logging POST request
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/scrape-runs"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().string(containsString("\"status\":\"FAILED\"")))
+        .andExpect(content().string(containsString("\"errorMessage\":\"500 Internal Server Error")))
+        .andRespond(withSuccess());
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert
+    mockServer.verify();
+  }
+
+  @Test
+  void runScrapeCycle_ThesisSubmissionFails_LogsFailedRun() {
+    // 1. Mock the endpoints fetch from Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // 2. Mock fetching the raw HTML from the external website
+    mockServer
+        .expect(requestTo("http://chair.example.com/theses"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("<html><h1>AI Thesis</h1></html>", MediaType.TEXT_HTML));
+
+    // 2b. Mock detect-changes call to Thesis Service
+    mockServer
+        .expect(requestTo("/thesis-internal/v1/source-endpoints/1/detect-changes"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            withSuccess(
+                "{\"changed\":true,\"sanitizedHtml\":\"<html><h1>AI"
+                    + " Thesis</h1></html>\",\"contentHash\":\"some-hash\"}",
+                MediaType.APPLICATION_JSON));
+
+    // 3. Mock the GenAI Python Service extraction POST request
+    mockServer
+        .expect(requestTo("/internal/v1/genai-service/extract-theses"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            withSuccess(
+                "{\"theses\":[{\"title\":\"AI"
+                    + " Thesis\",\"sourceUrl\":\"http://chair.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // 4. Mock the final submission PUT request back to the Main Thesis Service failing (500)
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints/1/theses"))
+        .andExpect(method(HttpMethod.PUT))
+        .andRespond(withServerError());
+
+    // 5. Mock the final FAILURE logging POST request
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/scrape-runs"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().string(containsString("\"status\":\"FAILED\"")))
+        .andExpect(content().string(containsString("\"errorMessage\":\"500 Internal Server Error")))
+        .andRespond(withSuccess());
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert
+    mockServer.verify();
+  }
+
+  @Test
+  void runScrapeCycle_EndpointListIsEmpty_DoesNotProcess() {
+    // 1. Mock the endpoints fetch to return an empty list
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("{\"endpoints\":[]}", MediaType.APPLICATION_JSON));
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert
     mockServer.verify();
   }
 }

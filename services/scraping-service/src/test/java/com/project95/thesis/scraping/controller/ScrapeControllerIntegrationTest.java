@@ -1,5 +1,7 @@
 package com.project95.thesis.scraping.controller;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
@@ -151,6 +153,8 @@ class ScrapeControllerIntegrationTest {
     thesisServer
         .expect(requestTo("http://localhost:8080/internal/v1/thesis-service/scrape-runs"))
         .andExpect(method(HttpMethod.POST))
+        .andExpect(content().string(containsString("\"status\":\"FAILED\"")))
+        .andExpect(content().string(containsString("\"errorMessage\":\"500 Internal Server Error")))
         .andRespond(withSuccess());
 
     // Act: trigger scraping
