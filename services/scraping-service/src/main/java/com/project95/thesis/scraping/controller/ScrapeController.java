@@ -1,18 +1,16 @@
 package com.project95.thesis.scraping.controller;
 
+import com.project95.thesis.scraping.api.ScrapingServiceApiApi;
 import com.project95.thesis.scraping.dto.TriggerScrapeResponseDto;
 import com.project95.thesis.scraping.service.ScrapeCoordinationService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/internal/v1/scraping-service")
-public class ScrapeController {
+public class ScrapeController implements ScrapingServiceApiApi {
 
   private final ScrapeCoordinationService scrapeCoordinationService;
   private final TaskExecutor taskExecutor;
@@ -24,7 +22,7 @@ public class ScrapeController {
     this.taskExecutor = taskExecutor;
   }
 
-  @PostMapping(value = "/scrape", produces = "application/json")
+  @Override
   public ResponseEntity<TriggerScrapeResponseDto> triggerScrape() {
     taskExecutor.execute(scrapeCoordinationService::runScrapeCycle);
 
