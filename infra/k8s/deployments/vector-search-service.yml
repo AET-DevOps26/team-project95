@@ -54,13 +54,13 @@ spec:
               value: text-embedding-ada-002
           livenessProbe:
             httpGet:
-              path: /health
+              path: /actuator/health
               port: 8082
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /health
+              path: /actuator/health
               port: 8082
             initialDelaySeconds: 30
             periodSeconds: 10

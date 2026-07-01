@@ -28,7 +28,7 @@ services:
       GENAI_MODEL_NAME: ${GENAI_MODEL_NAME:-llama3.1}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
     healthcheck:
-      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\" || exit 1"]
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/actuator/health')\" || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -73,7 +73,7 @@ services:
       vector-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/health/liveness | grep UP || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health/liveness | grep UP || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -97,7 +97,7 @@ services:
       vector-search-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health/liveness | grep UP || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/liveness | grep UP || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5

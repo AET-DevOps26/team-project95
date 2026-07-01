@@ -47,13 +47,13 @@ spec:
               value: "30000"
           livenessProbe:
             httpGet:
-              path: /internal/v1/health
+              path: /actuator/health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /internal/v1/health
+              path: /actuator/health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10

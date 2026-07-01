@@ -37,13 +37,13 @@ spec:
               value: {{ .Values.scrapingService.clientReadTimeout | quote }}
           livenessProbe:
             httpGet:
-              path: /health
+              path: /actuator/health
               port: 8081
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /health
+              path: /actuator/health
               port: 8081
             initialDelaySeconds: 30
             periodSeconds: 10

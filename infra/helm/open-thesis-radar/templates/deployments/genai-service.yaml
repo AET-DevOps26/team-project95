@@ -47,13 +47,13 @@ spec:
               value: {{ .Values.genaiService.maxCompletionTokens | quote }}
           livenessProbe:
             httpGet:
-              path: /internal/v1/health
+              path: /actuator/health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /internal/v1/health
+              path: /actuator/health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
