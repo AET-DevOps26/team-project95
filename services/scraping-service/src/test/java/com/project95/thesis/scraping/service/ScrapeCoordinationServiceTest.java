@@ -438,6 +438,16 @@ class ScrapeCoordinationServiceTest {
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess("<html><h1>DB Thesis</h1></html>", MediaType.TEXT_HTML));
 
+    // 4b. Mock detect-changes call for endpoint 2
+    mockServer
+        .expect(requestTo("/thesis-internal/v1/source-endpoints/2/detect-changes"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(
+            withSuccess(
+                "{\"changed\":true,\"sanitizedHtml\":\"<html><h1>DB"
+                    + " Thesis</h1></html>\",\"contentHash\":\"some-hash\"}",
+                MediaType.APPLICATION_JSON));
+
     // 5. Mock GenAI extraction for endpoint 2
     mockServer
         .expect(requestTo("/internal/v1/genai-service/extract-theses"))
@@ -461,6 +471,49 @@ class ScrapeCoordinationServiceTest {
         .andExpect(content().string(containsString("\"sourceEndpointId\":2")))
         .andExpect(content().string(containsString("\"status\":\"SUCCESS\"")))
         .andExpect(content().string(containsString("\"candidatesFound\":1")))
+        .andRespond(withSuccess());
+
+    // Act
+    service.runScrapeCycle();
+
+    // Assert
+    mockServer.verify();
+  }
+
+  @Test
+  void runScrapeCycle_DetectChangesFails_LogsFailedRun() {
+    // 1. Mock the endpoints fetch from Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/source-endpoints"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"endpoints\":[{\"id\":1,\"chairId\":10,\"chairName\":\"AI"
+                    + " Chair\",\"url\":\"http://chair.example.com/theses\"}]}",
+                MediaType.APPLICATION_JSON));
+
+    // 2. Mock fetching the raw HTML from the external website
+    mockServer
+        .expect(requestTo("http://chair.example.com/theses"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess("<html><h1>AI Thesis</h1></html>", MediaType.TEXT_HTML));
+
+    // 2b. Mock detect-changes call to Thesis Service to fail (500)
+    mockServer
+        .expect(requestTo("/thesis-internal/v1/source-endpoints/1/detect-changes"))
+        .andExpect(method(HttpMethod.POST))
+        .andRespond(withServerError());
+
+    // 3. Mock the final FAILURE logging POST request
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/scrape-runs"))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content().string(containsString("\"status\":\"FAILED\"")))
+        .andExpect(content().string(containsString("\"errorMessage\":\"500 Internal Server Error")))
+        .andExpect(
+            content()
+                .string(containsString("\"rawHtmlSnapshot\":\"<html><h1>AI Thesis</h1></html>\"")))
+        .andExpect(content().string(containsString("\"candidatesFound\":0")))
         .andRespond(withSuccess());
 
     // Act
