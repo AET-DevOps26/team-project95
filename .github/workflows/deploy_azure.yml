@@ -30,6 +30,7 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
       CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL }}
       ENABLE_CERTBOT: ${{ inputs.enable_certbot }}
+      APP_ADDITIONAL_DOMAINS: ${{ vars.APP_ADDITIONAL_DOMAINS }}
       THESIS_DB_PASSWORD: ${{ secrets.THESIS_DB_PASSWORD }}
       VECTOR_DB_PASSWORD: ${{ secrets.VECTOR_DB_PASSWORD }}
       AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
@@ -132,3 +133,8 @@ jobs:
 
       - name: Run Ansible deployment playbook
         run: ansible-playbook -i infra/ansible/inventory.ini infra/ansible/deploy.yml
+
+      - name: Print deployed app domains
+        run: |
+          echo "Primary app domain: ${APP_DOMAIN}"
+          echo "Additional app domains: ${APP_ADDITIONAL_DOMAINS:-none}"
