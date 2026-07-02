@@ -17,8 +17,8 @@
       set -eu
       test -f /etc/letsencrypt/live/{{ app_domain }}/fullchain.pem || exit 1
       cert_domains="$(certbot certificates --cert-name {{ app_domain }} 2>/dev/null | awk -F": " "/Domains:/ { print \$2; exit }")"
-      for domain in {{ app_domains | join(' ') }}; do
-        echo " $cert_domains " | grep -q " $domain " || exit 1
+      for domain in "{{ app_domains | join('" "') }}"; do
+        echo " $cert_domains " | grep -Fq " $domain " || exit 1
       done
     '
   args:
