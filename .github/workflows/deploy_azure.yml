@@ -8,6 +8,11 @@ on:
         required: true
         type: boolean
         default: true
+      additional_domains:
+        description: "Comma-separated extra domains for the Let's Encrypt certificate"
+        required: false
+        type: string
+        default: "open-thesis-radar.vserver.app"
 
 permissions:
   contents: read
@@ -27,10 +32,11 @@ jobs:
       TF_INPUT: "false"
       TF_VAR_admin_ssh_public_key: ${{ secrets.AZURE_VM_SSH_PUBLIC_KEY }}
       ADMIN_USERNAME: azureuser
-      IMAGE_TAG: ${{ github.sha }}
+      # IMAGE_TAG: ${{ github.sha }}
+      IMAGE_TAG: latest
       CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL }}
       ENABLE_CERTBOT: ${{ inputs.enable_certbot }}
-      APP_ADDITIONAL_DOMAINS: ${{ vars.APP_ADDITIONAL_DOMAINS }}
+      APP_ADDITIONAL_DOMAINS: ${{ inputs.additional_domains }}
       THESIS_DB_PASSWORD: ${{ secrets.THESIS_DB_PASSWORD }}
       VECTOR_DB_PASSWORD: ${{ secrets.VECTOR_DB_PASSWORD }}
       AZURE_OPENAI_ENDPOINT: ${{ vars.AZURE_OPENAI_ENDPOINT }}
