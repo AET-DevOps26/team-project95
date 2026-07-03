@@ -1,6 +1,48 @@
-# React + TypeScript + Vite
+# Open Thesis Radar frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## End-to-end tests
+
+The frontend uses Playwright for browser workflow tests. The tests live in `tests/` and mock backend API responses, so a live backend is not required.
+
+Run the tests locally with:
+
+```bash
+npm ci
+npx playwright install chromium
+npm run build
+npm run test:e2e
+```
+
+For a visible browser while debugging, run:
+
+```bash
+npm run test:e2e:headed
+```
+
+To inspect the last HTML report, run:
+
+```bash
+npm run test:e2e:report
+```
+
+### Playwright configuration
+
+The Playwright setup is defined in `playwright.config.ts`.
+
+- `testDir: './tests'` tells Playwright to discover test files in the `tests/` directory.
+- `fullyParallel: true` allows independent tests to run in parallel.
+- `reporter` uses GitHub annotations plus an HTML report in CI, and a terminal list plus an HTML report locally.
+- `use.baseURL` points tests to `http://127.0.0.1:4173`, so tests can navigate with paths like `page.goto('/')`.
+- `use.trace: 'on-first-retry'` records a trace only when a failed test is retried, which keeps normal runs light while preserving debug information for failures.
+- `webServer.command` starts the built Vite app with `npm run preview -- --host 127.0.0.1 --port 4173` before the tests run.
+- `webServer.reuseExistingServer` reuses a local server during development, but starts a fresh server in CI.
+- `projects` currently runs the suite in Chromium using Playwright's Desktop Chrome preset.
+
+Because the tests mock `/api/v1/...` responses in Playwright, the preview server only needs to serve the frontend; no live backend is required.
+
+## React + TypeScript + Vite
+
+This project uses Vite with React, TypeScript, and ESLint.
 
 Currently, two official plugins are available:
 
