@@ -40,6 +40,6 @@ The GenAI service does not directly write to the database. It only returns struc
 
 ### Database
 
-The system uses PostgreSQL as the relational database. It stores structured thesis proposals, chairs, source endpoints, scrape runs, advisors, and tags.
+The system uses PostgreSQL as the relational database. It stores structured thesis proposals, chairs, source endpoints, scrape runs, advisors, and research areas.
 
 A vector database is used separately for semantic search. It stores embeddings and allows similarity-based retrieval of thesis proposals.
