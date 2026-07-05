@@ -144,7 +144,7 @@ Important endpoint groups:
 | `/internal/v1/scraping-service/scrape`      | Trigger scraping                      |
 | `/internal/v1/genai-service/extract-theses` | Extract thesis data from raw content  |
 | `/internal/v1/vector-search-service/...`    | Semantic search and vector indexing   |
-| `/internal/v1/health`                       | Health checks                         |
+| `/health`                                   | Health checks                         |
 
 Generated OpenAPI sources must not be edited manually.
 
