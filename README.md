@@ -73,6 +73,7 @@ For local development, most variables have defaults in `docker-compose.yml`.
 │   └── openapi-v1.yml                 # Shared OpenAPI contract
 ├── docs/
 │   ├── architecture.md                # High-level architecture
+│   ├── database-schema.md             # PostgreSQL schema and persistence model
 ├── services/
 │   ├── pom.xml                        # Maven parent project
 │   ├── thesis-service/                # Main backend and relational data owner
@@ -111,6 +112,8 @@ Main data flow:
 8. Natural-language search is delegated to the Vector Search Service.
 
 For more details, see [`docs/architecture.md`](docs/architecture.md).
+
+The PostgreSQL schema, relationships, Flyway migrations, and persistence setup are documented in [`docs/database-schema.md`](docs/database-schema.md).
 
 ## API Contract
 
