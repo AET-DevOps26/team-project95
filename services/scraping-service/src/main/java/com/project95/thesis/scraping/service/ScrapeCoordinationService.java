@@ -57,14 +57,34 @@ public class ScrapeCoordinationService {
       return;
     }
 
+    List<String> knownResearchAreas = fetchKnownResearchAreas();
+
     for (SourceEndpointDto endpoint : response.getEndpoints()) {
-      processEndpoint(endpoint);
+      processEndpoint(endpoint, knownResearchAreas);
     }
 
     log.info("Scrape cycle completed.");
   }
 
-  private void processEndpoint(SourceEndpointDto endpoint) {
+  private List<String> fetchKnownResearchAreas() {
+    try {
+      KnownResearchAreasResponseDto response =
+          thesisServiceClient
+              .get()
+              .uri("/internal/v1/thesis-service/research-areas")
+              .retrieve()
+              .body(KnownResearchAreasResponseDto.class);
+      if (response == null || response.getResearchAreas() == null) {
+        return List.of();
+      }
+      return response.getResearchAreas();
+    } catch (Exception e) {
+      log.warn("Failed to fetch known research areas. Continuing extraction without taxonomy.", e);
+      return List.of();
+    }
+  }
+
+  private void processEndpoint(SourceEndpointDto endpoint, List<String> knownResearchAreas) {
     log.info("Scraping endpoint: {} (Chair: {})", endpoint.getUrl(), endpoint.getChairName());
 
     OffsetDateTime startedAt = OffsetDateTime.now(ZoneOffset.UTC);
@@ -125,6 +145,7 @@ public class ScrapeCoordinationService {
       genAiRequest.setChairName(endpoint.getChairName());
       genAiRequest.setSourceUrl(endpoint.getUrl());
       genAiRequest.setRawHtml(sanitizedHtml);
+      genAiRequest.setKnownResearchAreas(knownResearchAreas);
 
       genAiResponse =
           genAiServiceClient
@@ -221,10 +242,6 @@ public class ScrapeCoordinationService {
       thesis.setResearchArea(cleanText(thesis.getResearchArea()));
       thesis.setSourceUrl(cleanUri(thesis.getSourceUrl()));
       thesis.setStatus(cleanText(thesis.getStatus()));
-
-      if (thesis.getTags() != null) {
-        thesis.setTags(thesis.getTags().stream().map(this::cleanText).toList());
-      }
 
       sanitizeAdvisorsWithoutUsableEmail(thesis);
     }

@@ -175,10 +175,6 @@ public class ThesisSearchService {
           Join<Object, Object> areaJoin = root.join("researchAreas");
           predicates.add(areaJoin.get("name").in(filters.getResearchAreas()));
         }
-        if (filters.getTags() != null && !filters.getTags().isEmpty()) {
-          Join<Object, Object> tagJoin = root.join("tags");
-          predicates.add(tagJoin.get("name").in(filters.getTags()));
-        }
       }
 
       return cb.and(predicates.toArray(new Predicate[0]));
@@ -218,10 +214,6 @@ public class ThesisSearchService {
                     return advDto;
                   })
               .collect(Collectors.toList()));
-    }
-
-    if (!entity.getTags().isEmpty()) {
-      dto.setTags(entity.getTags().stream().map(t -> t.getName()).collect(Collectors.toList()));
     }
 
     if (!entity.getResearchAreas().isEmpty()) {

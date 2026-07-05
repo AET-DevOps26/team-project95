@@ -43,7 +43,15 @@ class ScrapeCoordinationServiceTest {
                     + " Chair\",\"url\":\"http://chair.example.com/theses\"}]}",
                 MediaType.APPLICATION_JSON));
 
-    // 2. Mock fetching the raw HTML from the external website
+    // 2. Mock fetching known research areas from Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/research-areas"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"researchAreas\":[\"Artificial Intelligence\"]}", MediaType.APPLICATION_JSON));
+
+    // 3. Mock fetching the raw HTML from the external website
     mockServer
         .expect(requestTo("http://chair.example.com/theses"))
         .andExpect(method(HttpMethod.GET))
@@ -100,7 +108,15 @@ class ScrapeCoordinationServiceTest {
                     + " Chair\",\"url\":\"http://chair.example.com/theses\"}]}",
                 MediaType.APPLICATION_JSON));
 
-    // 2. Mock fetching the raw HTML from the external website
+    // 2. Mock fetching known research areas from Main Thesis Service
+    mockServer
+        .expect(requestTo("/internal/v1/thesis-service/research-areas"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"researchAreas\":[\"Artificial Intelligence\"]}", MediaType.APPLICATION_JSON));
+
+    // 3. Mock fetching the raw HTML from the external website
     mockServer
         .expect(requestTo("http://chair.example.com/theses"))
         .andExpect(method(HttpMethod.GET))

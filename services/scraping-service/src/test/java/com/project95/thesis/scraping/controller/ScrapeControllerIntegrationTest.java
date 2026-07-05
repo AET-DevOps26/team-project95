@@ -73,7 +73,15 @@ class ScrapeControllerIntegrationTest {
                     + " Chair\",\"url\":\"http://chair.example.com/theses\",\"status\":\"ACTIVE\"}]}",
                 MediaType.APPLICATION_JSON));
 
-    // 2. Mock Scraping Client fetching raw HTML
+    // 2. Mock Thesis Service fetching known research areas
+    thesisServer
+        .expect(requestTo("http://localhost:8080/internal/v1/thesis-service/research-areas"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"researchAreas\":[\"Artificial Intelligence\"]}", MediaType.APPLICATION_JSON));
+
+    // 3. Mock Scraping Client fetching raw HTML
     scrapingServer
         .expect(requestTo("http://chair.example.com/theses"))
         .andExpect(method(HttpMethod.GET))
@@ -141,7 +149,15 @@ class ScrapeControllerIntegrationTest {
                     + " Chair\",\"url\":\"http://chair.example.com/theses\",\"status\":\"ACTIVE\"}]}",
                 MediaType.APPLICATION_JSON));
 
-    // 2. Mock Scraping Client failing (e.g., website down)
+    // 2. Mock Thesis Service fetching known research areas
+    thesisServer
+        .expect(requestTo("http://localhost:8080/internal/v1/thesis-service/research-areas"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(
+            withSuccess(
+                "{\"researchAreas\":[\"Artificial Intelligence\"]}", MediaType.APPLICATION_JSON));
+
+    // 3. Mock Scraping Client failing (e.g., website down)
     scrapingServer
         .expect(requestTo("http://chair.example.com/theses"))
         .andExpect(method(HttpMethod.GET))

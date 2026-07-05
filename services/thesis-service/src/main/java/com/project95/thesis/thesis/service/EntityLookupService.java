@@ -8,11 +8,8 @@ import com.project95.thesis.management.dto.SourceEndpointThesesReplacementReques
 import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.domain.Advisor;
 import com.project95.thesis.thesis.domain.ResearchArea;
-import com.project95.thesis.thesis.domain.Tag;
 import com.project95.thesis.thesis.repository.AdvisorRepository;
 import com.project95.thesis.thesis.repository.ResearchAreaRepository;
-import com.project95.thesis.thesis.repository.TagRepository;
-import com.project95.thesis.thesis.utils.Utils;
 import java.util.*;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
@@ -21,37 +18,31 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class EntityLookupService {
 
-  private final TagRepository tagRepository;
   private final ResearchAreaRepository researchAreaRepository;
   private final AdvisorRepository advisorRepository;
+  private final ResearchAreaTaxonomyService researchAreaTaxonomyService;
 
   public EntityLookupService(
-      TagRepository tagRepository,
       ResearchAreaRepository researchAreaRepository,
-      AdvisorRepository advisorRepository) {
-    this.tagRepository = tagRepository;
+      AdvisorRepository advisorRepository,
+      ResearchAreaTaxonomyService researchAreaTaxonomyService) {
     this.researchAreaRepository = researchAreaRepository;
     this.advisorRepository = advisorRepository;
+    this.researchAreaTaxonomyService = researchAreaTaxonomyService;
   }
 
   /**
-   * Synchronizes shared entities (Tags, Research Areas, Advisors) with the database. Performs batch
+   * Synchronizes shared entities (Research Areas, Advisors) with the database. Performs batch
    * inserts for improved performance.
    */
   @Transactional
   public void ensureSharedEntitiesExist(SourceEndpointThesesReplacementRequestDto request) {
-    Set<String> tagNames = new HashSet<>();
     Set<String> areaNames = new HashSet<>();
     Map<String, AdvisorInputDto> advisorByEmail = new HashMap<>();
 
     for (ThesisProposalInputDto thesis : request.getTheses()) {
-      if (thesis.getTags() != null) {
-        thesis.getTags().stream()
-            .map(Utils::normalize)
-            .filter(Objects::nonNull)
-            .forEach(tagNames::add);
-      }
-      String area = normalize(unwrap(thesis.getResearchArea()));
+      String area =
+          researchAreaTaxonomyService.canonicalize(normalize(unwrap(thesis.getResearchArea())));
       if (area != null) {
         areaNames.add(area);
       }
@@ -65,25 +56,8 @@ public class EntityLookupService {
       }
     }
 
-    syncTags(tagNames);
     syncResearchAreas(areaNames);
     syncAdvisors(advisorByEmail);
-  }
-
-  private void syncTags(Set<String> names) {
-    if (names.isEmpty()) return;
-    Set<String> existing =
-        tagRepository.findAllByNameIn(names).stream().map(Tag::getName).collect(Collectors.toSet());
-
-    List<Tag> newEntities =
-        names.stream()
-            .filter(name -> !existing.contains(name))
-            .map(Tag::new)
-            .collect(Collectors.toList());
-
-    if (!newEntities.isEmpty()) {
-      tagRepository.saveAll(newEntities);
-    }
   }
 
   private void syncResearchAreas(Set<String> names) {
@@ -96,6 +70,7 @@ public class EntityLookupService {
     List<ResearchArea> newEntities =
         names.stream()
             .filter(name -> !existing.contains(name))
+            .filter(researchAreaTaxonomyService::isAllowedResearchArea)
             .map(ResearchArea::new)
             .collect(Collectors.toList());
 

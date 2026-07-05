@@ -95,11 +95,6 @@ public class ThesisVectorIndexService {
     ThesisVectorUtils.addLabelledIfPresent(parts, "Research area", thesis.getResearchArea());
     ThesisVectorUtils.addLabelledIfPresent(parts, "Degree type", thesis.getDegreeType());
 
-    List<String> tags = normalizedTags(thesis);
-    if (!tags.isEmpty()) {
-      ThesisVectorUtils.addLabelledIfPresent(parts, "Tags", String.join(", ", tags));
-    }
-
     return String.join("\n\n", parts);
   }
 
@@ -114,20 +109,6 @@ public class ThesisVectorIndexService {
     ThesisVectorUtils.putIfPresent(
         metadata, ThesisVectorMetadata.RESEARCH_AREA, thesis.getResearchArea());
     metadata.put(ThesisVectorMetadata.SOURCE_URL, thesis.getSourceUrl().toString());
-    List<String> tags = normalizedTags(thesis);
-    if (!tags.isEmpty()) {
-      metadata.put(ThesisVectorMetadata.TAGS, tags);
-    }
     return metadata;
-  }
-
-  private List<String> normalizedTags(VectorThesisDocumentDto thesis) {
-    if (thesis.getTags() == null) {
-      return List.of();
-    }
-    return thesis.getTags().stream()
-        .filter(tag -> !ThesisVectorUtils.isBlank(tag))
-        .map(String::trim)
-        .toList();
   }
 }

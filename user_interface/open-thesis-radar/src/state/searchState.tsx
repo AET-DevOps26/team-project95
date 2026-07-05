@@ -7,14 +7,12 @@ export type FilterState = {
   chairIds: number[];
   degreeTypes: string[];
   researchAreas: string[];
-  tags: string[];
 };
 
 export const INITIAL_FILTER_STATE: FilterState = {
   chairIds: [],
   degreeTypes: [],
   researchAreas: [],
-  tags: [],
 };
 
 type SearchStateContextValue = {

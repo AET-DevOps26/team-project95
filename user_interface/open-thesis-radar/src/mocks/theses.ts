@@ -23,49 +23,6 @@
 //       { id: 101, name: 'Dr. Lena Hoffmann', email: 'lena.hoffmann@example.tum.de' },
 //       { id: 102, name: 'Maximilian Weber', email: 'maximilian.weber@example.tum.de' },
 //     ],
-//     tags: ['Security', 'Embedded Systems', 'Automotive', 'Cryptography'],
-//   },
-//   {
-//     id: 1002,
-//     chairId: 2,
-//     chairName: 'Chair of Machine Learning',
-//     title: 'Semantic Search for Cross-Chair Thesis Discovery',
-//     degreeType: 'MASTER',
-//     originalDescription:
-//       'Design and evaluate a retrieval pipeline that combines structured thesis metadata with vector search over descriptions from multiple university chairs.',
-//     aiOverview:
-//       'This thesis explores hybrid information retrieval for thesis recommendations, combining filters, embeddings, ranking, and evaluation with realistic student queries.',
-//     researchArea: 'Artificial Intelligence',
-//     sourceUrl: 'https://www.in.tum.de/en/open-theses/semantic-search-thesis-discovery',
-//     status: 'OPEN',
-//     lastSeenAt: '2026-05-24T14:15:00.000Z',
-//     advisors: [
-//       { id: 201, name: 'Prof. Anna Keller', email: 'anna.keller@example.tum.de' },
-//       { id: 202, name: 'Jonas Richter', email: 'jonas.richter@example.tum.de' },
-//     ],
-//     tags: ['LLM', 'Semantic Search', 'Information Retrieval', 'MLOps'],
-//   },
-//   {
-//     id: 1003,
-//     chairId: 3,
-//     chairName: 'Chair of Robotics and AI',
-//     title: 'Vision-Language Planning for Assistive Mobile Robots',
-//     degreeType: 'MASTER',
-//     originalDescription:
-//       'Investigate how vision-language models can produce robust task plans for assistive robots operating in cluttered indoor environments.',
-//     aiOverview:
-//       'The project studies robot task planning from natural language instructions and visual scene context, including failure handling and evaluation in simulation.',
-//     researchArea: 'Robotics',
-//     sourceUrl: 'https://www.in.tum.de/en/open-theses/vision-language-planning-assistive-robots',
-//     status: 'OPEN',
-//     lastSeenAt: '2026-05-26T11:45:00.000Z',
-//     advisors: [
-//       { id: 301, name: 'Dr. Sofia Brandt', email: 'sofia.brandt@example.tum.de' },
-//       { id: 302, name: 'Nina Schneider', email: 'nina.schneider@example.tum.de' },
-//     ],
-//     tags: ['Computer Vision', 'Robotics', 'Natural Language Processing', 'Planning'],
-//   },
-// ];
 //
 // export const MOCK_SEARCH_RESPONSE: SearchThesesResponse = {
 //   items: MOCK_THESES.map((thesis, index) => ({
@@ -85,6 +42,5 @@
 //   }])).values()),
 //   degreeTypes: Array.from(new Set(MOCK_THESES.map((thesis) => thesis.degreeType).filter(Boolean))) as string[],
 //   researchAreas: Array.from(new Set(MOCK_THESES.map((thesis) => thesis.researchArea).filter(Boolean))) as string[],
-//   tags: Array.from(new Set(MOCK_THESES.flatMap((thesis) => thesis.tags ?? []))),
 // };
 

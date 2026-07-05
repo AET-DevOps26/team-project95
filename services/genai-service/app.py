@@ -1,3 +1,4 @@
+import difflib
 import logging
 import os
 import re
@@ -74,7 +75,6 @@ class ThesisProposalInput(BaseModel):
     sourceUrl: str
     status: str = "OPEN"
     advisors: list[AdvisorInput] = Field(default_factory=list)
-    tags: list[str] = Field(default_factory=list)
 
 
 class GenAIExtractionRequest(BaseModel):
@@ -84,6 +84,7 @@ class GenAIExtractionRequest(BaseModel):
     sourceUrl: str
     rawHtml: str
     extractedPlainText: Optional[str] = None
+    knownResearchAreas: list[str] = Field(default_factory=list)
 
 
 class GenAIExtractionResponse(BaseModel):
@@ -116,7 +117,6 @@ class DraftThesisProposalInput(BaseModel):
     sourceUrl: Optional[str] = None
     status: Optional[str] = None
     advisors: list[DraftAdvisorInput] = Field(default_factory=list)
-    tags: list[str] = Field(default_factory=list)
 
 
 class ExtractionDraftResult(BaseModel):
@@ -293,7 +293,15 @@ def get_llm():
     )
 
 
+def format_known_research_areas(known_research_areas: list[str]) -> str:
+    cleaned = [area.strip() for area in known_research_areas if area and area.strip()]
+    if not cleaned:
+        return "No known research areas were provided."
+    return "\n".join(f"- {area}" for area in cleaned)
+
+
 def build_prompt(request: GenAIExtractionRequest, cleaned_text: str) -> str:
+    known_research_areas = format_known_research_areas(request.knownResearchAreas)
     return f'''
 You extract structured thesis proposals from scraped university chair webpages.
 
@@ -306,7 +314,12 @@ Rules:
 - degreeType should be [BACHELOR, MASTER, PHD] when clearly indicated, otherwise null.
 - status should be OPEN unless the text clearly indicates otherwise.
 - advisors should only include explicit names, emails, or profile links from the content.
-- tags should be short topic keywords.
+- researchArea must be exactly one of the known research areas listed below whenever any listed area can reasonably describe the thesis.
+- Treat the known research-area list as the canonical taxonomy. Prefer a slightly broader known area over creating a new label.
+- If uncertain between a known area and a new area, choose the closest known area.
+- Only create a new researchArea when the thesis absolutely cannot be matched to any known area.
+- New research areas must be broad, reusable academic fields (for example, "Artificial Intelligence" or "Robotics").
+- Do not use thesis titles, project names, chair-specific projects, methods, technologies, product names, or long phrases as researchArea.
 - aiOverview should be a concise 1-2 sentence grounded summary.
 - sourceUrl should default to the provided source URL unless a more specific thesis link is clearly visible.
 - originalDescription should copy the relevant description from the input, not invent new details.
@@ -318,6 +331,9 @@ Input metadata:
 - chairName: {request.chairName}
 - sourceUrl: {request.sourceUrl}
 
+Known research areas to prefer exactly:
+{known_research_areas}
+
 Cleaned page content:
 """
 {cleaned_text}
@@ -325,7 +341,77 @@ Cleaned page content:
 '''.strip()
 
 
-def normalize_thesis(thesis: DraftThesisProposalInput, source_url: str) -> ThesisProposalInput:
+def research_area_key(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", value.casefold()).strip()
+
+
+def is_broad_research_area(value: str) -> bool:
+    candidate = value.strip()
+    if len(candidate) < 3 or len(candidate) > 60:
+        return False
+    if not re.match(r"^[\w][\w &/+\-]*$", candidate, flags=re.UNICODE):
+        return False
+    if len(candidate.split()) > 4:
+        return False
+
+    lower = candidate.casefold()
+    blocked_terms = ("thesis", "project", "using", "based", "towards", " for ", " with ")
+    return not any(term in f" {lower} " for term in blocked_terms)
+
+
+def normalize_research_area(value: Optional[str], known_research_areas: list[str]) -> Optional[str]:
+    if not value or not value.strip():
+        return None
+
+    candidate = value.strip()
+    known = [area.strip() for area in known_research_areas if area and area.strip()]
+    if not known:
+        return candidate if is_broad_research_area(candidate) else None
+
+    known_by_casefold = {area.casefold(): area for area in known}
+    exact = known_by_casefold.get(candidate.casefold())
+    if exact:
+        return exact
+
+    candidate_key = research_area_key(candidate)
+    known_by_key = {research_area_key(area): area for area in known}
+    normalized_exact = known_by_key.get(candidate_key)
+    if normalized_exact:
+        return normalized_exact
+
+    candidate_tokens = set(candidate_key.split())
+    if candidate_tokens:
+        substring_matches = [
+            area
+            for key, area in known_by_key.items()
+            if candidate_key in key or key in candidate_key
+        ]
+        if substring_matches:
+            return min(substring_matches, key=len)
+
+        scored_matches: list[tuple[float, str]] = []
+        for key, area in known_by_key.items():
+            area_tokens = set(key.split())
+            if not area_tokens:
+                continue
+            overlap = len(candidate_tokens & area_tokens) / len(candidate_tokens | area_tokens)
+            if overlap >= 0.67:
+                scored_matches.append((overlap, area))
+        if scored_matches:
+            return max(scored_matches, key=lambda item: (item[0], -len(item[1])))[1]
+
+    close_keys = difflib.get_close_matches(candidate_key, list(known_by_key.keys()), n=1, cutoff=0.86)
+    if close_keys:
+        return known_by_key[close_keys[0]]
+
+    if is_broad_research_area(candidate):
+        return candidate
+    return None
+
+
+def normalize_thesis(
+    thesis: DraftThesisProposalInput, source_url: str, known_research_areas: list[str]
+) -> ThesisProposalInput:
     if not thesis.title or not thesis.title.strip():
         raise ExtractionError(details={"reason": "Model returned a thesis item without a title."})
 
@@ -335,7 +421,6 @@ def normalize_thesis(thesis: DraftThesisProposalInput, source_url: str) -> Thesi
         normalized_degree = None
 
     normalized_status = (thesis.status or "OPEN").strip().upper() or "OPEN"
-    normalized_tags = [tag.strip() for tag in thesis.tags if tag and tag.strip()]
 
     normalized_advisors = [
         AdvisorInput(
@@ -353,11 +438,10 @@ def normalize_thesis(thesis: DraftThesisProposalInput, source_url: str) -> Thesi
         if thesis.originalDescription
         else None,
         aiOverview=thesis.aiOverview.strip() if thesis.aiOverview else None,
-        researchArea=thesis.researchArea.strip() if thesis.researchArea else None,
+        researchArea=normalize_research_area(thesis.researchArea, known_research_areas),
         sourceUrl=(thesis.sourceUrl or source_url).strip() or source_url,
         status=normalized_status,
         advisors=normalized_advisors,
-        tags=normalized_tags,
     )
 
 
@@ -401,7 +485,7 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
 
     for thesis in result.theses:
         try:
-            normalized = normalize_thesis(thesis, request.sourceUrl)
+            normalized = normalize_thesis(thesis, request.sourceUrl, request.knownResearchAreas)
         except ExtractionError:
             continue
         except ValidationError as exc:

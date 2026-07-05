@@ -811,27 +811,6 @@
   line-height: 1.5;
 }
 
-.resultTags {
-  margin-top: 18px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.resultTag {
-  border-radius: 999px;
-  background: #eef4ff;
-  color: var(--color-primary-strong);
-  padding: 7px 10px;
-  font-size: 13px;
-  font-weight: 800;
-  transition: transform var(--duration-fast) var(--ease-out);
-}
-
-.resultCard:hover .resultTag {
-  transform: translateY(-1px);
-}
-
 .emptyState {
   max-width: 1200px;
   margin: 24px auto 0;

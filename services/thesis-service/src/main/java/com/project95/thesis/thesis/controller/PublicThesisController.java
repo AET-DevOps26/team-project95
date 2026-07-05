@@ -3,12 +3,10 @@ package com.project95.thesis.thesis.controller;
 import com.project95.thesis.management.api.FrontendApiApi;
 import com.project95.thesis.management.dto.*;
 import com.project95.thesis.thesis.domain.Chair;
-import com.project95.thesis.thesis.domain.Tag;
 import com.project95.thesis.thesis.domain.ThesisProposal;
 import com.project95.thesis.thesis.repository.ChairRepository;
-import com.project95.thesis.thesis.repository.ResearchAreaRepository;
-import com.project95.thesis.thesis.repository.TagRepository;
 import com.project95.thesis.thesis.repository.ThesisProposalRepository;
+import com.project95.thesis.thesis.service.ResearchAreaTaxonomyService;
 import com.project95.thesis.thesis.service.ThesisSearchService;
 import java.net.URI;
 import java.util.List;
@@ -22,20 +20,17 @@ public class PublicThesisController implements FrontendApiApi {
   private final ThesisSearchService thesisSearchService;
   private final ThesisProposalRepository thesisRepository;
   private final ChairRepository chairRepository;
-  private final TagRepository tagRepository;
-  private final ResearchAreaRepository researchAreaRepository;
+  private final ResearchAreaTaxonomyService researchAreaTaxonomyService;
 
   public PublicThesisController(
       ThesisSearchService thesisSearchService,
       ThesisProposalRepository thesisRepository,
       ChairRepository chairRepository,
-      TagRepository tagRepository,
-      ResearchAreaRepository researchAreaRepository) {
+      ResearchAreaTaxonomyService researchAreaTaxonomyService) {
     this.thesisSearchService = thesisSearchService;
     this.thesisRepository = thesisRepository;
     this.chairRepository = chairRepository;
-    this.tagRepository = tagRepository;
-    this.researchAreaRepository = researchAreaRepository;
+    this.researchAreaTaxonomyService = researchAreaTaxonomyService;
   }
 
   @Override
@@ -71,10 +66,7 @@ public class PublicThesisController implements FrontendApiApi {
     response.setChairs(
         chairRepository.findAll().stream().map(this::mapToChairDto).collect(Collectors.toList()));
 
-    response.setTags(
-        tagRepository.findAll().stream().map(Tag::getName).collect(Collectors.toList()));
-
-    response.setResearchAreas(researchAreaRepository.findDistinctNamesLinkedToTheses());
+    response.setResearchAreas(researchAreaTaxonomyService.listResearchAreasForFilters());
 
     response.setDegreeTypes(List.of("BACHELOR", "MASTER", "INTERNSHIP", "IDP"));
 
@@ -110,10 +102,6 @@ public class PublicThesisController implements FrontendApiApi {
                     return advDto;
                   })
               .collect(Collectors.toList()));
-    }
-
-    if (!entity.getTags().isEmpty()) {
-      dto.setTags(entity.getTags().stream().map(Tag::getName).collect(Collectors.toList()));
     }
 
     if (!entity.getResearchAreas().isEmpty()) {

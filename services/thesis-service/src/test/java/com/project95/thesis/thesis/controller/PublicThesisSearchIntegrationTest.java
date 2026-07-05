@@ -16,7 +16,6 @@ import com.project95.thesis.management.dto.ThesisSearchFiltersDto;
 import com.project95.thesis.thesis.domain.Chair;
 import com.project95.thesis.thesis.domain.ResearchArea;
 import com.project95.thesis.thesis.domain.SourceEndpoint;
-import com.project95.thesis.thesis.domain.Tag;
 import com.project95.thesis.thesis.domain.ThesisProposal;
 import com.project95.thesis.thesis.repository.*;
 import java.util.List;
@@ -50,7 +49,6 @@ class PublicThesisSearchIntegrationTest {
   @Autowired private ThesisProposalRepository thesisRepository;
   @Autowired private ChairRepository chairRepository;
   @Autowired private SourceEndpointRepository sourceEndpointRepository;
-  @Autowired private TagRepository tagRepository;
   @Autowired private ResearchAreaRepository researchAreaRepository;
 
   private static MockRestServiceServer mockServer;
@@ -75,7 +73,6 @@ class PublicThesisSearchIntegrationTest {
     thesisRepository.deleteAll();
     sourceEndpointRepository.deleteAll();
     chairRepository.deleteAll();
-    tagRepository.deleteAll();
     researchAreaRepository.deleteAll();
 
     chair = chairRepository.save(new Chair("AI Chair", "http://ai.tum.de"));
@@ -85,7 +82,6 @@ class PublicThesisSearchIntegrationTest {
     sourceEndpoint.setStatus("ACTIVE");
     sourceEndpoint = sourceEndpointRepository.save(sourceEndpoint);
 
-    Tag tag = tagRepository.save(new Tag("LLM"));
     ResearchArea area = researchAreaRepository.save(new ResearchArea("NLP"));
 
     ThesisProposal t1 = new ThesisProposal();
@@ -95,7 +91,6 @@ class PublicThesisSearchIntegrationTest {
     t1.setSourceUrl("http://test.com/t1");
     t1.setStatus("OPEN");
     t1.setDegreeType("MASTER");
-    t1.setTags(Set.of(tag));
     t1.setResearchAreas(Set.of(area));
     t1.setOriginalDescription("This is the first thesis proposal description.");
     t1.setAiOverview("First thesis summary.");
@@ -131,7 +126,6 @@ class PublicThesisSearchIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.title").value("First Thesis Title"))
         .andExpect(jsonPath("$.degreeType").value("MASTER"))
-        .andExpect(jsonPath("$.tags", contains("LLM")))
         .andExpect(jsonPath("$.researchArea").value("NLP"));
   }
 
@@ -174,24 +168,6 @@ class PublicThesisSearchIntegrationTest {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.items", hasSize(2)))
         .andExpect(jsonPath("$.totalElements").value(2));
-  }
-
-  @Test
-  void searchTheses_FilterByTag() throws Exception {
-    SearchThesesRequestDto request = new SearchThesesRequestDto();
-    ThesisSearchFiltersDto filters = new ThesisSearchFiltersDto();
-    filters.setTags(List.of("LLM"));
-    request.setFilters(filters);
-
-    mockMvc
-        .perform(
-            post("/api/v1/theses/search")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.items", hasSize(1)))
-        .andExpect(jsonPath("$.items[0].id").value(savedThesis1.getId()))
-        .andExpect(jsonPath("$.totalElements").value(1));
   }
 
   @Test

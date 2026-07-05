@@ -132,7 +132,8 @@ def test_build_prompt_contains_metadata_and_cleaned_content():
     assert "chairId: 3" in prompt
     assert "chairName: Chair of Software Engineering" in prompt
     assert "sourceUrl: https://example.com/theses" in prompt
-    assert "Cleaned thesis content" in prompt
+    assert "Known research areas to prefer exactly" in prompt
+    assert "Cleaned page content" in prompt
 
 
 def test_normalize_thesis_trims_fields_and_defaults_source_url():
@@ -151,10 +152,13 @@ def test_normalize_thesis_trims_fields_and_defaults_source_url():
                 profileUrl="  https://example.com/max  ",
             )
         ],
-        tags=[" search ", "", " ai "],
     )
 
-    normalized = normalize_thesis(draft, source_url="https://example.com/default")
+    normalized = normalize_thesis(
+        draft,
+        source_url="https://example.com/default",
+        known_research_areas=["Information Retrieval"],
+    )
 
     assert normalized.title == "Semantic Search for Thesis Discovery"
     assert normalized.degreeType == "MASTER"
@@ -163,7 +167,6 @@ def test_normalize_thesis_trims_fields_and_defaults_source_url():
     assert normalized.researchArea == "Information Retrieval"
     assert normalized.sourceUrl == "https://example.com/default"
     assert normalized.status == "OPEN"
-    assert normalized.tags == ["search", "ai"]
     assert normalized.advisors[0].name == "Max Mustermann"
     assert normalized.advisors[0].email == "max@example.com"
     assert normalized.advisors[0].profileUrl == "https://example.com/max"
@@ -176,7 +179,7 @@ def test_normalize_thesis_drops_unknown_degree_type():
         sourceUrl="https://example.com/topic",
     )
 
-    normalized = normalize_thesis(draft, source_url="https://example.com/default")
+    normalized = normalize_thesis(draft, source_url="https://example.com/default", known_research_areas=[])
 
     assert normalized.degreeType is None
 
@@ -185,4 +188,36 @@ def test_normalize_thesis_rejects_missing_title():
     draft = DraftThesisProposalInput(title="  ")
 
     with pytest.raises(ExtractionError):
-        normalize_thesis(draft, source_url="https://example.com/default")
+        normalize_thesis(draft, source_url="https://example.com/default", known_research_areas=[])
+
+
+def test_normalize_thesis_snaps_research_area_to_known_taxonomy():
+    draft = DraftThesisProposalInput(
+        title="Topic",
+        researchArea="machine-learning",
+        sourceUrl="https://example.com/topic",
+    )
+
+    normalized = normalize_thesis(
+        draft,
+        source_url="https://example.com/default",
+        known_research_areas=["Machine Learning", "Robotics"],
+    )
+
+    assert normalized.researchArea == "Machine Learning"
+
+
+def test_normalize_thesis_drops_noisy_unknown_research_area_when_taxonomy_exists():
+    draft = DraftThesisProposalInput(
+        title="Topic",
+        researchArea="Agile Amphibious Locomotion Project with Miniature Legged Robot",
+        sourceUrl="https://example.com/topic",
+    )
+
+    normalized = normalize_thesis(
+        draft,
+        source_url="https://example.com/default",
+        known_research_areas=["Robotics", "Artificial Intelligence"],
+    )
+
+    assert normalized.researchArea is None

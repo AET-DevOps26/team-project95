@@ -90,7 +90,6 @@ paths:
                     chairIds: [1, 3]
                     degreeTypes: ["MASTER"]
                     researchAreas: ["Artificial Intelligence", "Software Engineering"]
-                    tags: ["LLM", "Search"]
                     status: "OPEN"
                   page: 0
                   size: 20
@@ -163,7 +162,7 @@ paths:
       tags:
         - Frontend API
       summary: Get available filter values
-      description: Fetch available filter values such as degree types, research areas, tags, and chairs.
+      description: Fetch available filter values such as degree types, research areas, and chairs.
       operationId: getAvailableFilters
       responses:
         '200':
@@ -191,6 +190,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SourceEndpointListResponse'
+
+  /internal/v1/thesis-service/research-areas:
+    get:
+      tags:
+        - Thesis Service Internal API
+      summary: List known research areas for extraction
+      description: Returns canonical/known research area names that the GenAI service should prefer during extraction.
+      operationId: listKnownResearchAreasForScraping
+      responses:
+        '200':
+          description: Known research areas returned successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnownResearchAreasResponse'
 
   /internal/v1/thesis-service/scrape-runs:
     post:
@@ -254,9 +268,6 @@ paths:
                     - name: "Max Mustermann"
                       email: "max.mustermann@example.com"
                       profileUrl: "https://example-chair.tum.de/team/max"
-                  tags:
-                    - "Semantic Search"
-                    - "LLM"
                     - "Information Retrieval"
       responses:
         '200':
@@ -384,7 +395,6 @@ paths:
                   originalDescription: "This thesis investigates semantic search for university thesis proposals..."
                   researchArea: "Artificial Intelligence"
                   sourceUrl: "https://example-chair.tum.de/theses/semantic-search"
-                  tags: ["Semantic Search", "LLM", "Information Retrieval"]
       responses:
         '200':
           description: Vector index entries for the chair were replaced successfully.
@@ -416,6 +426,7 @@ paths:
               chairName: "Chair of Software Engineering"
               sourceUrl: "https://example-chair.tum.de/theses"
               rawHtml: "<html>...</html>"
+              knownResearchAreas: ["Artificial Intelligence", "Robotics", "Security"]
       responses:
         '200':
           description: Structured thesis proposals extracted successfully.
@@ -515,11 +526,6 @@ components:
           items:
             type: string
             example: "Artificial Intelligence"
-        tags:
-          type: array
-          items:
-            type: string
-            example: "LLM"
         status:
           type: string
           nullable: true
@@ -676,10 +682,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Advisor'
-        tags:
-          type: array
-          items:
-            type: string
 
     ThesisProposalInput:
       type: object
@@ -711,10 +713,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AdvisorInput'
-        tags:
-          type: array
-          items:
-            type: string
 
     Advisor:
       type: object
@@ -851,6 +849,16 @@ components:
           type: string
           example: "Scrape run started."
 
+    KnownResearchAreasResponse:
+      type: object
+      required:
+        - researchAreas
+      properties:
+        researchAreas:
+          type: array
+          items:
+            type: string
+
     GenAIExtractionRequest:
       type: object
       required:
@@ -877,6 +885,11 @@ components:
           type: string
           nullable: true
           description: Optional plain text extracted by the Scraping Service before calling GenAI.
+        knownResearchAreas:
+          type: array
+          description: Existing/canonical research area names the model should reuse whenever possible.
+          items:
+            type: string
 
     GenAIExtractionResponse:
       type: object
@@ -919,10 +932,6 @@ components:
           items:
             type: string
         researchAreas:
-          type: array
-          items:
-            type: string
-        tags:
           type: array
           items:
             type: string
@@ -1009,10 +1018,6 @@ components:
         sourceUrl:
           type: string
           format: uri
-        tags:
-          type: array
-          items:
-            type: string
 
     ReplaceSourceEndpointVectorsResponse:
       type: object
@@ -1043,10 +1048,6 @@ components:
           items:
             type: string
         researchAreas:
-          type: array
-          items:
-            type: string
-        tags:
           type: array
           items:
             type: string

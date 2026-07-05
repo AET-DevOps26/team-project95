@@ -18,7 +18,6 @@ runtime:
           expect(res.body).to.have.property("chairs");
           expect(res.body).to.have.property("degreeTypes");
           expect(res.body).to.have.property("researchAreas");
-          expect(res.body).to.have.property("tags");
         });
 
 settings:
