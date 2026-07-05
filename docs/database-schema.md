@@ -2,7 +2,7 @@
 
 Open Thesis Radar uses two PostgreSQL databases:
 
-| Database | Owner | Purpose | Local container |
+| Database | Owner | Purpose | Compose service / host port |
 | --- | --- | --- | --- |
 | Thesis database | `thesis-service` | Canonical relational data for chairs, source endpoints, scrape runs, thesis proposals, advisors, tags, and research areas | `thesis-db` on `localhost:5432` |
 | Vector database | `vector-search-service` | Embedding vectors and metadata used for semantic search | `vector-db` on `localhost:5433` |
@@ -93,7 +93,7 @@ Stores the canonical thesis proposals returned by the frontend API.
 | `degree_type` | `VARCHAR(255)` | Bachelor/master/project/etc. classification when available |
 | `original_description` | `TEXT` | Extracted source description |
 | `ai_overview` | `TEXT` | AI-generated overview shown to users |
-| `source_url` | `VARCHAR(1024)` | Original thesis URL |
+| `source_url` | `VARCHAR(1024)` | Required original thesis URL |
 | `status` | `VARCHAR(255)` | Proposal status; defaults to `OPEN` |
 | `last_seen_at` | `TIMESTAMPTZ` | Last time the proposal was observed during scraping |
 | `chair_id` | `BIGINT` | Required reference to `chairs.id` |
