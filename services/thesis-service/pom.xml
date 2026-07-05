@@ -89,6 +89,12 @@
       <artifactId>jackson-datatype-jsr310</artifactId>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>io.swagger.parser.v3</groupId>
+      <artifactId>swagger-parser</artifactId>
+      <version>2.1.45</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

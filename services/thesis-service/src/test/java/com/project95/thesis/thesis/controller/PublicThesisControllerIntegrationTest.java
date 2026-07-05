@@ -1,5 +1,6 @@
 package com.project95.thesis.thesis.controller;
 
+import static com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers.openApi;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -29,6 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
 @ActiveProfiles("test")
 @Transactional
 class PublicThesisControllerIntegrationTest {
+
+  private static final String OPENAPI_SPEC = "../../api/openapi-v1.yml";
 
   @Autowired private MockMvc mockMvc;
 
@@ -76,6 +79,7 @@ class PublicThesisControllerIntegrationTest {
     mockMvc
         .perform(get("/api/v1/chairs"))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$", hasSize(1)))
         .andExpect(jsonPath("$[0].name").value("AI Chair"));
   }
@@ -85,6 +89,7 @@ class PublicThesisControllerIntegrationTest {
     mockMvc
         .perform(get("/api/v1/filters"))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.chairs", hasSize(1)))
         .andExpect(jsonPath("$.tags", contains("LLM")))
         .andExpect(jsonPath("$.researchAreas", hasItem("NLP")))

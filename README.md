@@ -216,6 +216,32 @@ cd services
 mvn clean package
 ```
 
+OpenAPI contract linting:
+
+```bash
+npx --yes @redocly/cli lint api/openapi-v1.yml
+```
+
+OpenAPI contract validation runs at multiple levels:
+
+- CI lints the canonical contract with Redocly.
+- Spring controller tests validate representative real MockMvc requests/responses against `api/openapi-v1.yml` for Thesis, Scraping, and Vector Search services.
+- GenAI tests compare FastAPI-generated OpenAPI metadata with the canonical GenAI endpoints and exercise a mocked extraction response.
+- The frontend uses generated OpenAPI TypeScript types in `src/api.ts`; CI checks that generated file stays in sync.
+
+Useful local commands:
+
+```bash
+cd services
+mvn -pl thesis-service,scraping-service,vector-search-service -Dtest=OpenApiContractTest,PublicThesisControllerIntegrationTest,PublicThesisSearchIntegrationTest,InternalThesisControllerIntegrationTest,ScrapeControllerIntegrationTest,VectorSearchControllerTest test
+
+cd services/genai-service
+pytest tests/test_contract.py
+
+cd user_interface/open-thesis-radar
+npm run check:api
+```
+
 Docker Compose validation:
 
 ```bash
