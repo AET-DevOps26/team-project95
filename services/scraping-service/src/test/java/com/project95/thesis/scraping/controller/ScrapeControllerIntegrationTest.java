@@ -1,5 +1,6 @@
 package com.project95.thesis.scraping.controller;
 
+import static com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers.openApi;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
@@ -25,6 +26,8 @@ import org.springframework.web.client.RestClient;
 @SpringBootTest(properties = "spring.main.allow-bean-definition-overriding=true")
 @AutoConfigureMockMvc
 class ScrapeControllerIntegrationTest {
+
+  private static final String OPENAPI_SPEC = "../../api/openapi-v1.yml";
 
   @Autowired private MockMvc mockMvc;
 
@@ -117,6 +120,7 @@ class ScrapeControllerIntegrationTest {
     mockMvc
         .perform(post("/internal/v1/scraping-service/scrape"))
         .andExpect(status().isAccepted())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.started").value(true))
         .andExpect(jsonPath("$.message").value("Scrape run started."));
 
@@ -154,7 +158,10 @@ class ScrapeControllerIntegrationTest {
         .andRespond(withSuccess());
 
     // Act: trigger scraping
-    mockMvc.perform(post("/internal/v1/scraping-service/scrape")).andExpect(status().isAccepted());
+    mockMvc
+        .perform(post("/internal/v1/scraping-service/scrape"))
+        .andExpect(status().isAccepted())
+        .andExpect(openApi().isValid(OPENAPI_SPEC));
 
     // Wait for the asynchronous background task to complete execution
     Thread.sleep(1200);

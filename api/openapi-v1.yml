@@ -17,6 +17,8 @@ info:
     for that chair in one transaction before instructing the Vector Search Service to refresh the
     corresponding vector index entries.
 
+security: []
+
 servers:
   - url: http://localhost:8080
     description: Thesis Service
@@ -378,6 +380,7 @@ paths:
               theses:
                 - thesisId: 1001
                   chairId: 3
+                  sourceEndpointId: 7
                   title: "Semantic Search for Thesis Discovery"
                   degreeType: "MASTER"
                   aiOverview: "Build and evaluate a semantic search pipeline for thesis discovery."
@@ -549,16 +552,67 @@ components:
           example: 123
 
     ThesisSearchResult:
-      allOf:
-        - $ref: '#/components/schemas/ThesisProposal'
-        - type: object
-          properties:
-            semanticScore:
-              type: number
-              format: float
-              nullable: true
-              description: Present when result came from semantic/vector search.
-              example: 0.87
+      type: object
+      required:
+        - id
+        - chairId
+        - title
+        - sourceUrl
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1001
+        chairId:
+          type: integer
+          format: int64
+          example: 3
+        chairName:
+          type: string
+          nullable: true
+          example: "Chair of Software Engineering"
+        title:
+          type: string
+          example: "Semantic Search for Thesis Discovery"
+        degreeType:
+          type: string
+          nullable: true
+          example: "MASTER"
+        originalDescription:
+          type: string
+          nullable: true
+        aiOverview:
+          type: string
+          nullable: true
+        researchArea:
+          type: string
+          nullable: true
+          example: "Artificial Intelligence"
+        sourceUrl:
+          type: string
+          format: uri
+        status:
+          type: string
+          example: "OPEN"
+        lastSeenAt:
+          type: string
+          format: date-time
+          nullable: true
+        advisors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Advisor'
+        tags:
+          type: array
+          items:
+            type: string
+        semanticScore:
+          type: number
+          format: float
+          nullable: true
+          description: Present when result came from semantic/vector search.
+          example: 0.87
 
     Chair:
       type: object

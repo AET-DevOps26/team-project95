@@ -187,6 +187,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/thesis-internal/v1/source-endpoints/{sourceEndpointId}/detect-changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Detect if source endpoint content has changed
+         * @description Called by the Scraping Service before calling the GenAI Service.
+         *     The Thesis Service normalizes the HTML, hashes it, and checks if it matches the stored hash.
+         */
+        post: operations["detectChanges"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/internal/v1/scraping-service/scrape": {
         parameters: {
             query?: never;
@@ -333,7 +354,35 @@ export interface components {
             /** @example 123 */
             totalElements: number;
         };
-        ThesisSearchResult: components["schemas"]["ThesisProposal"] & {
+        ThesisSearchResult: {
+            /**
+             * Format: int64
+             * @example 1001
+             */
+            id: number;
+            /**
+             * Format: int64
+             * @example 3
+             */
+            chairId: number;
+            /** @example Chair of Software Engineering */
+            chairName?: string | null;
+            /** @example Semantic Search for Thesis Discovery */
+            title: string;
+            /** @example MASTER */
+            degreeType?: string | null;
+            originalDescription?: string | null;
+            aiOverview?: string | null;
+            /** @example Artificial Intelligence */
+            researchArea?: string | null;
+            /** Format: uri */
+            sourceUrl: string;
+            /** @example OPEN */
+            status: string;
+            /** Format: date-time */
+            lastSeenAt?: string | null;
+            advisors?: components["schemas"]["Advisor"][];
+            tags?: string[];
             /**
              * Format: float
              * @description Present when result came from semantic/vector search.
@@ -377,6 +426,8 @@ export interface components {
             status: string;
             /** Format: date-time */
             lastScrapedAt?: string | null;
+            /** @example e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 */
+            lastContentHash?: string | null;
         };
         SourceEndpointListResponse: {
             endpoints: components["schemas"]["SourceEndpoint"][];
@@ -462,6 +513,8 @@ export interface components {
         };
         SourceEndpointThesesReplacementRequest: {
             theses: components["schemas"]["ThesisProposalInput"][];
+            /** @example e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 */
+            lastContentHash?: string | null;
         };
         SourceEndpointThesesReplacementResponse: {
             /**
@@ -579,6 +632,18 @@ export interface components {
             details?: {
                 [key: string]: unknown;
             } | null;
+        };
+        DetectChangesRequest: {
+            /** @description Raw HTML of the scraped page to be normalized and checked. */
+            rawHtml: string;
+        };
+        DetectChangesResponse: {
+            /** @description True if the normalized content hash differs from the last successfully processed hash. */
+            changed: boolean;
+            /** @description Cleaned semantic HTML that is safe and optimized for sending to GenAI. */
+            sanitizedHtml?: string | null;
+            /** @description The SHA-256 hash of the normalized text content. */
+            contentHash: string;
         };
     };
     responses: never;
@@ -819,6 +884,42 @@ export interface operations {
             };
         };
     };
+    detectChanges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Internal source endpoint id. */
+                sourceEndpointId: components["parameters"]["SourceEndpointId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DetectChangesRequest"];
+            };
+        };
+        responses: {
+            /** @description Change status computed successfully. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DetectChangesResponse"];
+                };
+            };
+            /** @description Source endpoint not found. */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
+                };
+            };
+        };
+    };
     triggerScrape: {
         parameters: {
             query?: never;
@@ -896,6 +997,7 @@ export interface operations {
                  *         {
                  *           "thesisId": 1001,
                  *           "chairId": 3,
+                 *           "sourceEndpointId": 7,
                  *           "title": "Semantic Search for Thesis Discovery",
                  *           "degreeType": "MASTER",
                  *           "aiOverview": "Build and evaluate a semantic search pipeline for thesis discovery.",

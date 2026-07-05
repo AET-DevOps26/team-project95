@@ -430,6 +430,7 @@ def health_check() -> HealthResponse:
 @app.post(
     "/internal/v1/genai-service/extract-theses",
     response_model=GenAIExtractionResponse,
+    operation_id="extractThesesFromRawContent",
     responses={
         422: {"model": ErrorResponse},
         500: {"model": ErrorResponse},

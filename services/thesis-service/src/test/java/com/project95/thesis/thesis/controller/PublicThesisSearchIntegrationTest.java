@@ -1,5 +1,6 @@
 package com.project95.thesis.thesis.controller;
 
+import static com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers.openApi;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
@@ -42,6 +43,8 @@ import org.springframework.web.client.RestClient;
 @ActiveProfiles("test")
 @Transactional
 class PublicThesisSearchIntegrationTest {
+
+  private static final String OPENAPI_SPEC = "../../api/openapi-v1.yml";
 
   @Autowired private MockMvc mockMvc;
   private final ObjectMapper objectMapper =
@@ -118,6 +121,7 @@ class PublicThesisSearchIntegrationTest {
     mockMvc
         .perform(get("/api/v1/theses"))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$", hasSize(2)))
         .andExpect(
             jsonPath(
@@ -129,6 +133,7 @@ class PublicThesisSearchIntegrationTest {
     mockMvc
         .perform(get("/api/v1/theses/" + savedThesis1.getId()))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.title").value("First Thesis Title"))
         .andExpect(jsonPath("$.degreeType").value("MASTER"))
         .andExpect(jsonPath("$.tags", contains("LLM")))
@@ -153,6 +158,7 @@ class PublicThesisSearchIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.items", hasSize(1)))
         .andExpect(jsonPath("$.items[0].id").value(savedThesis1.getId()))
         .andExpect(jsonPath("$.items[0].title").value("First Thesis Title"))

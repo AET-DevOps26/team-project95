@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "generate:api": "npx --yes openapi-typescript@7.13.0 ../../api/openapi-v1.yml -o src/api.ts",
+    "check:api": "npm run generate:api && git diff --exit-code src/api.ts",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
