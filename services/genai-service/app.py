@@ -400,7 +400,9 @@ def normalize_research_area(value: Optional[str], known_research_areas: list[str
         if scored_matches:
             return max(scored_matches, key=lambda item: (item[0], -len(item[1])))[1]
 
-    close_keys = difflib.get_close_matches(candidate_key, list(known_by_key.keys()), n=1, cutoff=0.86)
+    close_keys = difflib.get_close_matches(
+        candidate_key, list(known_by_key.keys()), n=1, cutoff=0.86
+    )
     if close_keys:
         return known_by_key[close_keys[0]]
 

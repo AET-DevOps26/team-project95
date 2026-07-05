@@ -179,7 +179,9 @@ def test_normalize_thesis_drops_unknown_degree_type():
         sourceUrl="https://example.com/topic",
     )
 
-    normalized = normalize_thesis(draft, source_url="https://example.com/default", known_research_areas=[])
+    normalized = normalize_thesis(
+        draft, source_url="https://example.com/default", known_research_areas=[]
+    )
 
     assert normalized.degreeType is None
 
