@@ -10,19 +10,19 @@ Run the tests locally with:
 npm ci
 npx playwright install chromium
 npm run build
-npm run test:e2e
+npm run test:client-side
 ```
 
 For a visible browser while debugging, run:
 
 ```bash
-npm run test:e2e:headed
+npm run test:client-side:headed
 ```
 
 To inspect the last HTML report, run:
 
 ```bash
-npm run test:e2e:report
+npm run test:client-side:report
 ```
 
 ### Playwright configuration
