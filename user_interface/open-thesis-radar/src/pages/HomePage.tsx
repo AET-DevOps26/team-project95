@@ -56,11 +56,11 @@ export default function HomePage() {
     [selectedFilters],
   );
   const shouldUseServerSearch = normalizedNaturalLanguageQuery.length > 0;
-  const clientFilteredTheses = useMemo(
-    () => allTheses.filter((thesis) => thesisMatchesSelectedFilters(thesis, selectedApiFilters)),
-    [allTheses, selectedApiFilters],
+  const resultSourceTheses = serverSearchResults ?? allTheses;
+  const displayedTheses = useMemo(
+    () => resultSourceTheses.filter((thesis) => thesisMatchesSelectedFilters(thesis, selectedApiFilters)),
+    [resultSourceTheses, selectedApiFilters],
   );
-  const displayedTheses = serverSearchResults ?? clientFilteredTheses;
   const totalPages = Math.max(1, Math.ceil(displayedTheses.length / THESES_PER_PAGE));
   const visiblePage = Math.min(currentPage, totalPages);
   const pageStartIndex = (visiblePage - 1) * THESES_PER_PAGE;
@@ -284,10 +284,10 @@ export default function HomePage() {
               {isSearching
                 ? 'Searching thesis service…'
                 : serverSearchResults
-                  ? `${displayedTheses.length} thesis proposals shown`
+                  ? `${thesisTotalCount} thesis proposals available${isLoadingTheses ? ' · refreshing…' : ''} — ${displayedTheses.length} thesis proposals matched by filters ${isLoadingTheses ? ' · refreshing…' : ''}`
                   : isLoadingTheses && thesisTotalCount === 0
                     ? 'Loading thesis proposals…'
-                    : `${thesisTotalCount} thesis proposals available${isLoadingTheses ? ' · refreshing…' : ''}`}
+                    : `${thesisTotalCount} thesis proposals available${isLoadingTheses ? ' · refreshing…' : ''} — ${displayedTheses.length} thesis proposals matched by filters ${isLoadingTheses ? ' · refreshing…' : ''}`}
             </p>
           </div>
         </div>
