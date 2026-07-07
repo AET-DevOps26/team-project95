@@ -104,6 +104,19 @@ class OpenApiContractTest {
         "#/components/schemas/SourceEndpointThesesReplacementRequest");
     assertOperation(
         openApi,
+        "/thesis-internal/v1/source-endpoints/{sourceEndpointId}/detect-changes",
+        PathItem.HttpMethod.POST,
+        "detectChanges",
+        Map.of(
+            "200", "#/components/schemas/DetectChangesResponse",
+            "404", "#/components/schemas/ErrorResponse"));
+    assertJsonRequestBody(
+        openApi,
+        "/thesis-internal/v1/source-endpoints/{sourceEndpointId}/detect-changes",
+        PathItem.HttpMethod.POST,
+        "#/components/schemas/DetectChangesRequest");
+    assertOperation(
+        openApi,
         "/internal/v1/vector-search-service/search",
         PathItem.HttpMethod.POST,
         "semanticSearch",
@@ -113,6 +126,17 @@ class OpenApiContractTest {
         "/internal/v1/vector-search-service/search",
         PathItem.HttpMethod.POST,
         "#/components/schemas/VectorSearchRequest");
+    assertOperation(
+        openApi,
+        "/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index",
+        PathItem.HttpMethod.POST,
+        "indexSourceEndpointTheses",
+        Map.of("200", "#/components/schemas/ReplaceSourceEndpointVectorsResponse"));
+    assertJsonRequestBody(
+        openApi,
+        "/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index",
+        PathItem.HttpMethod.POST,
+        "#/components/schemas/ReplaceSourceEndpointVectorsRequest");
     assertOperation(
         openApi,
         "/internal/v1/genai-service/extract-theses",
@@ -137,7 +161,24 @@ class OpenApiContractTest {
     assertRequiredFields(
         openApi, "ScrapeRunLogRequest", "sourceEndpointId", "startedAt", "finishedAt", "status");
     assertRequiredFields(openApi, "SourceEndpointThesesReplacementRequest", "theses");
+    assertRequiredFields(openApi, "DetectChangesRequest", "rawHtml");
+    assertRequiredFields(openApi, "DetectChangesResponse", "changed", "contentHash");
     assertRequiredFields(openApi, "VectorSearchRequest", "query");
+    assertRequiredFields(openApi, "ReplaceSourceEndpointVectorsRequest", "theses");
+    assertRequiredFields(
+        openApi,
+        "ReplaceSourceEndpointVectorsResponse",
+        "sourceEndpointId",
+        "deletedVectorEntries",
+        "insertedVectorEntries");
+    assertRequiredFields(
+        openApi,
+        "VectorThesisDocument",
+        "thesisId",
+        "chairId",
+        "sourceEndpointId",
+        "title",
+        "sourceUrl");
     assertRequiredFields(
         openApi, "GenAIExtractionRequest", "sourceEndpointId", "chairId", "sourceUrl", "rawHtml");
   }

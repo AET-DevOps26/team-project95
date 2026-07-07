@@ -37,6 +37,9 @@ def test_fastapi_openapi_matches_canonical_genai_contract():
     assert json_schema_ref(generated_operation, "200") == json_schema_ref(
         canonical_operation, "200"
     )
+    assert json_schema_ref(generated_operation, "422") == json_schema_ref(
+        canonical_operation, "422"
+    )
 
     for schema_name in [
         "GenAIExtractionRequest",

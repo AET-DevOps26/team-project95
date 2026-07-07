@@ -112,6 +112,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -119,7 +121,7 @@ jobs:
           node-version: 22
 
       - name: Lint OpenAPI contract
-        run: npx --yes @redocly/cli lint api/openapi-v1.yml
+        run: npx --yes @redocly/cli@2.37.0 lint api/openapi-v1.yml
 
   docker-compose:
     name: Validate Docker Compose
