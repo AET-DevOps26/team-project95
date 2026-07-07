@@ -209,6 +209,22 @@ def test_normalize_thesis_snaps_research_area_to_known_taxonomy():
     assert normalized.researchArea == "Machine Learning"
 
 
+def test_normalize_thesis_does_not_snap_vague_short_area_to_unrelated_taxonomy():
+    draft = DraftThesisProposalInput(
+        title="Topic",
+        researchArea="data",
+        sourceUrl="https://example.com/topic",
+    )
+
+    normalized = normalize_thesis(
+        draft,
+        source_url="https://example.com/default",
+        known_research_areas=["Database Systems", "Robotics"],
+    )
+
+    assert normalized.researchArea == "data"
+
+
 def test_normalize_thesis_drops_noisy_unknown_research_area_when_taxonomy_exists():
     draft = DraftThesisProposalInput(
         title="Topic",

@@ -5,10 +5,10 @@ This is an explicit maintenance script, not part of normal application startup.
 
 What it does when run with --apply:
 1. Drops legacy app-level tag storage if it exists.
-2. Clears thesis_proposal_research_areas so all theses lose old research-area links.
-3. Reads theses in batches, asks a GenAI model to classify each thesis into one of the
+2. Reads theses in batches, asks a GenAI model to classify each thesis into one of the
    canonical research areas from canonical-research-areas.yml or, only if necessary,
    a broad reusable new research area.
+3. For theses with a valid classification, replaces their research-area links.
 4. Upserts the chosen research area and links it to the thesis.
 
 Dry-run is the default. Use --apply --yes to mutate the database non-interactively.
@@ -149,9 +149,7 @@ def is_broad_research_area(value: str) -> bool:
     if len(candidate.split()) > 4:
         return False
 
-    lower = candidate.casefold()
-    blocked_terms = ("thesis", "project", "using", "based", "towards", " for ", " with ")
-    return not any(term in f" {lower} " for term in blocked_terms)
+    return True
 
 
 def canonicalize_research_area(value: str | None, known_areas: list[str]) -> str | None:
@@ -352,25 +350,37 @@ def fetch_theses(conn: Any, limit: int | None = None) -> list[Thesis]:
         return [Thesis(*row) for row in cur.fetchall()]
 
 
-def cleanup_database(conn: Any, prune_orphan_research_areas: bool) -> None:
+def cleanup_database(conn: Any) -> None:
     with conn.cursor() as cur:
         cur.execute("DROP TABLE IF EXISTS thesis_proposal_tags CASCADE")
         cur.execute("DROP TABLE IF EXISTS tags CASCADE")
         cur.execute("ALTER TABLE thesis_proposals DROP COLUMN IF EXISTS tags")
         cur.execute("ALTER TABLE thesis_proposals DROP COLUMN IF EXISTS tag")
-        cur.execute("TRUNCATE TABLE thesis_proposal_research_areas")
-        if prune_orphan_research_areas:
-            cur.execute(
-                """
-                DELETE FROM research_areas ra
-                WHERE NOT EXISTS (
-                    SELECT 1
-                    FROM thesis_proposal_research_areas tpra
-                    WHERE tpra.research_area_id = ra.id
-                )
-                """
-            )
     conn.commit()
+
+
+def clear_research_area_links(conn: Any, thesis_ids: set[int]) -> None:
+    if not thesis_ids:
+        return
+    with conn.cursor() as cur:
+        cur.execute(
+            "DELETE FROM thesis_proposal_research_areas WHERE thesis_proposal_id = ANY(%s)",
+            (list(thesis_ids),),
+        )
+
+
+def prune_orphan_research_areas(conn: Any) -> None:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            DELETE FROM research_areas ra
+            WHERE NOT EXISTS (
+                SELECT 1
+                FROM thesis_proposal_research_areas tpra
+                WHERE tpra.research_area_id = ra.id
+            )
+            """
+        )
 
 
 def get_or_create_research_area_id(conn: Any, name: str) -> int:
@@ -411,8 +421,8 @@ def confirm_or_exit(args: argparse.Namespace, thesis_count: int) -> None:
     print("This will mutate the configured thesis database:")
     if not args.skip_cleanup:
         print("  - drop legacy tag table/columns if present")
-        print("  - clear all thesis research-area links")
     print(f"  - reclassify {thesis_count} theses in batches of {args.batch_size}")
+    print("  - replace research-area links only for theses with a valid classification")
     typed = input("Type 'reclassify research areas' to continue: ").strip()
     if typed != "reclassify research areas":
         print("Aborted.")
@@ -423,7 +433,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="Mutate the database. Default is dry-run.")
     parser.add_argument("--yes", action="store_true", help="Skip interactive confirmation.")
-    parser.add_argument("--skip-cleanup", action="store_true", help="Do not drop tags or clear old research-area links.")
+    parser.add_argument("--skip-cleanup", action="store_true", help="Do not drop legacy tag storage before relinking.")
     parser.add_argument("--prune-orphan-research-areas", action="store_true", help="Delete research_areas no longer linked after cleanup.")
     parser.add_argument("--batch-size", type=int, default=DEFAULT_BATCH_SIZE)
     parser.add_argument("--limit", type=int, help="Process only the first N theses, useful for testing.")
@@ -482,13 +492,16 @@ def main() -> None:
         total_linked = 0
         if args.apply:
             if not args.skip_cleanup:
-                print("Cleaning legacy tags and clearing thesis research-area links...")
-                cleanup_database(conn, args.prune_orphan_research_areas)
+                print("Cleaning legacy tag storage...")
+                cleanup_database(conn)
 
-            print("Writing classified research-area links...")
+            print("Replacing research-area links for classified theses...")
+            clear_research_area_links(conn, set(classified_research_areas))
             for thesis_id, research_area in classified_research_areas.items():
                 link_research_area(conn, thesis_id, research_area)
                 total_linked += 1
+            if args.prune_orphan_research_areas:
+                prune_orphan_research_areas(conn)
             conn.commit()
 
         print("Done.")

@@ -92,14 +92,7 @@ public class ResearchAreaTaxonomyService {
       return false;
     }
 
-    String lower = trimmed.toLowerCase(Locale.ROOT);
-    return !(lower.contains("thesis")
-        || lower.contains("project")
-        || lower.contains("using")
-        || lower.contains("based")
-        || lower.contains("towards")
-        || lower.contains("for ")
-        || lower.contains("with "));
+    return true;
   }
 
   private List<String> loadCanonicalResearchAreas() {

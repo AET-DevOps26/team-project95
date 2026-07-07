@@ -860,8 +860,7 @@ export interface operations {
                  *               "name": "Max Mustermann",
                  *               "email": "max.mustermann@example.com",
                  *               "profileUrl": "https://example-chair.tum.de/team/max"
-                 *             },
-                 *             "Information Retrieval"
+                 *             }
                  *           ]
                  *         }
                  *       ]

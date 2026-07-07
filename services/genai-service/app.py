@@ -354,9 +354,7 @@ def is_broad_research_area(value: str) -> bool:
     if len(candidate.split()) > 4:
         return False
 
-    lower = candidate.casefold()
-    blocked_terms = ("thesis", "project", "using", "based", "towards", " for ", " with ")
-    return not any(term in f" {lower} " for term in blocked_terms)
+    return True
 
 
 def normalize_research_area(value: Optional[str], known_research_areas: list[str]) -> Optional[str]:
@@ -381,14 +379,6 @@ def normalize_research_area(value: Optional[str], known_research_areas: list[str
 
     candidate_tokens = set(candidate_key.split())
     if candidate_tokens:
-        substring_matches = [
-            area
-            for key, area in known_by_key.items()
-            if candidate_key in key or key in candidate_key
-        ]
-        if substring_matches:
-            return min(substring_matches, key=len)
-
         scored_matches: list[tuple[float, str]] = []
         for key, area in known_by_key.items():
             area_tokens = set(key.split())
