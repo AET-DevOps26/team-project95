@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:client-side": "playwright test",
+    "test:client-side:headed": "playwright test --headed",
+    "test:client-side:report": "playwright show-report"
   },
   "dependencies": {
     "react": "^19.2.5",
@@ -16,6 +19,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.61.1",
     "@types/node": "^24.12.2",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
