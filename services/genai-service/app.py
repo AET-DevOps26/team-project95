@@ -2,6 +2,7 @@ import difflib
 import logging
 import os
 import re
+import time
 from functools import lru_cache
 from typing import Any, Optional
 from urllib.parse import unquote, urlparse
@@ -13,6 +14,8 @@ from fastapi.responses import JSONResponse
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI
+from prometheus_client import Counter, Histogram
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel, Field, ValidationError
 
 logging.basicConfig(
@@ -159,6 +162,24 @@ app = FastAPI(
     version="0.1.0",
     description="Minimal FastAPI + LangChain thesis extraction service",
 )
+
+# Custom Prometheus metrics
+LLM_CALL_DURATION = Histogram(
+    "genai_llm_call_duration_seconds",
+    "Latency of LangChain LLM structured generation call",
+    ["provider", "model_name"],
+)
+LLM_CALLS_TOTAL = Counter(
+    "genai_llm_calls_total",
+    "Total number of upstream LLM calls",
+    ["provider", "model_name", "status"],
+)
+THESES_EXTRACTED_TOTAL = Counter(
+    "genai_theses_extracted_total", "Total number of theses extracted", ["chair_id", "status"]
+)
+
+# Instrument the app and expose standard HTTP metrics under /actuator/prometheus
+Instrumentator().instrument(app).expose(app, endpoint="/actuator/prometheus")
 
 
 @app.exception_handler(GenAIServiceError)
@@ -470,6 +491,14 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
     llm = get_llm()
     structured_llm = llm.with_structured_output(ExtractionDraftResult)
 
+    use_ollama = (get_env("GENAI_USE_OLLAMA", "false") or "false").lower() == "true"
+    provider = "ollama" if use_ollama else "azure"
+    if use_ollama:
+        model_name = get_env("GENAI_MODEL_NAME", DEFAULT_OLLAMA_MODEL) or DEFAULT_OLLAMA_MODEL
+    else:
+        model_name = get_env("AZURE_OPENAI_CHAT_DEPLOYMENT") or DEFAULT_AZURE_OPENAI_DEPLOYMENT
+
+    start_time = time.perf_counter()
     try:
         result = structured_llm.invoke(
             [
@@ -482,9 +511,17 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
                 HumanMessage(content=build_prompt(request, cleaned_text)),
             ]
         )
-    except GenAIServiceError:
+        duration = time.perf_counter() - start_time
+        LLM_CALL_DURATION.labels(provider=provider, model_name=model_name).observe(duration)
+        LLM_CALLS_TOTAL.labels(provider=provider, model_name=model_name, status="success").inc()
+    except GenAIServiceError as exc:
+        status = "config_error" if isinstance(exc, ConfigError) else "extraction_error"
+        LLM_CALLS_TOTAL.labels(provider=provider, model_name=model_name, status=status).inc()
         raise
     except Exception as exc:
+        LLM_CALLS_TOTAL.labels(
+            provider=provider, model_name=model_name, status="upstream_error"
+        ).inc()
         raise UpstreamServiceError(details={"errorType": type(exc).__name__}) from exc
 
     normalized_theses: list[ThesisProposalInput] = []
@@ -503,6 +540,14 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
             continue
         seen_titles.add(title_key)
         normalized_theses.append(normalized)
+
+    chair_id_str = str(request.chairId)
+    if normalized_theses:
+        THESES_EXTRACTED_TOTAL.labels(chair_id=chair_id_str, status="success").inc(
+            len(normalized_theses)
+        )
+    else:
+        THESES_EXTRACTED_TOTAL.labels(chair_id=chair_id_str, status="empty").inc(1)
 
     notes = result.extractionNotes
     if not notes:

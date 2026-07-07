@@ -2,6 +2,7 @@ package com.project95.thesis.scraping.service;
 
 import com.project95.thesis.scraping.config.ClientProperties;
 import com.project95.thesis.scraping.dto.*;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -24,46 +25,56 @@ public class ScrapeCoordinationService {
   private final RestClient thesisServiceClient;
   private final RestClient genAiServiceClient;
   private final RestClient scrapingClient;
+  private final MeterRegistry meterRegistry;
 
   public ScrapeCoordinationService(
       @Qualifier("thesisServiceClient") RestClient thesisServiceClient,
       @Qualifier("genAiServiceClient") RestClient genAiServiceClient,
       @Qualifier("scrapingClient") RestClient scrapingClient,
-      ClientProperties clientProperties) {
+      ClientProperties clientProperties,
+      MeterRegistry meterRegistry) {
     this.thesisServiceClient = thesisServiceClient;
     this.genAiServiceClient = genAiServiceClient;
     this.scrapingClient = scrapingClient;
+    this.meterRegistry = meterRegistry;
   }
 
   @Scheduled(cron = "${app.scheduling.scrape-cron}")
   public void runScrapeCycle() {
-    log.info("Starting scrape cycle...");
+    meterRegistry
+        .timer("scraping_cycle_duration_seconds")
+        .record(
+            () -> {
+              log.info("Starting scrape cycle...");
 
-    SourceEndpointListResponseDto response = null;
-    try {
-      response =
-          thesisServiceClient
-              .get()
-              .uri("/internal/v1/thesis-service/source-endpoints")
-              .retrieve()
-              .body(SourceEndpointListResponseDto.class);
-    } catch (Exception e) {
-      log.error("Failed to fetch source endpoints from Main Thesis Service", e);
-      return;
-    }
+              SourceEndpointListResponseDto response = null;
+              try {
+                response =
+                    thesisServiceClient
+                        .get()
+                        .uri("/internal/v1/thesis-service/source-endpoints")
+                        .retrieve()
+                        .body(SourceEndpointListResponseDto.class);
+              } catch (Exception e) {
+                log.error("Failed to fetch source endpoints from Main Thesis Service", e);
+                return;
+              }
 
-    if (response == null || response.getEndpoints() == null || response.getEndpoints().isEmpty()) {
-      log.info("No source endpoints found to scrape.");
-      return;
-    }
+              if (response == null
+                  || response.getEndpoints() == null
+                  || response.getEndpoints().isEmpty()) {
+                log.info("No source endpoints found to scrape.");
+                return;
+              }
 
-    List<String> knownResearchAreas = fetchKnownResearchAreas();
+              List<String> knownResearchAreas = fetchKnownResearchAreas();
 
-    for (SourceEndpointDto endpoint : response.getEndpoints()) {
-      processEndpoint(endpoint, knownResearchAreas);
-    }
+              for (SourceEndpointDto endpoint : response.getEndpoints()) {
+                processEndpoint(endpoint, knownResearchAreas);
+              }
 
-    log.info("Scrape cycle completed.");
+              log.info("Scrape cycle completed.");
+            });
   }
 
   private List<String> fetchKnownResearchAreas() {
@@ -92,7 +103,19 @@ public class ScrapeCoordinationService {
     String rawHtml = null;
 
     try {
-      rawHtml = scrapingClient.get().uri(endpoint.getUrl()).retrieve().body(String.class);
+      String statusExternal = "SUCCESS";
+      long startTimeExternal = System.nanoTime();
+      try {
+        rawHtml = scrapingClient.get().uri(endpoint.getUrl()).retrieve().body(String.class);
+      } catch (Exception e) {
+        statusExternal = "FAILED";
+        throw e;
+      } finally {
+        long durationExternal = System.nanoTime() - startTimeExternal;
+        meterRegistry
+            .timer("scraping_external_http_duration_seconds", "status", statusExternal)
+            .record(durationExternal, java.util.concurrent.TimeUnit.NANOSECONDS);
+      }
 
       if (rawHtml == null || rawHtml.isBlank()) {
         throw new RuntimeException("Received empty HTML from source URL");
@@ -130,6 +153,9 @@ public class ScrapeCoordinationService {
             null,
             rawHtml,
             0);
+        meterRegistry
+            .counter("scraping_endpoints_processed_total", "status", "SKIPPED")
+            .increment();
         return;
       }
 
@@ -181,6 +207,7 @@ public class ScrapeCoordinationService {
           null,
           rawHtml,
           genAiResponse.getTheses().size());
+      meterRegistry.counter("scraping_endpoints_processed_total", "status", "SUCCESS").increment();
 
     } catch (Exception e) {
       log.error(
@@ -196,6 +223,7 @@ public class ScrapeCoordinationService {
           e.getMessage(),
           rawHtml,
           0);
+      meterRegistry.counter("scraping_endpoints_processed_total", "status", "FAILED").increment();
     }
   }
 
@@ -265,11 +293,13 @@ public class ScrapeCoordinationService {
             .toList();
 
     if (advisorsWithUsableEmail.size() != originalAdvisorCount) {
+      int droppedCount = originalAdvisorCount - advisorsWithUsableEmail.size();
       log.warn(
           "Dropping {} advisor(s) without usable email for thesis '{}'. Thesis will still be"
               + " submitted.",
-          originalAdvisorCount - advisorsWithUsableEmail.size(),
+          droppedCount,
           thesis.getTitle());
+      meterRegistry.counter("scraping_advisors_dropped_total").increment(droppedCount);
     }
 
     thesis.setAdvisors(advisorsWithUsableEmail);

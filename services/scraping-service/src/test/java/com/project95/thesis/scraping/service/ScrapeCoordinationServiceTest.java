@@ -28,7 +28,13 @@ class ScrapeCoordinationServiceTest {
 
     RestClient mockedClient = restClientBuilder.build();
 
-    service = new ScrapeCoordinationService(mockedClient, mockedClient, mockedClient, properties);
+    service =
+        new ScrapeCoordinationService(
+            mockedClient,
+            mockedClient,
+            mockedClient,
+            properties,
+            new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
   }
 
   @Test
