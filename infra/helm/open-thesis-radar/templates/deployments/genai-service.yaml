@@ -17,6 +17,10 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name | quote }}
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/actuator/prometheus"
       labels:
 {{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "genai-service" "component" "backend") | nindent 8 }}
     spec:

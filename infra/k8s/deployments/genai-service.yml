@@ -19,6 +19,10 @@ spec:
     metadata:
       labels:
         app: genai-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
       containers:
         - name: genai-service-container
