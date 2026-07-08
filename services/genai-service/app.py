@@ -178,8 +178,8 @@ THESES_EXTRACTED_TOTAL = Counter(
     "genai_theses_extracted_total", "Total number of theses extracted", ["chair_id", "status"]
 )
 
-# Instrument the app and expose standard HTTP metrics under /actuator/prometheus
-Instrumentator().instrument(app).expose(app, endpoint="/actuator/prometheus")
+# Instrument the app and expose standard HTTP metrics under /metrics
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 
 @app.exception_handler(GenAIServiceError)
@@ -556,7 +556,7 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
     return GenAIExtractionResponse(theses=normalized_theses, extractionNotes=notes)
 
 
-@app.get("/actuator/health", response_model=HealthResponse)
+@app.get("/health", response_model=HealthResponse)
 def health_check() -> HealthResponse:
     return HealthResponse(status="UP", service="genai-service")
 

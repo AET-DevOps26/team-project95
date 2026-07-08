@@ -58,13 +58,13 @@ spec:
               value: {{ .Values.vectorSearchService.azureOpenAi.embeddingModel | quote }}
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/liveness
               port: 8082
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /actuator/health/readiness
               port: 8082
             initialDelaySeconds: 30
             periodSeconds: 10

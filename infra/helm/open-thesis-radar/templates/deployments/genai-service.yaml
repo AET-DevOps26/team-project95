@@ -20,7 +20,7 @@ spec:
       annotations:
         prometheus.io/scrape: "true"
         prometheus.io/port: "8000"
-        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/path: "/metrics"
       labels:
 {{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "genai-service" "component" "backend") | nindent 8 }}
     spec:
@@ -51,13 +51,13 @@ spec:
               value: {{ .Values.genaiService.maxCompletionTokens | quote }}
           livenessProbe:
             httpGet:
-              path: /actuator/health
+              path: /health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
