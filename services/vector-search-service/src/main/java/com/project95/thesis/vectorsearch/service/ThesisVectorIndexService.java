@@ -73,15 +73,10 @@ public class ThesisVectorIndexService {
     } finally {
       long duration = System.nanoTime() - start;
       meterRegistry
-          .timer("vector_index_replacement_duration_seconds")
+          .timer("vector_index_replacement_duration")
           .record(duration, java.util.concurrent.TimeUnit.NANOSECONDS);
       if (!documents.isEmpty()) {
-        meterRegistry
-            .counter(
-                "vector_index_documents_indexed_total",
-                "source_endpoint_id",
-                String.valueOf(sourceEndpointId))
-            .increment(documents.size());
+        meterRegistry.counter("vector_index_documents_indexed_total").increment(documents.size());
       }
     }
 

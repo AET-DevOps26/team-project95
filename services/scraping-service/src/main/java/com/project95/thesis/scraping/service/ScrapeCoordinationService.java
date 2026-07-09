@@ -42,7 +42,7 @@ public class ScrapeCoordinationService {
   @Scheduled(cron = "${app.scheduling.scrape-cron}")
   public void runScrapeCycle() {
     meterRegistry
-        .timer("scraping_cycle_duration_seconds")
+        .timer("scraping_cycle_duration")
         .record(
             () -> {
               log.info("Starting scrape cycle...");
@@ -113,7 +113,7 @@ public class ScrapeCoordinationService {
       } finally {
         long durationExternal = System.nanoTime() - startTimeExternal;
         meterRegistry
-            .timer("scraping_external_http_duration_seconds", "status", statusExternal)
+            .timer("scraping_external_http_duration", "status", statusExternal)
             .record(durationExternal, java.util.concurrent.TimeUnit.NANOSECONDS);
       }
 

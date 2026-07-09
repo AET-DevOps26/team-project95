@@ -139,7 +139,7 @@ public class ThesisCoordinationService {
     } finally {
       long duration = System.nanoTime() - start;
       meterRegistry
-          .timer("thesis_ingestion_pipeline_duration_seconds")
+          .timer("thesis_ingestion_pipeline_duration")
           .record(duration, java.util.concurrent.TimeUnit.NANOSECONDS);
 
       String chairIdStr = "unknown";

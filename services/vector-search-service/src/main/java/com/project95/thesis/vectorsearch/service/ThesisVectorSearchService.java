@@ -69,7 +69,7 @@ public class ThesisVectorSearchService {
       long duration = System.nanoTime() - start;
       meterRegistry
           .timer(
-              "vector_search_duration_seconds",
+              "vector_search_duration",
               "query_length_range",
               getQueryLengthRange(normalizedQuery.length()))
           .record(duration, java.util.concurrent.TimeUnit.NANOSECONDS);
