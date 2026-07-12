@@ -26,6 +26,11 @@ DEFAULT_MAX_COMPLETION_TOKENS = 30000
 DEFAULT_AZURE_OPENAI_DEPLOYMENT = "gpt-5.4"
 DEFAULT_AZURE_OPENAI_API_VERSION = "2024-12-01-preview"
 DEFAULT_OLLAMA_MODEL = "llama3.1"
+MIN_RESEARCH_AREA_LENGTH = 3
+MAX_RESEARCH_AREA_LENGTH = 60
+MAX_RESEARCH_AREA_WORDS = 4
+RESEARCH_AREA_TOKEN_OVERLAP_THRESHOLD = 0.67
+RESEARCH_AREA_FUZZY_MATCH_CUTOFF = 0.86
 
 NOISE_SELECTORS = [
     "header",
@@ -345,26 +350,33 @@ def research_area_key(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", " ", value.casefold()).strip()
 
 
-def is_broad_research_area(value: str) -> bool:
+def is_valid_research_area(value: str) -> bool:
     candidate = value.strip()
-    if len(candidate) < 3 or len(candidate) > 60:
+    if len(candidate) < MIN_RESEARCH_AREA_LENGTH or len(candidate) > MAX_RESEARCH_AREA_LENGTH:
         return False
     if not re.match(r"^[\w][\w &/+\-]*$", candidate, flags=re.UNICODE):
         return False
-    if len(candidate.split()) > 4:
+    if len(candidate.split()) > MAX_RESEARCH_AREA_WORDS:
         return False
 
     return True
 
 
 def normalize_research_area(value: Optional[str], known_research_areas: list[str]) -> Optional[str]:
+    """Map a model-provided research area to the canonical taxonomy when possible.
+
+    Matching is intentionally ordered from strict to loose: exact case-insensitive match,
+    punctuation-normalized exact match, token-overlap match, then fuzzy typo correction.
+    If no known area matches, the original value is kept only when it passes basic
+    syntax/length validation for a reusable research-area label.
+    """
     if not value or not value.strip():
         return None
 
     candidate = value.strip()
     known = [area.strip() for area in known_research_areas if area and area.strip()]
     if not known:
-        return candidate if is_broad_research_area(candidate) else None
+        return candidate if is_valid_research_area(candidate) else None
 
     known_by_casefold = {area.casefold(): area for area in known}
     exact = known_by_casefold.get(candidate.casefold())
@@ -385,18 +397,21 @@ def normalize_research_area(value: Optional[str], known_research_areas: list[str
             if not area_tokens:
                 continue
             overlap = len(candidate_tokens & area_tokens) / len(candidate_tokens | area_tokens)
-            if overlap >= 0.67:
+            if overlap >= RESEARCH_AREA_TOKEN_OVERLAP_THRESHOLD:
                 scored_matches.append((overlap, area))
         if scored_matches:
             return max(scored_matches, key=lambda item: (item[0], -len(item[1])))[1]
 
     close_keys = difflib.get_close_matches(
-        candidate_key, list(known_by_key.keys()), n=1, cutoff=0.86
+        candidate_key,
+        list(known_by_key.keys()),
+        n=1,
+        cutoff=RESEARCH_AREA_FUZZY_MATCH_CUTOFF,
     )
     if close_keys:
         return known_by_key[close_keys[0]]
 
-    if is_broad_research_area(candidate):
+    if is_valid_research_area(candidate):
         return candidate
     return None
 
