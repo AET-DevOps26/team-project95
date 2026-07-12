@@ -431,12 +431,12 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
 
-  /internal/v1/health:
+  /health:
     get:
       tags:
         - Health
       summary: Health check
-      description: Generic health endpoint implemented by every service.
+      description: Actuator-style health endpoint exposed by each service.
       operationId: healthCheck
       responses:
         '200':
