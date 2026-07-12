@@ -87,3 +87,19 @@ BRU_BIN=/path/to/bru ./scripts/run-bruno-tests.sh
 ```
 
 The local services must be running before executing the collection.
+
+## CI smoke tests
+
+The main CI workflow starts the Docker Compose stack, waits for the required `/health` endpoints, then runs a small Bruno smoke subset:
+
+```bash
+./scripts/run-bruno-tests.sh \
+  "Health/Thesis Service Health.yml" \
+  "Health/Scraping Service Health.yml" \
+  "Frontend API/List Theses.yml" \
+  "Frontend API/List Chairs.yml" \
+  "Frontend API/Get Available Filters.yml" \
+  --tests-only
+```
+
+This smoke job covers health plus stable thesis-service frontend APIs and intentionally avoids AI-provider-dependent GenAI/vector requests, so it does not require hardcoded secrets.
