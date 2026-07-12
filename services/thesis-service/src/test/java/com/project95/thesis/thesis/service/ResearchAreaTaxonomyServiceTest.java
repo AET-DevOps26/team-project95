@@ -21,7 +21,7 @@ class ResearchAreaTaxonomyServiceTest {
   void canonicalize_SnapsCanonicalAreaCaseInsensitively() {
     ResearchAreaTaxonomyService service = new ResearchAreaTaxonomyService(researchAreaRepository);
 
-    assertThat(service.canonicalize("machine learning")).isEqualTo("Machine Learning");
+    assertThat(service.canonicalize("computer vision")).isEqualTo("Computer Vision");
   }
 
   @Test
@@ -31,7 +31,7 @@ class ResearchAreaTaxonomyServiceTest {
     ResearchAreaTaxonomyService service = new ResearchAreaTaxonomyService(researchAreaRepository);
 
     assertThat(service.listKnownResearchAreasForExtraction())
-        .contains("Machine Learning", "Custom Area");
+        .contains("Computer Vision", "Custom Area");
   }
 
   @Test
