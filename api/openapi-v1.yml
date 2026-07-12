@@ -587,10 +587,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Advisor'
-        tags:
-          type: array
-          items:
-            type: string
         semanticScore:
           type: number
           format: float
