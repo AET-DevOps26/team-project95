@@ -20,9 +20,8 @@ function thesisMatchesSelectedFilters(thesis: ThesisSearchResult, selectedFilter
   const matchesResearchArea =
     !selectedFilters.researchAreas?.length ||
     Boolean(thesis.researchArea && selectedFilters.researchAreas.includes(thesis.researchArea));
-  const matchesTags = !selectedFilters.tags?.length || selectedFilters.tags.every((tag) => thesis.tags?.includes(tag));
 
-  return matchesChair && matchesDegree && matchesResearchArea && matchesTags;
+  return matchesChair && matchesDegree && matchesResearchArea;
 }
 
 export default function HomePage() {
@@ -52,7 +51,6 @@ export default function HomePage() {
       chairIds: selectedFilters.chairIds,
       degreeTypes: selectedFilters.degreeTypes,
       researchAreas: selectedFilters.researchAreas,
-      tags: selectedFilters.tags,
       status: 'OPEN',
     }),
     [selectedFilters],
@@ -149,11 +147,6 @@ export default function HomePage() {
     [filters?.researchAreas],
   );
 
-  const tagOptions = useMemo(
-    () => (filters?.tags ?? []).map((tag) => ({ value: tag, label: tag })),
-    [filters?.tags],
-  );
-
   return (
     <main className={styles.page}>
       <header className={styles.topBar}>
@@ -173,8 +166,8 @@ export default function HomePage() {
             <p className={styles.heroEyebrow}>TUM thesis discovery</p>
             <h1 className={styles.heroTitle}>Search open theses by fit.</h1>
             <p className={styles.heroSubtitle}>
-              Compare thesis offers across chairs, degree types, research areas, and tags without losing your filter
-              context while you inspect a topic.
+              Compare thesis offers across chairs, degree types, and research areas without losing your filter context while
+              you inspect a topic.
             </p>
             <div className={styles.heroActions}>
               <button className={`${styles.primaryAction} ${styles.clickableButton}`} type="button" onClick={scrollToSearch}>
@@ -289,12 +282,6 @@ export default function HomePage() {
                 }))
               }
             />
-            <FilterDropdown
-              label="Tag"
-              values={selectedFilters.tags}
-              options={tagOptions}
-              onChange={(values) => setSelectedFilters((prev) => ({ ...prev, tags: values }))}
-            />
           </div>
         </div>
 
@@ -327,11 +314,6 @@ export default function HomePage() {
                   <h4 className={styles.resultTitle}>{thesis.title}</h4>
                   <p className={styles.resultChair}>{thesis.chairName ?? 'Chair not specified'}</p>
                   <p className={styles.resultSummary}>{thesis.aiOverview ?? thesis.originalDescription ?? 'No summary available.'}</p>
-                  <div className={styles.resultTags}>
-                    {(thesis.tags ?? []).slice(0, 4).map((tag) => (
-                      <span className={styles.resultTag} key={tag}>{tag}</span>
-                    ))}
-                  </div>
                 </Link>
               ))}
             </div>

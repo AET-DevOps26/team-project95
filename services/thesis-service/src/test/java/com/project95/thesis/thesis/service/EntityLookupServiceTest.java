@@ -8,7 +8,6 @@ import com.project95.thesis.management.dto.SourceEndpointThesesReplacementReques
 import com.project95.thesis.management.dto.ThesisProposalInputDto;
 import com.project95.thesis.thesis.repository.AdvisorRepository;
 import com.project95.thesis.thesis.repository.ResearchAreaRepository;
-import com.project95.thesis.thesis.repository.TagRepository;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -20,9 +19,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class EntityLookupServiceTest {
 
-  @Mock private TagRepository tagRepository;
   @Mock private ResearchAreaRepository researchAreaRepository;
   @Mock private AdvisorRepository advisorRepository;
+  @Mock private ResearchAreaTaxonomyService researchAreaTaxonomyService;
 
   @InjectMocks private EntityLookupService service;
 
@@ -32,8 +31,7 @@ class EntityLookupServiceTest {
     SourceEndpointThesesReplacementRequestDto request =
         new SourceEndpointThesesReplacementRequestDto();
     ThesisProposalInputDto input = new ThesisProposalInputDto();
-    input.setTags(List.of("T1"));
-    input.setResearchArea("A1");
+    input.setResearchArea("Robotics");
 
     AdvisorInputDto adv = new AdvisorInputDto();
     adv.setName("Adv1");
@@ -42,7 +40,8 @@ class EntityLookupServiceTest {
 
     request.setTheses(List.of(input));
 
-    when(tagRepository.findAllByNameIn(any())).thenReturn(Collections.emptyList());
+    when(researchAreaTaxonomyService.canonicalize("Robotics")).thenReturn("Robotics");
+    when(researchAreaTaxonomyService.isAllowedResearchArea("Robotics")).thenReturn(true);
     when(researchAreaRepository.findAllByNameIn(any())).thenReturn(Collections.emptyList());
     when(advisorRepository.findAllByEmailIn(any())).thenReturn(Collections.emptyList());
 
@@ -50,7 +49,6 @@ class EntityLookupServiceTest {
     service.ensureSharedEntitiesExist(request);
 
     // Assert
-    verify(tagRepository).saveAll(anyList());
     verify(researchAreaRepository).saveAll(anyList());
     verify(advisorRepository).saveAll(anyList());
   }

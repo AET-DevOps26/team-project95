@@ -21,8 +21,7 @@ http:
             "aiOverview": "Build and evaluate a semantic search pipeline for thesis discovery.",
             "originalDescription": "This thesis investigates semantic search for university thesis proposals.",
             "researchArea": "Artificial Intelligence",
-            "sourceUrl": "https://example-chair.tum.de/theses/semantic-search",
-            "tags": ["Semantic Search", "LLM", "Information Retrieval"]
+            "sourceUrl": "https://example-chair.tum.de/theses/semantic-search"
           }
         ]
       }

@@ -102,7 +102,7 @@ export interface paths {
         };
         /**
          * Get available filter values
-         * @description Fetch available filter values such as degree types, research areas, tags, and chairs.
+         * @description Fetch available filter values such as degree types, research areas, and chairs.
          */
         get: operations["getAvailableFilters"];
         put?: never;
@@ -128,6 +128,26 @@ export interface paths {
          *     The Scraping Service then processes them sequentially.
          */
         get: operations["listSourceEndpointsForScraping"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/internal/v1/thesis-service/research-areas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List known research areas for extraction
+         * @description Returns canonical/known research area names that the GenAI service should prefer during extraction.
+         */
+        get: operations["listKnownResearchAreasForScraping"];
         put?: never;
         post?: never;
         delete?: never;
@@ -321,7 +341,6 @@ export interface components {
             chairIds?: number[];
             degreeTypes?: string[];
             researchAreas?: string[];
-            tags?: string[];
             /** @example OPEN */
             status?: string | null;
         };
@@ -440,7 +459,6 @@ export interface components {
             /** Format: date-time */
             lastSeenAt?: string | null;
             advisors?: components["schemas"]["Advisor"][];
-            tags?: string[];
         };
         ThesisProposalInput: {
             title: string;
@@ -453,7 +471,6 @@ export interface components {
             /** @default OPEN */
             status: string;
             advisors?: components["schemas"]["AdvisorInput"][];
-            tags?: string[];
         };
         Advisor: {
             /** Format: int64 */
@@ -517,6 +534,9 @@ export interface components {
             /** @example Scrape run started. */
             message?: string;
         };
+        KnownResearchAreasResponse: {
+            researchAreas: string[];
+        };
         GenAIExtractionRequest: {
             /** Format: int64 */
             sourceEndpointId: number;
@@ -528,6 +548,8 @@ export interface components {
             rawHtml: string;
             /** @description Optional plain text extracted by the Scraping Service before calling GenAI. */
             extractedPlainText?: string | null;
+            /** @description Existing/canonical research area names the model should reuse whenever possible. */
+            knownResearchAreas?: string[];
         };
         GenAIExtractionResponse: {
             theses: components["schemas"]["ThesisProposalInput"][];
@@ -543,7 +565,6 @@ export interface components {
             chairIds?: number[];
             degreeTypes?: string[];
             researchAreas?: string[];
-            tags?: string[];
             status?: string | null;
         };
         VectorSearchResponse: {
@@ -585,7 +606,6 @@ export interface components {
             researchArea?: string | null;
             /** Format: uri */
             sourceUrl: string;
-            tags?: string[];
         };
         ReplaceSourceEndpointVectorsResponse: {
             /** Format: int64 */
@@ -599,7 +619,6 @@ export interface components {
             chairs?: components["schemas"]["Chair"][];
             degreeTypes?: string[];
             researchAreas?: string[];
-            tags?: string[];
         };
         ErrorResponse: {
             message: string;
@@ -769,6 +788,26 @@ export interface operations {
             };
         };
     };
+    listKnownResearchAreasForScraping: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Known research areas returned successfully. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["KnownResearchAreasResponse"];
+                };
+            };
+        };
+    };
     logScrapeRun: {
         parameters: {
             query?: never;
@@ -822,11 +861,6 @@ export interface operations {
                  *               "email": "max.mustermann@example.com",
                  *               "profileUrl": "https://example-chair.tum.de/team/max"
                  *             }
-                 *           ],
-                 *           "tags": [
-                 *             "Semantic Search",
-                 *             "LLM",
-                 *             "Information Retrieval"
                  *           ]
                  *         }
                  *       ]
@@ -975,12 +1009,7 @@ export interface operations {
                  *           "aiOverview": "Build and evaluate a semantic search pipeline for thesis discovery.",
                  *           "originalDescription": "This thesis investigates semantic search for university thesis proposals...",
                  *           "researchArea": "Artificial Intelligence",
-                 *           "sourceUrl": "https://example-chair.tum.de/theses/semantic-search",
-                 *           "tags": [
-                 *             "Semantic Search",
-                 *             "LLM",
-                 *             "Information Retrieval"
-                 *           ]
+                 *           "sourceUrl": "https://example-chair.tum.de/theses/semantic-search"
                  *         }
                  *       ]
                  *     }
@@ -1015,7 +1044,12 @@ export interface operations {
                  *       "chairId": 3,
                  *       "chairName": "Chair of Software Engineering",
                  *       "sourceUrl": "https://example-chair.tum.de/theses",
-                 *       "rawHtml": "<html>...</html>"
+                 *       "rawHtml": "<html>...</html>",
+                 *       "knownResearchAreas": [
+                 *         "Artificial Intelligence",
+                 *         "Robotics",
+                 *         "Security"
+                 *       ]
                  *     }
                  */
                 "application/json": components["schemas"]["GenAIExtractionRequest"];

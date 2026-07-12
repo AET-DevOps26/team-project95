@@ -1,0 +1,43 @@
+# Canonical research-area taxonomy used for GenAI extraction.
+# Curated from the production research-area list on 2026-07-05.
+# Keep entries broad, reusable, and stable. Do not add thesis titles, project names,
+# product names, chair-specific topics, or long method/application phrases.
+version: 1
+source: production-filters
+sourceDate: 2026-07-05
+researchAreas:
+  - Algorithms
+  - Autonomous Systems
+  - AI Safety
+  - Cloud Computing
+  - Compiler Construction
+  - Computer Architecture
+  - Computer Vision
+  - Control Systems
+  - Cryptography
+  - Cyber-Physical Systems
+  - Data Mining
+  - Database Systems
+  - Distributed Systems
+  - Electronic Design Automation
+  - Embedded Systems
+  - Formal Methods
+  - Graph Theory
+  - Hardware Security
+  - Hardware-Software Co-Design
+  - High Performance Computing
+  - Human-Computer Interaction
+  - Information Systems
+  - IT Security
+  - Mechatronics
+  - Natural Language Processing
+  - Networking
+  - Optimization
+  - Quantum Computing
+  - Remote Sensing
+  - Robotics
+  - Safety-Critical Systems
+  - Sensor Systems
+  - Software Engineering
+  - Systems Engineering
+  - Visual Analytics

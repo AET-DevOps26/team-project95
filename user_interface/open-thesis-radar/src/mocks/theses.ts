@@ -23,7 +23,6 @@
 //       { id: 101, name: 'Dr. Lena Hoffmann', email: 'lena.hoffmann@example.tum.de' },
 //       { id: 102, name: 'Maximilian Weber', email: 'maximilian.weber@example.tum.de' },
 //     ],
-//     tags: ['Security', 'Embedded Systems', 'Automotive', 'Cryptography'],
 //   },
 //   {
 //     id: 1002,
@@ -43,7 +42,6 @@
 //       { id: 201, name: 'Prof. Anna Keller', email: 'anna.keller@example.tum.de' },
 //       { id: 202, name: 'Jonas Richter', email: 'jonas.richter@example.tum.de' },
 //     ],
-//     tags: ['LLM', 'Semantic Search', 'Information Retrieval', 'MLOps'],
 //   },
 //   {
 //     id: 1003,
@@ -63,7 +61,6 @@
 //       { id: 301, name: 'Dr. Sofia Brandt', email: 'sofia.brandt@example.tum.de' },
 //       { id: 302, name: 'Nina Schneider', email: 'nina.schneider@example.tum.de' },
 //     ],
-//     tags: ['Computer Vision', 'Robotics', 'Natural Language Processing', 'Planning'],
 //   },
 // ];
 //
@@ -85,6 +82,4 @@
 //   }])).values()),
 //   degreeTypes: Array.from(new Set(MOCK_THESES.map((thesis) => thesis.degreeType).filter(Boolean))) as string[],
 //   researchAreas: Array.from(new Set(MOCK_THESES.map((thesis) => thesis.researchArea).filter(Boolean))) as string[],
-//   tags: Array.from(new Set(MOCK_THESES.flatMap((thesis) => thesis.tags ?? []))),
 // };
-

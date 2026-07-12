@@ -165,8 +165,7 @@ class VectorSearchControllerTest {
                           "aiOverview": "Build and evaluate semantic search.",
                           "originalDescription": "Investigate semantic retrieval for theses.",
                           "researchArea": "Artificial Intelligence",
-                          "sourceUrl": "https://example-chair.tum.de/theses/semantic-search",
-                          "tags": ["Semantic Search", "LLM"]
+                          "sourceUrl": "https://example-chair.tum.de/theses/semantic-search"
                         }
                       ]
                     }

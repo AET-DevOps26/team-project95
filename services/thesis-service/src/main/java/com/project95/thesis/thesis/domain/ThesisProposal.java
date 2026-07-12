@@ -51,13 +51,6 @@ public class ThesisProposal {
 
   @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
   @JoinTable(
-      name = "thesis_proposal_tags",
-      joinColumns = @JoinColumn(name = "thesis_proposal_id"),
-      inverseJoinColumns = @JoinColumn(name = "tag_id"))
-  private Set<Tag> tags = new HashSet<>();
-
-  @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-  @JoinTable(
       name = "thesis_proposal_research_areas",
       joinColumns = @JoinColumn(name = "thesis_proposal_id"),
       inverseJoinColumns = @JoinColumn(name = "research_area_id"))
@@ -152,14 +145,6 @@ public class ThesisProposal {
 
   public void setAdvisors(Set<Advisor> advisors) {
     this.advisors = advisors;
-  }
-
-  public Set<Tag> getTags() {
-    return tags;
-  }
-
-  public void setTags(Set<Tag> tags) {
-    this.tags = tags;
   }
 
   public Set<ResearchArea> getResearchAreas() {

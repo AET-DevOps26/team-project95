@@ -95,7 +95,6 @@ export default function DetailedThesisPage() {
     };
   }, [resolvedThesisId]);
 
-  const tagsText = thesis?.tags?.length ? thesis.tags.join(', ') : EMPTY_FIELD;
   const sourceUrl = thesis?.sourceUrl;
 
   return (
@@ -209,8 +208,6 @@ export default function DetailedThesisPage() {
                     <div>
                       <h3 className={styles.detailLabel}>Advisors</h3>
                       <p className={styles.detailValue}>{formatAdvisors(thesis.advisors)}</p>
-                      <h3 className={styles.detailLabel}>Tags</h3>
-                      <p className={styles.detailValue}>{tagsText}</p>
                       <h3 className={styles.detailLabel}>Source</h3>
                       <a href={sourceUrl} target="_blank" rel="noreferrer" className={styles.detailLink}>
                         View source

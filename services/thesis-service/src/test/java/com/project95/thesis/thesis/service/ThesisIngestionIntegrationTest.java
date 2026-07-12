@@ -116,14 +116,12 @@ class ThesisIngestionIntegrationTest {
     SourceEndpointThesesReplacementRequestDto request =
         new SourceEndpointThesesReplacementRequestDto();
     ThesisProposalInputDto input = createInputDto("Shared Entity Test");
-    input.setTags(List.of("Tag1", "Tag2"));
-    input.setResearchArea("Area1");
+    input.setResearchArea("Artificial Intelligence");
     request.setTheses(List.of(input));
 
     thesisManagementService.replaceThesesInDatabase(endpoint.getId(), request);
 
     ThesisProposal saved = thesisRepository.findAll().get(0);
-    assertThat(saved.getTags()).hasSize(2);
     assertThat(saved.getResearchAreas()).hasSize(1);
   }
 

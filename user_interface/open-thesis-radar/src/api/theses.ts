@@ -17,9 +17,8 @@ type ThesisProposal = components['schemas']['ThesisProposal'];
 //   const matchesResearchArea =
 //     !filters.researchAreas?.length || Boolean(thesis.researchArea && filters.researchAreas.includes(thesis.researchArea));
 //   const matchesStatus = !filters.status || thesis.status === filters.status;
-//   const matchesTags = !filters.tags?.length || filters.tags.every((tag) => thesis.tags?.includes(tag));
 //
-//   return matchesChair && matchesDegree && matchesResearchArea && matchesStatus && matchesTags;
+//   return matchesChair && matchesDegree && matchesResearchArea && matchesStatus;
 // }
 //
 // function thesisMatchesNaturalLanguage(thesis: ThesisProposal, query?: string | null) {
@@ -36,7 +35,6 @@ type ThesisProposal = components['schemas']['ThesisProposal'];
 //     thesis.researchArea,
 //     thesis.aiOverview,
 //     thesis.originalDescription,
-//     ...(thesis.tags ?? []),
 //     ...(thesis.advisors?.map((advisor) => `${advisor.name ?? ''} ${advisor.email ?? ''}`) ?? []),
 //   ]
 //     .filter(Boolean)

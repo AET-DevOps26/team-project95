@@ -71,13 +71,6 @@ public class ThesisCoordinationService {
                     }
                   }
 
-                  if (!entity.getTags().isEmpty()) {
-                    doc.setTags(
-                        entity.getTags().stream()
-                            .map(t -> t.getName())
-                            .collect(Collectors.toList()));
-                  }
-
                   if (!entity.getResearchAreas().isEmpty()) {
                     String areaName = entity.getResearchAreas().iterator().next().getName();
                     doc.setResearchArea(areaName);

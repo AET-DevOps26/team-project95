@@ -25,7 +25,6 @@ export function registerNaturalLanguageSearchTest() {
         chairIds: [],
         degreeTypes: [],
         researchAreas: [],
-        tags: [],
         status: 'OPEN',
       },
       page: 0,

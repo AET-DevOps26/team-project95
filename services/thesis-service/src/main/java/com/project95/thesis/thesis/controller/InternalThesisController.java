@@ -4,6 +4,7 @@ import com.project95.thesis.management.api.ThesisServiceInternalApiApi;
 import com.project95.thesis.management.dto.*;
 import com.project95.thesis.thesis.domain.SourceEndpoint;
 import com.project95.thesis.thesis.repository.SourceEndpointRepository;
+import com.project95.thesis.thesis.service.ResearchAreaTaxonomyService;
 import com.project95.thesis.thesis.service.ScrapeRunService;
 import com.project95.thesis.thesis.service.ThesisCoordinationService;
 import com.project95.thesis.thesis.utils.HtmlNormalizer;
@@ -23,14 +24,17 @@ public class InternalThesisController implements ThesisServiceInternalApiApi {
   private final ThesisCoordinationService thesisCoordinationService;
   private final ScrapeRunService scrapeRunService;
   private final SourceEndpointRepository sourceEndpointRepository;
+  private final ResearchAreaTaxonomyService researchAreaTaxonomyService;
 
   public InternalThesisController(
       ThesisCoordinationService thesisCoordinationService,
       ScrapeRunService scrapeRunService,
-      SourceEndpointRepository sourceEndpointRepository) {
+      SourceEndpointRepository sourceEndpointRepository,
+      ResearchAreaTaxonomyService researchAreaTaxonomyService) {
     this.thesisCoordinationService = thesisCoordinationService;
     this.scrapeRunService = scrapeRunService;
     this.sourceEndpointRepository = sourceEndpointRepository;
+    this.researchAreaTaxonomyService = researchAreaTaxonomyService;
   }
 
   @Override
@@ -42,6 +46,13 @@ public class InternalThesisController implements ThesisServiceInternalApiApi {
 
     SourceEndpointListResponseDto response = new SourceEndpointListResponseDto();
     response.setEndpoints(dtos);
+    return ResponseEntity.ok(response);
+  }
+
+  @Override
+  public ResponseEntity<KnownResearchAreasResponseDto> listKnownResearchAreasForScraping() {
+    KnownResearchAreasResponseDto response = new KnownResearchAreasResponseDto();
+    response.setResearchAreas(researchAreaTaxonomyService.listKnownResearchAreasForExtraction());
     return ResponseEntity.ok(response);
   }
 
