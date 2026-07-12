@@ -15,14 +15,21 @@ type ThesisSearchResult = components['schemas']['ThesisSearchResult'];
 const THESES_PER_PAGE = 21;
 
 
+function isUnspecifiedDegreeType(degreeType: string | null | undefined) {
+  const normalizedDegreeType = degreeType?.trim().toLowerCase();
+
+  return !normalizedDegreeType || normalizedDegreeType === 'not specified';
+}
+
 function thesisMatchesSelectedFilters(thesis: ThesisSearchResult, selectedFilters: components['schemas']['ThesisSearchFilters']) {
   const matchesChair = !selectedFilters.chairIds?.length || selectedFilters.chairIds.includes(thesis.chairId);
   const matchesDegree =
-    !selectedFilters.degreeTypes?.length || Boolean(thesis.degreeType && selectedFilters.degreeTypes.includes(thesis.degreeType));
+    !selectedFilters.degreeTypes?.length ||
+    isUnspecifiedDegreeType(thesis.degreeType) ||
+    Boolean(thesis.degreeType && selectedFilters.degreeTypes.includes(thesis.degreeType));
   const matchesResearchArea =
     !selectedFilters.researchAreas?.length ||
     Boolean(thesis.researchArea && selectedFilters.researchAreas.includes(thesis.researchArea));
-
   return matchesChair && matchesDegree && matchesResearchArea;
 }
 
@@ -174,11 +181,6 @@ export default function HomePage() {
       <header className={styles.topBar}>
         <div className={styles.topBarInner}>
           <div className={styles.logo}>Open Thesis Radar</div>
-          <nav className={styles.topNav} aria-label="Home page navigation">
-            <button className={styles.navButton} type="button" onClick={scrollToSearch}>
-              Search
-            </button>
-          </nav>
         </div>
       </header>
 
@@ -188,8 +190,8 @@ export default function HomePage() {
             <p className={styles.heroEyebrow}>TUM thesis discovery</p>
             <h1 className={styles.heroTitle}>Search open theses by fit.</h1>
             <p className={styles.heroSubtitle}>
-              Compare thesis offers across chairs, degree types, and research areas without losing your filter context while
-              you inspect a topic.
+              Instead of navigating through a sea of chair websites, discover open thesis opportunities from TUM chairs in one
+              place. Narrow your search by degree type, research area, chair, or semantic search to find a thesis that fits you.
             </p>
             <div className={styles.heroActions}>
               <button className={`${styles.primaryAction} ${styles.clickableButton}`} type="button" onClick={scrollToSearch}>

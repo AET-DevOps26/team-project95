@@ -549,9 +549,15 @@
 
 .filtersGrid {
   margin-top: 20px;
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: 14px;
+}
+
+.filtersGrid > .filterBox {
+  flex: 1 1 220px;
+  max-width: 280px;
 }
 
 .filterBox {
@@ -579,10 +585,39 @@
   box-shadow: 0 10px 22px rgba(42, 70, 126, 0.09);
 }
 
+.filterHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .filterLabel {
   font-size: 14px;
   font-weight: 800;
   color: #3b4f7c;
+}
+
+.filterClearButton {
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-primary);
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), opacity var(--duration-fast) var(--ease-out);
+}
+
+.filterClearButton:hover:not(:disabled) {
+  background: #eef4ff;
+  color: var(--color-primary-strong);
+}
+
+.filterClearButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .filterSearchWrapper {
@@ -951,7 +986,6 @@
 @media (max-width: 1024px) {
   .heroGrid { min-height: auto; }
   .heroRadar { width: clamp(220px, 30vw, 300px); }
-  .filtersGrid,
   .resultsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .searchBarBlock { flex-direction: column; }
   .searchButton { width: 100%; }
@@ -981,7 +1015,8 @@
   .filtersCard { padding: 14px; border-radius: 10px; }
   .filtersTitle { font-size: 22px; }
   .resetLink { font-size: 16px; }
-  .filtersGrid,
+  .filtersGrid { gap: 10px; margin-top: 12px; }
+  .filtersGrid > .filterBox { flex-basis: 100%; max-width: none; }
   .resultsGrid { grid-template-columns: 1fr; gap: 10px; margin-top: 12px; }
   .paginationControls { flex-wrap: wrap; gap: 10px; }
   .paginationMeta { order: -1; width: 100%; justify-content: center; text-align: center; }

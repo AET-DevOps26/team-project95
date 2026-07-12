@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import styles from '../style/DetailedThesisPage.module.css';
+import homeStyles from '../style/HomePage.module.css';
 import arrowLeftIcon from '/assets/icons/arrow-left.svg';
 import graduationCapIcon from '/assets/icons/graduation-cap.svg';
 import notebookIcon from '/assets/icons/notebook.svg';
@@ -9,7 +10,6 @@ import sparklesIcon from '/assets/icons/sparkles.svg';
 import fileIcon from '/assets/icons/file.svg';
 import infoIcon from '/assets/icons/info.svg';
 import externalLinkIcon from '/assets/icons/external-link.svg';
-import TopBar from '../components/ui/TopBar';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import { getThesisById } from '../api/theses';
@@ -99,7 +99,11 @@ export default function DetailedThesisPage() {
 
   return (
     <main className={styles.page}>
-      <TopBar brand="Thesis Radar" />
+      <header className={homeStyles.topBar}>
+        <div className={homeStyles.topBarInner}>
+          <div className={homeStyles.logo}>Open Thesis Radar</div>
+        </div>
+      </header>
 
       <section className={styles.content}>
         <Button variant="ghost" onClick={() => navigate('/')} className={styles.backButton}>
