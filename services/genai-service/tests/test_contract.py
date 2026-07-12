@@ -10,7 +10,6 @@ from app import GenAIExtractionResponse, ThesisProposalInput, app
 REPOSITORY_ROOT = Path(__file__).resolve().parents[3]
 CANONICAL_OPENAPI = REPOSITORY_ROOT / "api" / "openapi-v1.yml"
 GENAI_EXTRACT_PATH = "/internal/v1/genai-service/extract-theses"
-HEALTH_PATH = "/internal/v1/health"
 
 
 def load_canonical_openapi() -> dict:
@@ -46,23 +45,10 @@ def test_fastapi_openapi_matches_canonical_genai_contract():
         "GenAIExtractionResponse",
         "ThesisProposalInput",
         "AdvisorInput",
-        "HealthResponse",
         "ErrorResponse",
     ]:
         assert schema_name in generated["components"]["schemas"]
         assert schema_name in canonical["components"]["schemas"]
-
-
-def test_fastapi_openapi_matches_canonical_health_contract():
-    canonical = load_canonical_openapi()
-    generated = app.openapi()
-
-    canonical_operation = canonical["paths"][HEALTH_PATH]["get"]
-    generated_operation = generated["paths"][HEALTH_PATH]["get"]
-
-    assert json_schema_ref(generated_operation, "200") == json_schema_ref(
-        canonical_operation, "200"
-    )
 
 
 def test_extract_theses_response_matches_documented_shape(monkeypatch):

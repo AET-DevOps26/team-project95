@@ -437,21 +437,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
 
-  /internal/v1/health:
-    get:
-      tags:
-        - Health
-      summary: Health check
-      description: Generic health endpoint implemented by every service.
-      operationId: healthCheck
-      responses:
-        '200':
-          description: Service is healthy.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthResponse'
-
 components:
   parameters:
     SourceEndpointId:
@@ -1098,19 +1083,6 @@ components:
           type: array
           items:
             type: string
-
-    HealthResponse:
-      type: object
-      required:
-        - status
-      properties:
-        status:
-          type: string
-          example: "UP"
-        service:
-          type: string
-          nullable: true
-          example: "main-thesis-service"
 
     ErrorResponse:
       type: object
