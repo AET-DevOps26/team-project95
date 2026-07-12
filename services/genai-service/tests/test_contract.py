@@ -62,7 +62,6 @@ def test_extract_theses_response_matches_documented_shape(monkeypatch):
                     sourceUrl="https://example.com/theses/semantic-search",
                     degreeType="MASTER",
                     status="OPEN",
-                    tags=["Semantic Search"],
                 )
             ],
             extractionNotes="Mocked extraction for contract validation.",
@@ -93,7 +92,6 @@ def test_extract_theses_response_matches_documented_shape(monkeypatch):
                 "sourceUrl": "https://example.com/theses/semantic-search",
                 "status": "OPEN",
                 "advisors": [],
-                "tags": ["Semantic Search"],
             }
         ],
         "extractionNotes": "Mocked extraction for contract validation.",
