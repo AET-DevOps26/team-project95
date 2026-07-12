@@ -31,8 +31,6 @@ export default function HomePage() {
   const [filters, setFilters] = useState<components['schemas']['AvailableFiltersResponse'] | null>(null);
   const [allTheses, setAllTheses] = useState<ThesisSearchResult[]>(cachedThesisList?.theses ?? []);
   const [thesisTotalCount, setThesisTotalCount] = useState(cachedThesisList?.totalCount ?? 0);
-  const [serverSearchResults, setServerSearchResults] = useState<ThesisSearchResult[] | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
   const [isLoadingTheses, setIsLoadingTheses] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [resultsError, setResultsError] = useState<string | null>(null);
@@ -44,6 +42,10 @@ export default function HomePage() {
     selectedFilters,
     setSelectedFilters,
     resetSelectedFilters,
+    currentPage,
+    setCurrentPage,
+    serverSearchResults,
+    setServerSearchResults,
   } = useSearchState();
   const normalizedNaturalLanguageQuery = naturalLanguageQuery.trim();
   const selectedApiFilters = useMemo(
@@ -79,14 +81,10 @@ export default function HomePage() {
   }
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [naturalLanguageQuery, selectedFilters, serverSearchResults]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
+    if (!isLoadingTheses && currentPage > totalPages) {
       setCurrentPage(totalPages);
     }
-  }, [currentPage, totalPages]);
+  }, [currentPage, isLoadingTheses, setCurrentPage, totalPages]);
 
   useEffect(() => {
     async function loadFilters() {
@@ -122,6 +120,7 @@ export default function HomePage() {
   async function handleSearchSubmit() {
     if (!shouldUseServerSearch) {
       setServerSearchResults(null);
+      setCurrentPage(1);
       setResultsError(null);
       return;
     }
@@ -137,6 +136,7 @@ export default function HomePage() {
         size: 50,
       });
       setServerSearchResults(response.items);
+      setCurrentPage(1);
     } catch (error) {
       console.error('Failed to search theses', error);
       setServerSearchResults([]);
@@ -229,7 +229,10 @@ export default function HomePage() {
         >
           <input
             className={styles.searchInput}
-            onChange={(event) => setNaturalLanguageQuery(event.target.value)}
+            onChange={(event) => {
+              setNaturalLanguageQuery(event.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Describe what you are looking for..."
             type="text"
             value={naturalLanguageQuery}
@@ -245,7 +248,11 @@ export default function HomePage() {
             <button
               className={`${styles.resetLink} ${styles.clickableButton}`}
               type="button"
-              onClick={() => {resetSelectedFilters(); setServerSearchResults(null)}}
+              onClick={() => {
+                resetSelectedFilters();
+                setServerSearchResults(null);
+                setCurrentPage(1);
+              }}
             >
               Reset all
             </button>
@@ -255,24 +262,31 @@ export default function HomePage() {
               label="Degree Type"
               values={selectedFilters.degreeTypes}
               options={degreeTypeOptions}
-              onChange={(values) => setSelectedFilters((prev) => ({ ...prev, degreeTypes: values }))}
+              onChange={(values) => {
+                setSelectedFilters((prev) => ({ ...prev, degreeTypes: values }));
+                setCurrentPage(1);
+              }}
             />
             <FilterDropdown
               label="Research Area"
               values={selectedFilters.researchAreas}
               options={researchAreaOptions}
-              onChange={(values) => setSelectedFilters((prev) => ({ ...prev, researchAreas: values }))}
+              onChange={(values) => {
+                setSelectedFilters((prev) => ({ ...prev, researchAreas: values }));
+                setCurrentPage(1);
+              }}
             />
             <FilterDropdown
               label="Chair"
               values={selectedFilters.chairIds.map(String)}
               options={chairOptions}
-              onChange={(values) =>
+              onChange={(values) => {
                 setSelectedFilters((prev) => ({
                   ...prev,
                   chairIds: values.map((value) => Number(value)),
-                }))
-              }
+                }));
+                setCurrentPage(1);
+              }}
             />
           </div>
         </div>
