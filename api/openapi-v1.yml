@@ -2,6 +2,9 @@ openapi: 3.0.3
 info:
   title: Thesis Discovery Platform API
   version: 0.1.0
+  license:
+    name: Unlicensed
+    url: https://choosealicense.com/no-permission/
   description: |
     Simplified API contract for the thesis discovery platform.
 
@@ -16,6 +19,8 @@ info:
     During every successful scrape run for a chair, the Thesis Service replaces all existing thesis proposals
     for that chair in one transaction before instructing the Vector Search Service to refresh the
     corresponding vector index entries.
+
+security: []
 
 servers:
   - url: http://localhost:8080
@@ -378,6 +383,7 @@ paths:
               theses:
                 - thesisId: 1001
                   chairId: 3
+                  sourceEndpointId: 7
                   title: "Semantic Search for Thesis Discovery"
                   degreeType: "MASTER"
                   aiOverview: "Build and evaluate a semantic search pipeline for thesis discovery."
@@ -431,21 +437,6 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
 
 
-  /health:
-    get:
-      tags:
-        - Health
-      summary: Health check
-      description: Actuator-style health endpoint exposed by each service.
-      operationId: healthCheck
-      responses:
-        '200':
-          description: Service is healthy.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HealthResponse'
-
 components:
   parameters:
     SourceEndpointId:
@@ -456,15 +447,6 @@ components:
         type: integer
         format: int64
       description: Internal source endpoint id.
-
-    ChairId:
-      name: chairId
-      in: path
-      required: true
-      schema:
-        type: integer
-        format: int64
-      description: Internal chair id.
 
     ThesisId:
       name: thesisId
@@ -549,16 +531,67 @@ components:
           example: 123
 
     ThesisSearchResult:
-      allOf:
-        - $ref: '#/components/schemas/ThesisProposal'
-        - type: object
-          properties:
-            semanticScore:
-              type: number
-              format: float
-              nullable: true
-              description: Present when result came from semantic/vector search.
-              example: 0.87
+      type: object
+      required:
+        - id
+        - chairId
+        - title
+        - sourceUrl
+        - status
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1001
+        chairId:
+          type: integer
+          format: int64
+          example: 3
+        chairName:
+          type: string
+          nullable: true
+          example: "Chair of Software Engineering"
+        title:
+          type: string
+          example: "Semantic Search for Thesis Discovery"
+        degreeType:
+          type: string
+          nullable: true
+          example: "MASTER"
+        originalDescription:
+          type: string
+          nullable: true
+        aiOverview:
+          type: string
+          nullable: true
+        researchArea:
+          type: string
+          nullable: true
+          example: "Artificial Intelligence"
+        sourceUrl:
+          type: string
+          format: uri
+        status:
+          type: string
+          example: "OPEN"
+        lastSeenAt:
+          type: string
+          format: date-time
+          nullable: true
+        advisors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Advisor'
+        tags:
+          type: array
+          items:
+            type: string
+        semanticScore:
+          type: number
+          format: float
+          nullable: true
+          description: Present when result came from semantic/vector search.
+          example: 0.87
 
     Chair:
       type: object
@@ -1050,19 +1083,6 @@ components:
           type: array
           items:
             type: string
-
-    HealthResponse:
-      type: object
-      required:
-        - status
-      properties:
-        status:
-          type: string
-          example: "UP"
-        service:
-          type: string
-          nullable: true
-          example: "main-thesis-service"
 
     ErrorResponse:
       type: object

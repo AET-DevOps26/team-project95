@@ -1,5 +1,6 @@
 package com.project95.thesis.thesis.controller;
 
+import static com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers.openApi;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
@@ -14,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.project95.thesis.management.dto.ScrapeRunLogRequestDto;
 import com.project95.thesis.management.dto.SourceEndpointThesesReplacementRequestDto;
 import com.project95.thesis.management.dto.ThesisProposalInputDto;
@@ -53,9 +55,13 @@ import org.springframework.web.client.RestClient;
 @Transactional
 class InternalThesisControllerIntegrationTest {
 
+  private static final String OPENAPI_SPEC = "../../api/openapi-v1.yml";
+
   @Autowired private MockMvc mockMvc;
   private final ObjectMapper objectMapper =
-      new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
+      new ObjectMapper()
+          .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
+          .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
   @Autowired private ChairRepository chairRepository;
   @Autowired private SourceEndpointRepository sourceEndpointRepository;
@@ -97,6 +103,7 @@ class InternalThesisControllerIntegrationTest {
     mockMvc
         .perform(get("/internal/v1/thesis-service/source-endpoints"))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.endpoints", hasSize(1)))
         .andExpect(jsonPath("$.endpoints[0].url").value("https://ai.example.com/active/"))
         .andExpect(jsonPath("$.endpoints[0].status").value("ACTIVE"));
@@ -119,6 +126,7 @@ class InternalThesisControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isCreated())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.id").exists())
         .andExpect(jsonPath("$.status").value("SUCCESS"));
 
@@ -163,7 +171,10 @@ class InternalThesisControllerIntegrationTest {
     request.setLastContentHash("success-hash");
 
     // Mock vector-search-service response
-    String vectorSyncResponseJson = "{\"insertedVectorEntries\":1,\"replacedVectorEntries\":1}";
+    String vectorSyncResponseJson =
+        "{\"sourceEndpointId\":"
+            + activeEndpoint.getId()
+            + ",\"deletedVectorEntries\":0,\"insertedVectorEntries\":1,\"replacedVectorEntries\":1}";
     mockServer
         .expect(
             requestTo(
@@ -181,6 +192,7 @@ class InternalThesisControllerIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.sourceEndpointId").value(activeEndpoint.getId()))
         .andExpect(jsonPath("$.insertedRelationalTheses").value(1))
         .andExpect(jsonPath("$.replacedVectorEntries").value(1))

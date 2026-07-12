@@ -28,6 +28,7 @@
     <jackson-databind-nullable.version>0.2.6</jackson-databind-nullable.version>
     <swagger-annotations.version>2.2.22</swagger-annotations.version>
     <openapi-generator-plugin.version>7.5.0</openapi-generator-plugin.version>
+    <openapi-request-validator.version>3.0.0</openapi-request-validator.version>
     <spring-ai.version>2.0.0-M6</spring-ai.version>
     <testcontainers.version>2.0.5</testcontainers.version>
   </properties>
@@ -88,6 +89,12 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>com.atlassian.oai</groupId>
+      <artifactId>openapi-request-validator-mockmvc</artifactId>
+      <version>${openapi-request-validator.version}</version>
       <scope>test</scope>
     </dependency>
 

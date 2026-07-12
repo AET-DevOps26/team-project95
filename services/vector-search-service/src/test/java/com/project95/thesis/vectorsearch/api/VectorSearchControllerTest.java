@@ -1,5 +1,6 @@
 package com.project95.thesis.vectorsearch.api;
 
+import static com.atlassian.oai.validator.mockmvc.OpenApiValidationMatchers.openApi;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
@@ -40,6 +41,7 @@ import org.springframework.transaction.support.DefaultTransactionStatus;
 @AutoConfigureMockMvc
 class VectorSearchControllerTest {
 
+  private static final String OPENAPI_SPEC = "../../api/openapi-v1.yml";
   private static final String SEARCH_PATH = "/internal/v1/vector-search-service/search";
   private static final String INDEX_PATH =
       "/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index";
@@ -100,6 +102,7 @@ class VectorSearchControllerTest {
                     }
                     """))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.results[0].thesisId").value(1001))
         .andExpect(jsonPath("$.results[0].chairId").value(3))
         .andExpect(jsonPath("$.results[0].score").value(0.87));
@@ -122,6 +125,7 @@ class VectorSearchControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"query\":\"non matching topic\",\"limit\":10}"))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.results").isArray())
         .andExpect(jsonPath("$.results").isEmpty());
 
@@ -168,6 +172,7 @@ class VectorSearchControllerTest {
                     }
                     """))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.sourceEndpointId").value(7))
         .andExpect(jsonPath("$.deletedVectorEntries").value(0))
         .andExpect(jsonPath("$.insertedVectorEntries").value(1));
@@ -193,6 +198,7 @@ class VectorSearchControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"scrapeRunId\":42,\"theses\":[]}"))
         .andExpect(status().isOk())
+        .andExpect(openApi().isValid(OPENAPI_SPEC))
         .andExpect(jsonPath("$.sourceEndpointId").value(7))
         .andExpect(jsonPath("$.insertedVectorEntries").value(0));
 

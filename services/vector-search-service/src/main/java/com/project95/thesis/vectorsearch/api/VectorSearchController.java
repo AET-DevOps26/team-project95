@@ -1,6 +1,5 @@
 package com.project95.thesis.vectorsearch.api;
 
-import com.project95.thesis.vectorsearch.dto.HealthResponseDto;
 import com.project95.thesis.vectorsearch.dto.ReplaceSourceEndpointVectorsRequestDto;
 import com.project95.thesis.vectorsearch.dto.ReplaceSourceEndpointVectorsResponseDto;
 import com.project95.thesis.vectorsearch.dto.VectorSearchRequestDto;
@@ -11,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class VectorSearchController implements VectorSearchApiApi, HealthApi {
+public class VectorSearchController implements VectorSearchApiApi {
 
   private final ThesisVectorSearchService thesisVectorSearchService;
   private final ThesisVectorIndexService thesisVectorIndexService;
@@ -36,10 +35,5 @@ public class VectorSearchController implements VectorSearchApiApi, HealthApi {
     return ResponseEntity.ok(
         thesisVectorIndexService.indexSourceEndpointTheses(
             sourceEndpointId, replaceSourceEndpointVectorsRequest));
-  }
-
-  @Override
-  public ResponseEntity<HealthResponseDto> healthCheck() {
-    return ResponseEntity.ok(new HealthResponseDto("UP").service("vector-search-service"));
   }
 }
