@@ -183,6 +183,7 @@ jobs:
       - backend
       - genai
       - docker-compose
+      - docker-compose-smoke-tests
     permissions:
       contents: read
       packages: write
