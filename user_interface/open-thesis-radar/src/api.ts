@@ -650,8 +650,6 @@ export interface components {
     parameters: {
         /** @description Internal source endpoint id. */
         SourceEndpointId: number;
-        /** @description Internal chair id. */
-        ChairId: number;
         /** @description Internal thesis proposal id. */
         ThesisId: number;
     };

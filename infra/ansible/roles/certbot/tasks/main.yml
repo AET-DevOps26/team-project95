@@ -11,28 +11,44 @@
     enabled: true
     state: started
 
-- name: Check whether certificate already exists
+- name: Check whether certificate covers configured domains
   ansible.builtin.shell: |
-    docker compose run --rm --entrypoint sh certbot -c 'test -f /etc/letsencrypt/live/{{ app_domain }}/fullchain.pem'
+    docker compose run --rm --entrypoint sh certbot -c '
+      set -eu
+      test -f /etc/letsencrypt/live/{{ app_domain }}/fullchain.pem || exit 1
+      cert_domains="$(certbot certificates --cert-name {{ app_domain }} 2>/dev/null | awk -F": " "/Domains:/ { print \$2; exit }")"
+      for domain in "{{ app_domains | join('" "') }}"; do
+        echo " $cert_domains " | grep -Fq " $domain " || exit 1
+      done
+    '
   args:
     chdir: "{{ app_dir }}"
-  register: certificate_exists
+  register: certificate_covers_domains
   changed_when: false
   failed_when: false
 
-- name: Request initial Let's Encrypt certificate
+- name: Renew existing Let's Encrypt certificate when due
+  ansible.builtin.command: docker compose run --rm certbot renew --cert-name {{ app_domain }} --quiet
+  args:
+    chdir: "{{ app_dir }}"
+  when: certificate_covers_domains.rc == 0
+
+- name: Request or expand Let's Encrypt certificate
   ansible.builtin.command: >-
     docker compose run --rm certbot certonly
     --webroot
     --webroot-path /var/www/certbot
-    -d {{ app_domain }}
+    --cert-name {{ app_domain }}
+    {% for domain in app_domains %}-d {{ domain }} {% endfor %}
     --email {{ certbot_email }}
     --agree-tos
     --no-eff-email
     --non-interactive
+    --keep-until-expiring
+    --expand
   args:
     chdir: "{{ app_dir }}"
-  when: certificate_exists.rc != 0
+  when: certificate_covers_domains.rc != 0
 
 - name: Install HTTPS Nginx config
   ansible.builtin.template:

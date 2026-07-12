@@ -2,6 +2,9 @@ openapi: 3.0.3
 info:
   title: Thesis Discovery Platform API
   version: 0.1.0
+  license:
+    name: Unlicensed
+    url: https://choosealicense.com/no-permission/
   description: |
     Simplified API contract for the thesis discovery platform.
 
@@ -459,15 +462,6 @@ components:
         type: integer
         format: int64
       description: Internal source endpoint id.
-
-    ChairId:
-      name: chairId
-      in: path
-      required: true
-      schema:
-        type: integer
-        format: int64
-      description: Internal chair id.
 
     ThesisId:
       name: thesisId

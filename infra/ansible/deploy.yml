@@ -5,6 +5,8 @@
   vars:
     app_dir: /open-thesis-radar
     app_domain: "{{ lookup('env', 'APP_DOMAIN') | lower }}"
+    app_additional_domains: "{{ lookup('env', 'APP_ADDITIONAL_DOMAINS') | default('', true) | lower | split(',') | map('trim') | reject('equalto', '') | list }}"
+    app_domains: "{{ ([app_domain] + app_additional_domains) | unique | list }}"
     certbot_email: "{{ lookup('env', 'CERTBOT_EMAIL') }}"
     image_repository: "{{ lookup('env', 'IMAGE_REPOSITORY') }}"
     image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('latest', true) }}"

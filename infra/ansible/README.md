@@ -69,11 +69,12 @@ At minimum, these variables are required:
 
 ```bash
 export APP_DOMAIN="openthesisradar.<vm-public-ip>.nip.io"
+export APP_ADDITIONAL_DOMAINS="open-thesis-radar.vserver.app"
 export IMAGE_REPOSITORY="ghcr.io/aet-devops26/team-project95"
 export IMAGE_TAG="latest"
 ```
 
-Use a lowercase `APP_DOMAIN`. DNS names are case-insensitive, but Linux certificate paths are case-sensitive. Certbot stores Let's Encrypt files under a lowercase domain directory.
+Use lowercase domain values. DNS names are case-insensitive, but Linux certificate paths are case-sensitive. Certbot stores Let's Encrypt files under the primary `APP_DOMAIN` certificate directory. Put extra hostnames for the same deployment in comma-separated `APP_ADDITIONAL_DOMAINS`; Certbot will request/expand one SAN certificate that covers all names.
 
 If Certbot is enabled, also set:
 
@@ -135,7 +136,7 @@ This will:
 5. log in to GHCR if credentials are provided
 6. pull images
 7. start containers with an HTTP-only Nginx config
-8. request the initial Let's Encrypt certificate with Certbot
+8. request or expand the Let's Encrypt certificate with Certbot for `APP_DOMAIN` and any `APP_ADDITIONAL_DOMAINS`
 9. switch Nginx to HTTPS
 10. install the Certbot renewal cron job
 
@@ -161,8 +162,8 @@ Deployment therefore works in two phases:
 
 1. Start frontend Nginx with the HTTP-only config.
 2. Serve ACME challenge files from `/.well-known/acme-challenge/`.
-3. Run Certbot in webroot mode to create the certificate.
-4. Replace the Nginx config with the HTTPS config.
+3. Run Certbot in webroot mode to create or expand the certificate.
+4. Replace the Nginx config with the HTTPS config for all configured domains.
 5. Restart/recreate the frontend container so Nginx uses the certificate.
 
 The Certbot container is not an Nginx server. It only writes and renews certificate files in shared Docker volumes. The frontend container remains the only public Nginx entrypoint.
