@@ -7,13 +7,10 @@ source: production-filters
 sourceDate: 2026-07-05
 researchAreas:
   - Algorithms
-  - Artificial Intelligence
   - Autonomous Systems
+  - AI Safety
   - Cloud Computing
-  - Communication Networks
   - Compiler Construction
-  - Computational Biology
-  - Computational Geometry
   - Computer Architecture
   - Computer Vision
   - Control Systems
@@ -30,17 +27,12 @@ researchAreas:
   - Hardware-Software Co-Design
   - High Performance Computing
   - Human-Computer Interaction
-  - Human-Robot Interaction
   - Information Systems
   - IT Security
-  - Machine Learning
   - Mechatronics
-  - Microfluidics
   - Natural Language Processing
+  - Networking
   - Optimization
-  - Photonics
-  - Privacy-Preserving Computing
-  - Programming Languages
   - Quantum Computing
   - Remote Sensing
   - Robotics
@@ -48,5 +40,4 @@ researchAreas:
   - Sensor Systems
   - Software Engineering
   - Systems Engineering
-  - Trustworthy AI
   - Visual Analytics
