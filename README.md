@@ -74,6 +74,7 @@ For local development, most variables have defaults in `docker-compose.yml`.
 ├── docs/
 │   ├── architecture.md                # High-level architecture
 │   ├── database-schema.md             # PostgreSQL schema and persistence model
+│   ├── api.html                       # Generated human-readable OpenAPI documentation
 ├── services/
 │   ├── pom.xml                        # Maven parent project
 │   ├── thesis-service/                # Main backend and relational data owner
@@ -123,6 +124,14 @@ The canonical API specification is:
 api/openapi-v1.yml
 ```
 
+Human-readable API documentation generated from that contract is available at [`docs/api.html`](docs/api.html). Open this file in a browser to inspect endpoints, schemas, and examples without reading the raw YAML.
+
+Regenerate the static API documentation after OpenAPI changes with:
+
+```bash
+./scripts/generate-api-docs.sh
+```
+
 Important endpoint groups:
 
 | Endpoint Group                              | Purpose                               |
@@ -135,7 +144,7 @@ Important endpoint groups:
 | `/internal/v1/scraping-service/scrape`      | Trigger scraping                      |
 | `/internal/v1/genai-service/extract-theses` | Extract thesis data from raw content  |
 | `/internal/v1/vector-search-service/...`    | Semantic search and vector indexing   |
-| `/internal/v1/health`                       | Health checks                         |
+| `/health`                                   | Health checks                         |
 
 Generated OpenAPI sources must not be edited manually.
 

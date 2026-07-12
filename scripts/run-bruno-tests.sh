@@ -24,9 +24,10 @@ args=(run --env "${BRUNO_ENV}")
 add_env_var_if_set() {
   local shell_name="$1"
   local bruno_name="$2"
+  local value="${!shell_name-}"
 
-  if [[ -v "${shell_name}" && -n "${!shell_name}" ]]; then
-    args+=(--env-var "${bruno_name}=${!shell_name}")
+  if [[ -n "${value}" ]]; then
+    args+=(--env-var "${bruno_name}=${value}")
   fi
 }
 
