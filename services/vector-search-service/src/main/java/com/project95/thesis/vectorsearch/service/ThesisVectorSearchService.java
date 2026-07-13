@@ -6,6 +6,7 @@ import com.project95.thesis.vectorsearch.dto.VectorSearchResponseDto;
 import com.project95.thesis.vectorsearch.dto.VectorSearchResultDto;
 import com.project95.thesis.vectorsearch.util.ThesisVectorMetadata;
 import com.project95.thesis.vectorsearch.util.ThesisVectorUtils;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -29,9 +30,11 @@ public class ThesisVectorSearchService {
   private static final int MAX_LIMIT = 200;
 
   private final VectorStore vectorStore;
+  private final MeterRegistry meterRegistry;
 
-  public ThesisVectorSearchService(VectorStore vectorStore) {
+  public ThesisVectorSearchService(VectorStore vectorStore, MeterRegistry meterRegistry) {
     this.vectorStore = vectorStore;
+    this.meterRegistry = meterRegistry;
   }
 
   public VectorSearchResponseDto semanticSearch(VectorSearchRequestDto request) {
@@ -58,7 +61,19 @@ public class ThesisVectorSearchService {
       searchRequest.filterExpression(filterExpression);
     }
 
-    List<Document> documents = vectorStore.similaritySearch(searchRequest.build());
+    List<Document> documents;
+    long start = System.nanoTime();
+    try {
+      documents = vectorStore.similaritySearch(searchRequest.build());
+    } finally {
+      long duration = System.nanoTime() - start;
+      meterRegistry
+          .timer(
+              "vector_search_duration",
+              "query_length_range",
+              getQueryLengthRange(normalizedQuery.length()))
+          .record(duration, java.util.concurrent.TimeUnit.NANOSECONDS);
+    }
     List<VectorSearchResultDto> results =
         documents == null ? List.of() : documents.stream().map(this::toResult).toList();
     log.info("Completed semantic vector search. resultCount={}", results.size());
@@ -66,6 +81,16 @@ public class ThesisVectorSearchService {
     VectorSearchResponseDto response = new VectorSearchResponseDto();
     response.setResults(results);
     return response;
+  }
+
+  private String getQueryLengthRange(int length) {
+    if (length < 20) {
+      return "short";
+    }
+    if (length < 100) {
+      return "medium";
+    }
+    return "long";
   }
 
   private int resolveLimit(Integer limit) {

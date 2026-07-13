@@ -19,6 +19,10 @@ spec:
     metadata:
       labels:
         app: genai-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
         - name: genai-service-container
@@ -47,13 +51,13 @@ spec:
               value: "30000"
           livenessProbe:
             httpGet:
-              path: /internal/v1/health
+              path: /health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /internal/v1/health
+              path: /health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10

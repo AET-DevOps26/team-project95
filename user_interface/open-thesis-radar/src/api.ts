@@ -381,7 +381,6 @@ export interface components {
             /** Format: date-time */
             lastSeenAt?: string | null;
             advisors?: components["schemas"]["Advisor"][];
-            tags?: string[];
             /**
              * Format: float
              * @description Present when result came from semantic/vector search.

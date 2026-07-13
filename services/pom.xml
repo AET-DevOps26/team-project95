@@ -31,6 +31,7 @@
     <openapi-request-validator.version>3.0.0</openapi-request-validator.version>
     <spring-ai.version>2.0.0-M6</spring-ai.version>
     <testcontainers.version>2.0.5</testcontainers.version>
+    <micrometer-registry-prometheus.version>1.14.13</micrometer-registry-prometheus.version>
   </properties>
 
   <repositories>
@@ -47,6 +48,11 @@
   <!-- Centralized Version Control -->
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-registry-prometheus</artifactId>
+        <version>${micrometer-registry-prometheus.version}</version>
+      </dependency>
       <dependency>
         <groupId>org.testcontainers</groupId>
         <artifactId>testcontainers-bom</artifactId>

@@ -18,7 +18,6 @@ app:
     #Every Monday at 03:30
     scrape-cron: "0 30 3 * * MON"
 
-# Actuator config for DevOps health checks
 management:
   endpoint:
     health:
@@ -26,6 +25,5 @@ management:
         enabled: true
   endpoints:
     web:
-      base-path: /
       exposure:
-        include: health, info
+        include: health, info, prometheus

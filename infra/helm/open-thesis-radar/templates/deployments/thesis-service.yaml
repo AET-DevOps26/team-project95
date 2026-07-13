@@ -17,6 +17,10 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name | quote }}
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/actuator/prometheus"
       labels:
 {{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "thesis-service" "component" "backend") | nindent 8 }}
     spec:
@@ -44,13 +48,13 @@ spec:
               value: {{ .Values.thesisService.vectorSearchUrl | quote }}
           livenessProbe:
             httpGet:
-              path: /health
+              path: /actuator/health/liveness
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /health
+              path: /actuator/health/readiness
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 10
