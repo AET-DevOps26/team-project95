@@ -170,3 +170,17 @@ vector-db:
     enabled: true
     image:
       digest: "sha256:4397aaaa6cf99a37ced6e7bada638fa3a02600326a9e71572d7f4e36f3fba736"
+
+prometheus:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "prom/prometheus"
+    tag: "v3.13.1"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
