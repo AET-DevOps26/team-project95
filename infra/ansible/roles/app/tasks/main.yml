@@ -55,3 +55,9 @@
   ansible.builtin.command: docker compose up -d
   args:
     chdir: "{{ app_dir }}"
+
+- name: Sync thesis source registry
+  ansible.builtin.command: docker compose run --rm thesis-service --sync-source-registry
+  args:
+    chdir: "{{ app_dir }}"
+  when: sync_source_registry
