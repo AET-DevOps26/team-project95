@@ -50,6 +50,11 @@ services:
         condition: service_started
       genai-service:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health/liveness | grep UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   vector-search-service:
     build:
@@ -135,6 +140,23 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: prometheus
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      thesis-service:
+        condition: service_healthy
+      scraping-service:
+        condition: service_healthy
+      vector-search-service:
+        condition: service_healthy
+      genai-service:
+        condition: service_healthy
 
 volumes:
   postgres_data:
