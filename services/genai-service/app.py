@@ -511,7 +511,6 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
     return GenAIExtractionResponse(theses=normalized_theses, extractionNotes=notes)
 
 
-@app.get("/internal/v1/health", response_model=HealthResponse)
 @app.get("/actuator/health", response_model=HealthResponse)
 def health_check() -> HealthResponse:
     return HealthResponse(status="UP", service="genai-service")

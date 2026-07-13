@@ -5,7 +5,7 @@ info:
 
 http:
   method: GET
-  url: "{{vectorSearchServiceUrl}}/internal/v1/health"
+  url: "{{vectorSearchServiceUrl}}/actuator/health"
 
 runtime:
   scripts:
