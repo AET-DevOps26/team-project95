@@ -204,3 +204,22 @@ prometheus:
         metrics_path: '/metrics'
         static_configs:
           - targets: ['genai-service:8000']
+      - job_name: 'user-interface'
+        metrics_path: '/metrics'
+        static_configs:
+          - targets: ['user-interface:9113']
+
+grafana:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "grafana/grafana"
+    tag: "13.1.0"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "128Mi"
+    limits:
+      cpu: "500m"
+      memory: "256Mi"
+
