@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import type { components } from '../api';
 
-export type QueryMode = 'Natural Language' | 'Filters' | 'Both';
+type ThesisSearchResult = components['schemas']['ThesisSearchResult'];
 
 export type FilterState = {
   chairIds: number[];
@@ -16,33 +17,38 @@ export const INITIAL_FILTER_STATE: FilterState = {
 };
 
 type SearchStateContextValue = {
-  queryMode: QueryMode;
-  setQueryMode: (queryMode: QueryMode) => void;
   naturalLanguageQuery: string;
   setNaturalLanguageQuery: (query: string) => void;
   selectedFilters: FilterState;
   setSelectedFilters: React.Dispatch<React.SetStateAction<FilterState>>;
   resetSelectedFilters: () => void;
+  currentPage: number;
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
+  serverSearchResults: ThesisSearchResult[] | null;
+  setServerSearchResults: React.Dispatch<React.SetStateAction<ThesisSearchResult[] | null>>;
 };
 
 const SearchStateContext = createContext<SearchStateContextValue | null>(null);
 
 export function SearchStateProvider({ children }: { children: ReactNode }) {
-  const [queryMode, setQueryMode] = useState<QueryMode>('Both');
   const [naturalLanguageQuery, setNaturalLanguageQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<FilterState>(INITIAL_FILTER_STATE);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [serverSearchResults, setServerSearchResults] = useState<ThesisSearchResult[] | null>(null);
 
   const value = useMemo(
     () => ({
-      queryMode,
-      setQueryMode,
       naturalLanguageQuery,
       setNaturalLanguageQuery,
       selectedFilters,
       setSelectedFilters,
       resetSelectedFilters: () => setSelectedFilters(INITIAL_FILTER_STATE),
+      currentPage,
+      setCurrentPage,
+      serverSearchResults,
+      setServerSearchResults,
     }),
-    [naturalLanguageQuery, queryMode, selectedFilters],
+    [currentPage, naturalLanguageQuery, selectedFilters, serverSearchResults],
   );
 
   return <SearchStateContext.Provider value={value}>{children}</SearchStateContext.Provider>;
