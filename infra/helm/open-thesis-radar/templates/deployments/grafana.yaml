@@ -22,6 +22,26 @@ spec:
           ports:
             - containerPort: 3000
               name: http
+          env:
+            - name: GF_SECURITY_ADMIN_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.grafana.name }}
+                  key: admin-user
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.grafana.name }}
+                  key: admin-password
+            - name: THESIS_DB_USER
+              value: {{ index .Values "thesis-db" "auth" "username" | quote }}
+            - name: THESIS_DB_NAME
+              value: {{ index .Values "thesis-db" "auth" "database" | quote }}
+            - name: THESIS_DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.secrets.thesisDb.name }}
+                  key: {{ index .Values "thesis-db" "auth" "secretKeys" "userPasswordKey" }}
           resources:
             {{- toYaml .Values.grafana.resources | nindent 12 }}
           volumeMounts:
