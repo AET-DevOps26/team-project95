@@ -1,0 +1,47 @@
+groups:
+  - name: OpenThesisRadarAlerts
+    rules:
+      - alert: InstanceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: "Instance {{ $labels.instance }} down"
+          description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute."
+
+      - alert: JvmHeapMemoryCritical
+        expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} * 100 > 90
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "JVM Heap Memory critical"
+          description: "JVM Heap Memory usage for {{ $labels.instance }} is {{ $value | printf \"%.2f\" }}%, which is above 90% for 5 minutes."
+
+      - alert: Http5xxRateHigh
+        expr: (sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) * 100 > 5) or (sum(rate(http_requests_total{status=~"5.."}[5m])) by (job) / sum(rate(http_requests_total[5m])) by (job) * 100 > 5)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "HTTP 5xx Error Rate High"
+          description: "HTTP 5xx error rate for job {{ $labels.job }} is {{ $value | printf \"%.2f\" }}%, which is above 5% for 2 minutes."
+
+      - alert: ServiceHighLatency
+        expr: (sum(rate(http_server_requests_seconds_sum[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) > 3) or (sum(rate(http_request_duration_seconds_sum[5m])) by (job) / sum(rate(http_request_duration_seconds_count[5m])) by (job) > 3)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Service response latency high"
+          description: "Average latency for job {{ $labels.job }} is {{ $value | printf \"%.2f\" }} seconds, which is above 3 seconds for 5 minutes."
+
+      - alert: ScraperFailureSpike
+        expr: increase(scraper_runs_total{status="failed"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scraper run failed"
+          description: "A scraper run has failed in the last 15 minutes."

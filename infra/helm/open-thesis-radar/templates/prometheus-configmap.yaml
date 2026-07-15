@@ -8,4 +8,6 @@ metadata:
 data:
   prometheus.yml: |
 {{ toYaml .Values.prometheus.config | indent 4 }}
+  alert_rules.yml: |
+{{ toYaml .Values.prometheus.rules | indent 4 }}
 {{- end }}
