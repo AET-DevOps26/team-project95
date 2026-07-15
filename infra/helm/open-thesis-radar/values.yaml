@@ -217,9 +217,9 @@ grafana:
     tag: "13.1.0"
   resources:
     requests:
-      cpu: "50m"
-      memory: "128Mi"
+      cpu: "100m"
+      memory: "256Mi"
     limits:
       cpu: "500m"
-      memory: "256Mi"
+      memory: "512Mi"
 
