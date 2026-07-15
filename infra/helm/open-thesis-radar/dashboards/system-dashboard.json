@@ -113,7 +113,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "nginx_up{instance=~\"$nginx_instance\"}",
+              "expr": "nginx_up",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -183,7 +183,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(nginx_connections_accepted{instance=~\"$nginx_instance\"}[5m])",
+              "expr": "irate(nginx_connections_accepted[5m])",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -191,7 +191,7 @@
               "refId": "A"
             },
             {
-              "expr": "irate(nginx_connections_handled{instance=~\"$nginx_instance\"}[5m])",
+              "expr": "irate(nginx_connections_handled[5m])",
               "format": "time_series",
               "instant": false,
               "intervalFactor": 1,
@@ -282,28 +282,28 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "nginx_connections_active{instance=~\"$nginx_instance\"}",
+              "expr": "nginx_connections_active",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{instance}} active",
               "refId": "A"
             },
             {
-              "expr": "nginx_connections_reading{instance=~\"$nginx_instance\"}",
+              "expr": "nginx_connections_reading",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{instance}} reading",
               "refId": "B"
             },
             {
-              "expr": "nginx_connections_waiting{instance=~\"$nginx_instance\"}",
+              "expr": "nginx_connections_waiting",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{instance}} waiting",
               "refId": "C"
             },
             {
-              "expr": "nginx_connections_writing{instance=~\"$nginx_instance\"}",
+              "expr": "nginx_connections_writing",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{instance}} writing",
@@ -390,7 +390,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "irate(nginx_http_requests_total{instance=~\"$nginx_instance\"}[5m])",
+              "expr": "irate(nginx_http_requests_total[5m])",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "{{instance}} total requests",
@@ -506,7 +506,7 @@
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum(http_requests_total{job=\"$app_name\", handler!=\"/metrics\"})",
+              "expr": "sum(http_requests_total{job=\"genai-service\", handler!=\"/metrics\"})",
               "instant": true,
               "interval": "",
               "legendFormat": "",
@@ -589,7 +589,7 @@
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "http_requests_total{job=\"$app_name\", handler!=\"/metrics\"}",
+              "expr": "http_requests_total{job=\"genai-service\", handler!=\"/metrics\"}",
               "instant": true,
               "interval": "",
               "legendFormat": "{{method}} {{handler}}",
@@ -688,7 +688,7 @@
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "http_request_duration_seconds_sum{job=\"$app_name\"} / http_request_duration_seconds_count{job=\"$app_name\"}",
+              "expr": "http_request_duration_seconds_sum{job=\"genai-service\"} / http_request_duration_seconds_count{job=\"genai-service\"}",
               "interval": "",
               "legendFormat": "{{method}} {{handler}}",
               "range": true,
@@ -787,7 +787,7 @@
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum by(handler) (http_requests_total{job=\"$app_name\", status=~\"2.*\", handler!=\"/metrics\"}) / sum by(handler) (http_requests_total{job=\"$app_name\", handler!=\"/metrics\"})",
+              "expr": "sum by(handler) (http_requests_total{job=\"genai-service\", status=~\"2.*\", handler!=\"/metrics\"}) / sum by(handler) (http_requests_total{job=\"genai-service\", handler!=\"/metrics\"})",
               "interval": "",
               "legendFormat": "{{handler}}",
               "range": true,
@@ -886,7 +886,7 @@
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "sum by(handler) (http_requests_total{job=\"$app_name\", status=~\"5.*\", handler!=\"/metrics\"}) / sum by(handler) (http_requests_total{job=\"$app_name\", handler!=\"/metrics\"})",
+              "expr": "sum by(handler) (http_requests_total{job=\"genai-service\", status=~\"5.*\", handler!=\"/metrics\"}) / sum by(handler) (http_requests_total{job=\"genai-service\", handler!=\"/metrics\"})",
               "interval": "",
               "legendFormat": "{{handler}}",
               "range": true,
@@ -984,7 +984,7 @@
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "histogram_quantile(.99,sum(rate(http_request_duration_seconds_bucket{job=\"$app_name\", handler!=\"/metrics\"}[1m])) by(path, le))",
+              "expr": "histogram_quantile(.99,sum(rate(http_request_duration_seconds_bucket{job=\"genai-service\", handler!=\"/metrics\"}[1m])) by(path, le))",
               "interval": "",
               "legendFormat": "{{path}}",
               "range": true,
@@ -1117,7 +1117,7 @@
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "http_request_duration_seconds_sum{job=\"$app_name\"} / http_request_duration_seconds_count{job=\"$app_name\"}",
+              "expr": "http_request_duration_seconds_sum{job=\"genai-service\"} / http_request_duration_seconds_count{job=\"genai-service\"}",
               "hide": false,
               "instant": false,
               "legendFormat": "{{handler}}",
@@ -1241,7 +1241,7 @@
               },
               "editorMode": "code",
               "exemplar": true,
-              "expr": "rate(http_requests_total{job=\"$app_name\"}[1m])",
+              "expr": "rate(http_requests_total{job=\"genai-service\"}[1m])",
               "interval": "",
               "legendFormat": "{{handler}}",
               "range": true,
@@ -1338,7 +1338,7 @@
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "process_resident_memory_bytes{job=\"$app_name\"}",
+              "expr": "process_resident_memory_bytes{job=\"genai-service\"}",
               "instant": false,
               "legendFormat": "{{job}}",
               "range": true,
@@ -1435,7 +1435,7 @@
                 "uid": "prometheus"
               },
               "editorMode": "code",
-              "expr": "irate(process_cpu_seconds_total{job=\"$app_name\"}[5m])*10",
+              "expr": "irate(process_cpu_seconds_total{job=\"genai-service\"}[5m])*10",
               "instant": false,
               "legendFormat": "{{job}}",
               "range": true,
@@ -1519,7 +1519,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "process_uptime_seconds{application=\"$application\", instance=\"$instance\"}",
+              "expr": "process_uptime_seconds{job=\"$service\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",
@@ -1607,7 +1607,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"heap\"})*100/sum(jvm_memory_max_bytes{application=\"$application\",instance=\"$instance\", area=\"heap\"})",
+              "expr": "sum(jvm_memory_used_bytes{job=\"$service\", area=\"heap\"})*100/sum(jvm_memory_max_bytes{job=\"$service\", area=\"heap\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",
@@ -1698,7 +1698,7 @@
           "tableColumn": "",
           "targets": [
             {
-              "expr": "sum(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"nonheap\"})*100/sum(jvm_memory_max_bytes{application=\"$application\",instance=\"$instance\", area=\"nonheap\"})",
+              "expr": "sum(jvm_memory_used_bytes{job=\"$service\", area=\"nonheap\"})*100/sum(jvm_memory_max_bytes{job=\"$service\", area=\"nonheap\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "",
@@ -1762,7 +1762,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", instance=\"$instance\"}[1m]))",
+              "expr": "sum(rate(http_server_requests_seconds_count{job=\"$service\"}[1m]))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "HTTP",
@@ -1847,7 +1847,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(http_server_requests_seconds_count{application=\"$application\", instance=\"$instance\", status=~\"5..\"}[1m]))",
+              "expr": "sum(rate(http_server_requests_seconds_count{job=\"$service\", status=~\"5..\"}[1m]))",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "HTTP - 5xx",
@@ -1929,7 +1929,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(http_server_requests_seconds_sum{application=\"$application\", instance=\"$instance\", status!~\"5..\"}[1m]))/sum(rate(http_server_requests_seconds_count{application=\"$application\", instance=\"$instance\", status!~\"5..\"}[1m]))",
+              "expr": "sum(rate(http_server_requests_seconds_sum{job=\"$service\", status!~\"5..\"}[1m]))/sum(rate(http_server_requests_seconds_count{job=\"$service\", status!~\"5..\"}[1m]))",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
@@ -1937,7 +1937,7 @@
               "refId": "A"
             },
             {
-              "expr": "max(http_server_requests_seconds_max{application=\"$application\", instance=\"$instance\", status!~\"5..\"})",
+              "expr": "max(http_server_requests_seconds_max{job=\"$service\", status!~\"5..\"})",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
@@ -2029,7 +2029,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "system_cpu_usage{application=\"$application\", instance=\"$instance\"}",
+              "expr": "system_cpu_usage{job=\"$service\"}",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
@@ -2039,7 +2039,7 @@
               "step": 2400
             },
             {
-              "expr": "process_cpu_usage{application=\"$application\", instance=\"$instance\"}",
+              "expr": "process_cpu_usage{job=\"$service\"}",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
@@ -2047,7 +2047,7 @@
               "refId": "B"
             },
             {
-              "expr": "avg_over_time(process_cpu_usage{application=\"$application\", instance=\"$instance\"}[15m])",
+              "expr": "avg_over_time(process_cpu_usage{job=\"$service\"}[15m])",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
@@ -2147,7 +2147,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"heap\"})",
+              "expr": "sum(jvm_memory_used_bytes{job=\"$service\", area=\"heap\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "used",
@@ -2156,7 +2156,7 @@
               "step": 2400
             },
             {
-              "expr": "sum(jvm_memory_committed_bytes{application=\"$application\", instance=\"$instance\", area=\"heap\"})",
+              "expr": "sum(jvm_memory_committed_bytes{job=\"$service\", area=\"heap\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "committed",
@@ -2164,7 +2164,7 @@
               "step": 2400
             },
             {
-              "expr": "sum(jvm_memory_max_bytes{application=\"$application\", instance=\"$instance\", area=\"heap\"})",
+              "expr": "sum(jvm_memory_max_bytes{job=\"$service\", area=\"heap\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "max",
@@ -2263,7 +2263,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"nonheap\"})",
+              "expr": "sum(jvm_memory_used_bytes{job=\"$service\", area=\"nonheap\"})",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -2273,7 +2273,7 @@
               "step": 2400
             },
             {
-              "expr": "sum(jvm_memory_committed_bytes{application=\"$application\", instance=\"$instance\", area=\"nonheap\"})",
+              "expr": "sum(jvm_memory_committed_bytes{job=\"$service\", area=\"nonheap\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "committed",
@@ -2281,7 +2281,7 @@
               "step": 2400
             },
             {
-              "expr": "sum(jvm_memory_max_bytes{application=\"$application\", instance=\"$instance\", area=\"nonheap\"})",
+              "expr": "sum(jvm_memory_max_bytes{job=\"$service\", area=\"nonheap\"})",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "max",
@@ -2371,7 +2371,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "sum(rate(jvm_gc_pause_seconds_sum{application=\"$application\", instance=\"$instance\"}[1m])) by (application, instance) / on(application, instance) system_cpu_count",
+              "expr": "sum(rate(jvm_gc_pause_seconds_sum{job=\"$service\"}[1m])) by (application, instance) / on(application, instance) system_cpu_count",
               "format": "time_series",
               "intervalFactor": 1,
               "legendFormat": "CPU time spent on GC",
@@ -2453,7 +2453,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(jvm_gc_pause_seconds_count{application=\"$application\", instance=\"$instance\"}[1m])",
+              "expr": "rate(jvm_gc_pause_seconds_count{job=\"$service\"}[1m])",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 1,
@@ -2535,7 +2535,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "rate(jvm_gc_pause_seconds_sum{application=\"$application\", instance=\"$instance\"}[1m])/rate(jvm_gc_pause_seconds_count{application=\"$application\", instance=\"$instance\"}[1m])",
+              "expr": "rate(jvm_gc_pause_seconds_sum{job=\"$service\"}[1m])/rate(jvm_gc_pause_seconds_count{job=\"$service\"}[1m])",
               "format": "time_series",
               "hide": false,
               "instant": false,
@@ -2544,7 +2544,7 @@
               "refId": "A"
             },
             {
-              "expr": "jvm_gc_pause_seconds_max{application=\"$application\", instance=\"$instance\"}",
+              "expr": "jvm_gc_pause_seconds_max{job=\"$service\"}",
               "format": "time_series",
               "hide": false,
               "instant": false,
@@ -2637,7 +2637,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "jvm_threads_live_threads{application=\"$application\", instance=\"$instance\"}",
+              "expr": "jvm_threads_live_threads{job=\"$service\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "live",
@@ -2646,7 +2646,7 @@
               "step": 2400
             },
             {
-              "expr": "jvm_threads_daemon_threads{application=\"$application\", instance=\"$instance\"}",
+              "expr": "jvm_threads_daemon_threads{job=\"$service\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "daemon",
@@ -2655,7 +2655,7 @@
               "step": 2400
             },
             {
-              "expr": "jvm_threads_peak_threads{application=\"$application\", instance=\"$instance\"}",
+              "expr": "jvm_threads_peak_threads{job=\"$service\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "peak",
@@ -2663,7 +2663,7 @@
               "step": 2400
             },
             {
-              "expr": "process_threads{application=\"$application\", instance=\"$instance\"}",
+              "expr": "process_threads{job=\"$service\"}",
               "format": "time_series",
               "interval": "",
               "intervalFactor": 2,
@@ -2764,7 +2764,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "process_files_open_files{application=\"$application\", instance=\"$instance\"}",
+              "expr": "process_files_open_files{job=\"$service\"}",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -2774,7 +2774,7 @@
               "step": 2400
             },
             {
-              "expr": "process_files_max_files{application=\"$application\", instance=\"$instance\"}",
+              "expr": "process_files_max_files{job=\"$service\"}",
               "format": "time_series",
               "hide": false,
               "intervalFactor": 2,
@@ -2876,7 +2876,7 @@
           "steppedLine": false,
           "targets": [
             {
-              "expr": "jvm_classes_loaded_classes{application=\"$application\", instance=\"$instance\"}",
+              "expr": "jvm_classes_loaded_classes{job=\"$service\"}",
               "format": "time_series",
               "intervalFactor": 2,
               "legendFormat": "loaded",
@@ -2947,129 +2947,21 @@
   "templating": {
     "list": [
       {
-        "allValue": null,
-        "current": {},
-        "datasource": "prometheus",
-        "hide": 0,
-        "includeAll": false,
-        "label": "Application",
-        "multi": false,
-        "name": "application",
-        "options": [],
-        "query": "label_values(application)",
-        "refresh": 2,
-        "regex": "",
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allFormat": "glob",
-        "allValue": null,
-        "current": {},
-        "datasource": "prometheus",
-        "hide": 0,
-        "includeAll": false,
-        "label": "Instance",
-        "multi": false,
-        "multiFormat": "glob",
-        "name": "instance",
-        "options": [],
-        "query": "label_values(jvm_memory_used_bytes{application=\"$application\"}, instance)",
-        "refresh": 2,
-        "regex": "",
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allFormat": "glob",
-        "allValue": null,
-        "current": {},
-        "datasource": "prometheus",
-        "hide": 2,
-        "includeAll": true,
-        "label": "JVM Memory Pools Heap",
-        "multi": false,
-        "multiFormat": "glob",
-        "name": "jvm_memory_pool_heap",
-        "options": [],
-        "query": "label_values(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"heap\"},id)",
-        "refresh": 1,
-        "regex": "",
-        "sort": 1,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allFormat": "glob",
-        "allValue": null,
-        "current": {},
-        "datasource": "prometheus",
-        "hide": 2,
-        "includeAll": true,
-        "label": "JVM Memory Pools Non-Heap",
-        "multi": false,
-        "multiFormat": "glob",
-        "name": "jvm_memory_pool_nonheap",
-        "options": [],
-        "query": "label_values(jvm_memory_used_bytes{application=\"$application\", instance=\"$instance\", area=\"nonheap\"},id)",
-        "refresh": 1,
-        "regex": "",
-        "sort": 2,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allFormat": "glob",
-        "allValue": null,
-        "current": {},
-        "datasource": "prometheus",
-        "hide": 2,
-        "includeAll": true,
-        "label": "JVM Buffer Pools",
-        "multi": false,
-        "multiFormat": "glob",
-        "name": "jvm_buffer_pool",
-        "options": [],
-        "query": "label_values(jvm_buffer_memory_used_bytes{application=\"$application\", instance=\"$instance\"},id)",
-        "refresh": 1,
-        "regex": "",
-        "sort": 1,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
         "current": {},
         "datasource": {
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(http_requests_total,job)",
+        "definition": "label_values(jvm_memory_used_bytes, job)",
         "hide": 0,
         "includeAll": false,
-        "label": "Application Name",
+        "label": "Spring Boot Service",
         "multi": false,
-        "name": "app_name",
+        "name": "service",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(http_requests_total,job)",
+          "query": "label_values(jvm_memory_used_bytes, job)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
@@ -3077,43 +2969,6 @@
         "skipUrlSync": false,
         "sort": 0,
         "type": "query"
-      },
-      {
-        "current": {},
-        "hide": 0,
-        "includeAll": false,
-        "label": "Datasource",
-        "multi": false,
-        "name": "DS_PROMETHEUS",
-        "options": [],
-        "query": "prometheus",
-        "queryValue": "",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "type": "datasource"
-      },
-      {
-        "allValue": null,
-        "current": {},
-        "datasource": "prometheus",
-        "definition": "label_values(nginx_up, instance)",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Nginx Instance",
-        "multi": true,
-        "name": "nginx_instance",
-        "options": [],
-        "query": "label_values(nginx_up, instance)",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
       }
     ]
   },
