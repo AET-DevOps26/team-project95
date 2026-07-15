@@ -12,6 +12,8 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.callbacks import BaseCallbackHandler
+from langchain_core.outputs import LLMResult
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI
 from prometheus_client import Counter, Histogram
@@ -23,6 +25,41 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
 logger = logging.getLogger("genai-service")
+
+
+class TokenTrackerCallback(BaseCallbackHandler):
+    def __init__(self):
+        super().__init__()
+        self.prompt_tokens = 0
+        self.completion_tokens = 0
+
+    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        try:
+            if response.llm_output and "token_usage" in response.llm_output:
+                usage = response.llm_output["token_usage"]
+                if isinstance(usage, dict):
+                    self.prompt_tokens += usage.get("prompt_tokens", 0)
+                    self.completion_tokens += usage.get("completion_tokens", 0)
+                elif hasattr(usage, "prompt_tokens"):
+                    self.prompt_tokens += getattr(usage, "prompt_tokens", 0)
+                    self.completion_tokens += getattr(usage, "completion_tokens", 0)
+
+            for generations in response.generations:
+                for gen in generations:
+                    info = getattr(gen, "generation_info", None)
+                    if not info:
+                        continue
+                    metadata = info.get("response_metadata", {})
+                    token_usage = metadata.get("token_usage", {})
+                    if token_usage:
+                        self.prompt_tokens += token_usage.get("prompt_tokens", 0)
+                        self.completion_tokens += token_usage.get("completion_tokens", 0)
+                        continue
+                    if "prompt_eval_count" in info or "eval_count" in info:
+                        self.prompt_tokens += info.get("prompt_eval_count", 0)
+                        self.completion_tokens += info.get("eval_count", 0)
+        except Exception as e:
+            logger.warning("Failed to extract token usage in callback: %s", e)
 
 MAX_INPUT_CHARS = 40000
 DEFAULT_MAX_COMPLETION_TOKENS = 30000
@@ -176,6 +213,11 @@ LLM_CALLS_TOTAL = Counter(
 )
 THESES_EXTRACTED_TOTAL = Counter(
     "genai_theses_extracted_total", "Total number of theses extracted", ["chair_id", "status"]
+)
+LLM_TOKENS_TOTAL = Counter(
+    "llm_tokens_consumed_total",
+    "Total number of LLM tokens consumed",
+    ["model", "type"],
 )
 
 # Instrument the app and expose standard HTTP metrics under /metrics
@@ -499,6 +541,7 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
         model_name = get_env("AZURE_OPENAI_CHAT_DEPLOYMENT") or DEFAULT_AZURE_OPENAI_DEPLOYMENT
 
     start_time = time.perf_counter()
+    tracker = TokenTrackerCallback()
     try:
         result = structured_llm.invoke(
             [
@@ -509,11 +552,17 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
                     )
                 ),
                 HumanMessage(content=build_prompt(request, cleaned_text)),
-            ]
+            ],
+            config={"callbacks": [tracker]}
         )
         duration = time.perf_counter() - start_time
         LLM_CALL_DURATION.labels(provider=provider, model_name=model_name).observe(duration)
         LLM_CALLS_TOTAL.labels(provider=provider, model_name=model_name, status="success").inc()
+
+        if tracker.prompt_tokens > 0:
+            LLM_TOKENS_TOTAL.labels(model=model_name, type="prompt").inc(tracker.prompt_tokens)
+        if tracker.completion_tokens > 0:
+            LLM_TOKENS_TOTAL.labels(model=model_name, type="completion").inc(tracker.completion_tokens)
     except GenAIServiceError as exc:
         status = "config_error" if isinstance(exc, ConfigError) else "extraction_error"
         LLM_CALLS_TOTAL.labels(provider=provider, model_name=model_name, status=status).inc()

@@ -255,13 +255,31 @@ prometheus:
               description: "Average latency for job {{ $labels.job }} is {{ $value | printf \"%.2f\" }} seconds, which is above 3 seconds for 5 minutes."
 
           - alert: ScraperFailureSpike
-            expr: increase(scraper_runs_total{status="failed"}[15m]) > 0
+            expr: increase(scraping_endpoints_processed_total{status="FAILED"}[15m]) > 0
             for: 5m
             labels:
               severity: warning
             annotations:
               summary: "Scraper run failed"
               description: "A scraper run has failed in the last 15 minutes."
+
+          - alert: VectorIndexSyncFailed
+            expr: increase(http_server_requests_seconds_count{uri="/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index", status=~"5.."}[5m]) > 0
+            for: 1m
+            labels:
+              severity: critical
+            annotations:
+              summary: "Vector search index sync failing"
+              description: "Relational data was updated but sync to PgVector failed in the last 5 minutes."
+
+          - alert: GenAiUpstreamErrors
+            expr: (sum(rate(genai_llm_calls_total{status=~"upstream_error|config_error"}[5m])) / sum(rate(genai_llm_calls_total[5m]))) * 100 > 10
+            for: 2m
+            labels:
+              severity: critical
+            annotations:
+              summary: "GenAI Service Upstream Failure Rate High"
+              description: "LLM extraction queries are failing at a rate of {{ $value | printf \"%.2f\" }}%."
 
 grafana:
   enabled: true

@@ -410,7 +410,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sum(rate(semantic_search_requests_total[5m]))",
+          "expr": "sum(rate(vector_search_duration_seconds_count[5m]))",
           "legendFormat": "Queries",
           "range": true,
           "refId": "A"
