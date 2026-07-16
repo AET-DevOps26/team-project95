@@ -118,6 +118,54 @@ services:
       - letsencrypt:/etc/letsencrypt
       - certbot-webroot:/var/www/certbot
 
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.5.1
+    container_name: open-thesis-radar-nginx-exporter
+    network_mode: "service:frontend"
+    command:
+      - --nginx.scrape-uri=http://127.0.0.1:80/nginx_status
+    depends_on:
+      - frontend
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.13.1
+    container_name: open-thesis-radar-prometheus
+    volumes:
+      - ./infra/prometheus:/etc/prometheus
+    ports:
+      - "9090:9090"
+    depends_on:
+      thesis-service:
+        condition: service_started
+      scraping-service:
+        condition: service_started
+      vector-search-service:
+        condition: service_started
+      genai-service:
+        condition: service_started
+      nginx-exporter:
+        condition: service_started
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:13.1.0
+    container_name: open-thesis-radar-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
+      - THESIS_DB_USER=${THESIS_DB_USER:-thesis_user}
+      - THESIS_DB_NAME=${THESIS_DB_NAME:-thesis_db}
+      - THESIS_DB_PASSWORD=${THESIS_DB_PASSWORD:?THESIS_DB_PASSWORD is required}
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
 volumes:
   thesis-postgres-data:
   vector-postgres-data:

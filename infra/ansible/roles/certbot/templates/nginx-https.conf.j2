@@ -7,6 +7,13 @@ server {
         default_type "text/plain";
     }
 
+    location = /nginx_status {
+        stub_status on;
+        access_log off;
+        allow 127.0.0.1;
+        deny all;
+    }
+
     location / {
         return 301 https://$host$request_uri;
     }
@@ -34,5 +41,12 @@ server {
 
     location / {
         try_files $uri $uri/ /index.html;
+    }
+
+    location = /nginx_status {
+        stub_status on;
+        access_log off;
+        allow 127.0.0.1;
+        deny all;
     }
 }

@@ -46,6 +46,22 @@
     - ghcr_user | length > 0
     - ghcr_token | length > 0
 
+- name: Copy Prometheus config directory
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../infra/prometheus"
+    dest: "{{ app_dir }}/infra"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
+- name: Copy Grafana config directory
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../../infra/grafana"
+    dest: "{{ app_dir }}/infra"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+
 - name: Pull application images
   ansible.builtin.command: docker compose pull
   args:
