@@ -66,6 +66,7 @@ jobs:
         uses: docker/metadata-action@v5
         with:
           images: ${{ steps.repo.outputs.repository }}/${{ matrix.image }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           tags: |
             type=raw,value=latest,enable=${{ inputs.push }}
             type=sha,format=long,prefix=
