@@ -11,8 +11,8 @@ from bs4 import BeautifulSoup
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
-from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.callbacks import BaseCallbackHandler
+from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.outputs import LLMResult
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI
@@ -60,6 +60,7 @@ class TokenTrackerCallback(BaseCallbackHandler):
                         self.completion_tokens += info.get("eval_count", 0)
         except Exception as e:
             logger.warning("Failed to extract token usage in callback: %s", e)
+
 
 MAX_INPUT_CHARS = 40000
 DEFAULT_MAX_COMPLETION_TOKENS = 30000
@@ -553,7 +554,7 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
                 ),
                 HumanMessage(content=build_prompt(request, cleaned_text)),
             ],
-            config={"callbacks": [tracker]}
+            config={"callbacks": [tracker]},
         )
         duration = time.perf_counter() - start_time
         LLM_CALL_DURATION.labels(provider=provider, model_name=model_name).observe(duration)
@@ -562,7 +563,9 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
         if tracker.prompt_tokens > 0:
             LLM_TOKENS_TOTAL.labels(model=model_name, type="prompt").inc(tracker.prompt_tokens)
         if tracker.completion_tokens > 0:
-            LLM_TOKENS_TOTAL.labels(model=model_name, type="completion").inc(tracker.completion_tokens)
+            LLM_TOKENS_TOTAL.labels(model=model_name, type="completion").inc(
+                tracker.completion_tokens
+            )
     except GenAIServiceError as exc:
         status = "config_error" if isinstance(exc, ConfigError) else "extraction_error"
         LLM_CALLS_TOTAL.labels(provider=provider, model_name=model_name, status=status).inc()
