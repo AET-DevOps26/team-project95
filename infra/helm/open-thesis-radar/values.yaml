@@ -195,8 +195,6 @@ prometheus:
   config:
     global:
       scrape_interval: 15s
-    rule_files:
-      - "/etc/prometheus/alert_rules.yml"
     scrape_configs:
       - job_name: 'thesis-service'
         metrics_path: '/actuator/prometheus'
@@ -218,72 +216,6 @@ prometheus:
         metrics_path: '/metrics'
         static_configs:
           - targets: ['user-interface:9113']
-  rules:
-    groups:
-      - name: OpenThesisRadarAlerts
-        rules:
-          - alert: InstanceDown
-            expr: up == 0
-            for: 1m
-            labels:
-              severity: page
-            annotations:
-              summary: "Instance {{ $labels.instance }} down"
-              description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute."
-
-          - alert: JvmHeapMemoryCritical
-            expr: jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} * 100 > 90
-            for: 5m
-            labels:
-              severity: critical
-            annotations:
-              summary: "JVM Heap Memory critical"
-              description: "JVM Heap Memory usage for {{ $labels.instance }} is {{ $value | printf \"%.2f\" }}%, which is above 90% for 5 minutes."
-
-          - alert: Http5xxRateHigh
-            expr: (sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) * 100 > 5) or (sum(rate(http_requests_total{status=~"5.."}[5m])) by (job) / sum(rate(http_requests_total[5m])) by (job) * 100 > 5)
-            for: 2m
-            labels:
-              severity: critical
-            annotations:
-              summary: "HTTP 5xx Error Rate High"
-              description: "HTTP 5xx error rate for job {{ $labels.job }} is {{ $value | printf \"%.2f\" }}%, which is above 5% for 2 minutes."
-
-          - alert: ServiceHighLatency
-            expr: (sum(rate(http_server_requests_seconds_sum[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) > 3) or (sum(rate(http_request_duration_seconds_sum[5m])) by (job) / sum(rate(http_request_duration_seconds_count[5m])) by (job) > 3)
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Service response latency high"
-              description: "Average latency for job {{ $labels.job }} is {{ $value | printf \"%.2f\" }} seconds, which is above 3 seconds for 5 minutes."
-
-          - alert: ScraperFailureSpike
-            expr: increase(scraping_endpoints_processed_total{status="FAILED"}[15m]) > 0
-            for: 5m
-            labels:
-              severity: warning
-            annotations:
-              summary: "Scraper run failed"
-              description: "A scraper run has failed in the last 15 minutes."
-
-          - alert: VectorIndexSyncFailed
-            expr: increase(http_server_requests_seconds_count{uri="/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index", status=~"5.."}[5m]) > 0
-            for: 1m
-            labels:
-              severity: critical
-            annotations:
-              summary: "Vector search index sync failing"
-              description: "Relational data was updated but sync to PgVector failed in the last 5 minutes."
-
-          - alert: GenAiUpstreamErrors
-            expr: (sum(rate(genai_llm_calls_total{status=~"upstream_error|config_error"}[5m])) / sum(rate(genai_llm_calls_total[5m]))) * 100 > 10
-            for: 2m
-            labels:
-              severity: critical
-            annotations:
-              summary: "GenAI Service Upstream Failure Rate High"
-              description: "LLM extraction queries are failing at a rate of {{ $value | printf \"%.2f\" }}%."
 
 grafana:
   enabled: true
