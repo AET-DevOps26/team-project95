@@ -13,12 +13,12 @@ datasources:
     type: postgres
     access: proxy
     url: thesis-db:5432
-    user: ${THESIS_DB_USER:-thesis_user}
+    user: ${THESIS_DB_USER}
     secureJsonData:
       password: ${THESIS_DB_PASSWORD}
     jsonData:
       sslmode: disable
-      database: ${THESIS_DB_NAME:-thesis_db}
+      database: ${THESIS_DB_NAME}
       postgresVersion: 1600
       timescaledb: false
     uid: thesis-db-postgres
