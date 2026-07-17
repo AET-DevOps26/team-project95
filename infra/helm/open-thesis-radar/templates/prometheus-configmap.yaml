@@ -1,0 +1,11 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  labels:
+    {{- include "open-thesis-radar.labels" . | nindent 4 }}
+data:
+  prometheus.yml: |
+{{ toYaml .Values.prometheus.config | indent 4 }}
+{{- end }}

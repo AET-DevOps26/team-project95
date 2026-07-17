@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: thesis-service
   datasource:
     url: jdbc:postgresql://${THESIS_DB_HOST:${DB_HOST:localhost}}:${THESIS_DB_PORT:${DB_PORT:5432}}/${THESIS_DB_NAME:${DB_NAME:thesis_db}}
     username: ${THESIS_DB_USER:${DB_USER:thesis_user}}
@@ -34,3 +36,6 @@ management:
     web:
       exposure:
         include: health, info, prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
