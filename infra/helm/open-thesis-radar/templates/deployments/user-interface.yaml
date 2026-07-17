@@ -58,9 +58,4 @@ spec:
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
           resources:
-            requests:
-              cpu: 10m
-              memory: 16Mi
-            limits:
-              cpu: 100m
-              memory: 32Mi
+            {{- toYaml .Values.userInterface.exporter.resources | nindent 12 }}
