@@ -135,7 +135,7 @@ services:
       - ./infra/prometheus:/etc/prometheus
       - prometheus-data:/prometheus
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     depends_on:
       thesis-service:
         condition: service_started
@@ -153,7 +153,7 @@ services:
     image: grafana/grafana:13.1.0
     container_name: open-thesis-radar-grafana
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
