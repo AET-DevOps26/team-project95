@@ -52,7 +52,7 @@ groups:
         for: "5m"
         annotations:
           summary: "JVM Heap Memory critical"
-          description: 'JVM Heap Memory usage for {{ $labels.instance }} is {{ $value | printf "%.2f" }}%, which is above 90% for 5 minutes.'
+          description: 'JVM Heap Memory usage for {{ $labels.instance }} is {{ printf "%.2f" $values.A.Value }}%, which is above 90% for 5 minutes.'
         labels:
           severity: "critical"
 
@@ -77,7 +77,7 @@ groups:
         for: "2m"
         annotations:
           summary: "HTTP 5xx Error Rate High"
-          description: 'HTTP 5xx error rate for job {{ $labels.job }} is {{ $value | printf "%.2f" }}%, which is above 5% for 2 minutes.'
+          description: 'HTTP 5xx error rate for job {{ $labels.job }} is {{ printf "%.2f" $values.A.Value }}%, which is above 5% for 2 minutes.'
         labels:
           severity: "critical"
 
@@ -102,7 +102,7 @@ groups:
         for: "5m"
         annotations:
           summary: "Service response latency high"
-          description: 'Average latency for job {{ $labels.job }} is {{ $value | printf "%.2f" }} seconds, which is above 3 seconds for 5 minutes.'
+          description: 'Average latency for job {{ $labels.job }} is {{ printf "%.2f" $values.A.Value }} seconds, which is above 3 seconds for 5 minutes.'
         labels:
           severity: "warning"
 
@@ -177,6 +177,6 @@ groups:
         for: "2m"
         annotations:
           summary: "GenAI Service Upstream Failure Rate High"
-          description: 'LLM extraction queries are failing at a rate of {{ $value | printf "%.2f" }}%.'
+          description: 'LLM extraction queries are failing at a rate of {{ printf "%.2f" $values.A.Value }}%.'
         labels:
           severity: "critical"
