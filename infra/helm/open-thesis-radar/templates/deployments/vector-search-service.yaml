@@ -38,7 +38,7 @@ spec:
             - name: PGVECTOR_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.vectorDb.name }}
+                  name: {{ index .Values "vector-db" "auth" "existingSecret" | default .Values.secrets.vectorDb.name }}
                   key: {{ index .Values "vector-db" "auth" "secretKeys" "userPasswordKey" }}
             - name: PGVECTOR_DIMENSIONS
               value: {{ .Values.vectorSearchService.pgvector.dimensions | quote }}

@@ -28,7 +28,7 @@ data:
                   intervalMs: 15000
                   maxDataPoints: 43200
                   refId: "A"
-            noDataState: "NoData"
+            noDataState: "OK"
             execErrState: "Alerting"
             for: "1m"
             annotations:
@@ -51,7 +51,7 @@ data:
                   intervalMs: 15000
                   maxDataPoints: 43200
                   refId: "A"
-            noDataState: "NoData"
+            noDataState: "OK"
             execErrState: "Alerting"
             for: "5m"
             annotations:
@@ -74,7 +74,7 @@ data:
                   intervalMs: 15000
                   maxDataPoints: 43200
                   refId: "A"
-            noDataState: "NoData"
+            noDataState: "OK"
             execErrState: "Alerting"
             for: "2m"
             annotations:
@@ -97,7 +97,7 @@ data:
                   intervalMs: 15000
                   maxDataPoints: 43200
                   refId: "A"
-            noDataState: "NoData"
+            noDataState: "OK"
             execErrState: "Alerting"
             for: "5m"
             annotations:
@@ -120,7 +120,7 @@ data:
                   intervalMs: 15000
                   maxDataPoints: 43200
                   refId: "A"
-            noDataState: "NoData"
+            noDataState: "OK"
             execErrState: "Alerting"
             for: "5m"
             annotations:
@@ -143,7 +143,7 @@ data:
                   intervalMs: 15000
                   maxDataPoints: 43200
                   refId: "A"
-            noDataState: "NoData"
+            noDataState: "OK"
             execErrState: "Alerting"
             for: "1m"
             annotations:
@@ -166,7 +166,7 @@ data:
                   intervalMs: 15000
                   maxDataPoints: 43200
                   refId: "A"
-            noDataState: "NoData"
+            noDataState: "OK"
             execErrState: "Alerting"
             for: "2m"
             annotations:
