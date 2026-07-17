@@ -17,6 +17,8 @@ groups:
             datasourceUid: "prometheus"
             model:
               expr: "up == 0"
+              instant: true
+              queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
@@ -40,6 +42,8 @@ groups:
             datasourceUid: "prometheus"
             model:
               expr: 'jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} * 100 > 90'
+              instant: true
+              queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
@@ -63,6 +67,8 @@ groups:
             datasourceUid: "prometheus"
             model:
               expr: '(sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) * 100 > 5) or (sum(rate(http_requests_total{status=~"5.."}[5m])) by (job) / sum(rate(http_requests_total[5m])) by (job) * 100 > 5)'
+              instant: true
+              queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
@@ -86,6 +92,8 @@ groups:
             datasourceUid: "prometheus"
             model:
               expr: '(sum(rate(http_server_requests_seconds_sum[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) > 3) or (sum(rate(http_request_duration_seconds_sum[5m])) by (job) / sum(rate(http_request_duration_seconds_count[5m])) by (job) > 3)'
+              instant: true
+              queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
@@ -109,6 +117,8 @@ groups:
             datasourceUid: "prometheus"
             model:
               expr: 'increase(scraping_endpoints_processed_total{status="FAILED"}[15m]) > 0'
+              instant: true
+              queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
@@ -132,6 +142,8 @@ groups:
             datasourceUid: "prometheus"
             model:
               expr: 'increase(http_server_requests_seconds_count{uri="/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index", status=~"5.."}[5m]) > 0'
+              instant: true
+              queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
@@ -155,6 +167,8 @@ groups:
             datasourceUid: "prometheus"
             model:
               expr: '(sum(rate(genai_llm_calls_total{status=~"upstream_error|config_error"}[5m])) / sum(rate(genai_llm_calls_total[5m]))) * 100 > 10'
+              instant: true
+              queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"

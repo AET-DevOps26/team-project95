@@ -22,12 +22,30 @@
   "liveNow": false,
   "panels": [
     {
+      "type": "alertlist",
+      "title": "Active Alerts Overview",
+      "id": 999,
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "options": {
+        "showLimit": 20,
+        "sortOrder": 1,
+        "viewMode": "list",
+        "groupMode": "default",
+        "showInstances": true
+      }
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 6
       },
       "id": 1,
       "title": "Business KPIs - Dataset & Scraper Overview",
@@ -60,7 +78,7 @@
         "h": 4,
         "w": 8,
         "x": 0,
-        "y": 1
+        "y": 7
       },
       "id": 2,
       "options": {
@@ -121,7 +139,7 @@
         "h": 4,
         "w": 8,
         "x": 8,
-        "y": 1
+        "y": 7
       },
       "id": 3,
       "options": {
@@ -182,7 +200,7 @@
         "h": 4,
         "w": 8,
         "x": 16,
-        "y": 1
+        "y": 7
       },
       "id": 4,
       "options": {
@@ -225,7 +243,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 11
       },
       "id": 5,
       "options": {
@@ -240,7 +258,7 @@
           "editorMode": "code",
           "format": "table",
           "rawQuery": true,
-          "rawSql": "SELECT id, status, started_at, completed_at FROM scrape_runs ORDER BY started_at DESC LIMIT 10;",
+          "rawSql": "SELECT id, status, started_at, finished_at FROM scrape_runs ORDER BY started_at DESC LIMIT 10;",
           "refId": "A"
         }
       ],
@@ -253,7 +271,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 17
       },
       "id": 6,
       "title": "GenAI & Semantic Search Metrics",
@@ -308,7 +326,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 12
+        "y": 18
       },
       "id": 7,
       "options": {
@@ -388,7 +406,7 @@
         "h": 6,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 18
       },
       "id": 8,
       "options": {
