@@ -133,6 +133,7 @@ services:
     container_name: open-thesis-radar-prometheus
     volumes:
       - ./infra/prometheus:/etc/prometheus
+      - prometheus-data:/prometheus
     ports:
       - "9090:9090"
     depends_on:
@@ -171,3 +172,4 @@ volumes:
   vector-postgres-data:
   letsencrypt:
   certbot-webroot:
+  prometheus-data:

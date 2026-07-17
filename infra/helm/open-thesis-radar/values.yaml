@@ -188,6 +188,10 @@ prometheus:
     limits:
       cpu: "500m"
       memory: "512Mi"
+  persistence:
+    enabled: true
+    size: "10Gi"
+    storageClass: ""
   config:
     global:
       scrape_interval: 15s

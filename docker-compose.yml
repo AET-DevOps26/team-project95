@@ -158,6 +158,7 @@ services:
     volumes:
       - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - ./infra/prometheus/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
     ports:
       - "9090:9090"
     depends_on:
@@ -193,3 +194,4 @@ services:
 volumes:
   postgres_data:
   vector_postgres_data:
+  prometheus_data:
