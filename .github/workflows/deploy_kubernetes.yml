@@ -108,3 +108,5 @@ jobs:
           kubectl rollout status deployment/genai-service-deployment --namespace open-thesis-radar --timeout=300s
           kubectl rollout status deployment/scraping-service-deployment --namespace open-thesis-radar --timeout=300s
           kubectl rollout status deployment/user-interface-deployment --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/grafana-deployment --namespace open-thesis-radar --timeout=300s
+          kubectl rollout status deployment/prometheus-deployment --namespace open-thesis-radar --timeout=300s

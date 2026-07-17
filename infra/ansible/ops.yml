@@ -15,6 +15,9 @@
       - thesis-db
       - vector-db
       - certbot
+      - prometheus
+      - grafana
+      - nginx-exporter
     allowed_actions:
       - start
       - stop

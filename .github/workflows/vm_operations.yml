@@ -60,6 +60,36 @@ on:
           - "1"
           - "2"
         default: "3"
+      prometheus:
+        description: "prometheus operation"
+        required: true
+        type: choice
+        options:
+          - "3"
+          - "0"
+          - "1"
+          - "2"
+        default: "3"
+      grafana:
+        description: "grafana operation"
+        required: true
+        type: choice
+        options:
+          - "3"
+          - "0"
+          - "1"
+          - "2"
+        default: "3"
+      nginx_exporter:
+        description: "nginx-exporter operation"
+        required: true
+        type: choice
+        options:
+          - "3"
+          - "0"
+          - "1"
+          - "2"
+        default: "3"
 
 permissions:
   contents: read
@@ -90,7 +120,10 @@ jobs:
             && "${{ inputs.user_interface }}" == "3" \
             && "${{ inputs.thesis_service }}" == "3" \
             && "${{ inputs.genai_service }}" == "3" \
-            && "${{ inputs.vector_search_service }}" == "3" ]]; then
+            && "${{ inputs.vector_search_service }}" == "3" \
+            && "${{ inputs.prometheus }}" == "3" \
+            && "${{ inputs.grafana }}" == "3" \
+            && "${{ inputs.nginx_exporter }}" == "3" ]]; then
             echo "Select at least one operation. Use 0=off/stop, 1=on/start, 2=restart, 3=no change."
             exit 1
           fi
@@ -149,6 +182,9 @@ jobs:
             [[ "${{ inputs.thesis_service }}" != "3" ]] && has_service_ops=true
             [[ "${{ inputs.genai_service }}" != "3" ]] && has_service_ops=true
             [[ "${{ inputs.vector_search_service }}" != "3" ]] && has_service_ops=true
+            [[ "${{ inputs.prometheus }}" != "3" ]] && has_service_ops=true
+            [[ "${{ inputs.grafana }}" != "3" ]] && has_service_ops=true
+            [[ "${{ inputs.nginx_exporter }}" != "3" ]] && has_service_ops=true
             [[ "$has_service_ops" == "true" ]] && needs_ssh=true
           fi
 
@@ -264,6 +300,48 @@ jobs:
         env:
           SERVICE: vector-search-service
           SERVICE_OPERATION: ${{ inputs.vector_search_service }}
+        run: |
+          case "$SERVICE_OPERATION" in
+            0) ACTION=stop ;;
+            1) ACTION=start ;;
+            2) ACTION=restart ;;
+          esac
+          export ACTION
+          ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ops.yml
+
+      - name: Operate prometheus
+        if: steps.plan.outputs.has_service_ops == 'true' && inputs.prometheus != '3'
+        env:
+          SERVICE: prometheus
+          SERVICE_OPERATION: ${{ inputs.prometheus }}
+        run: |
+          case "$SERVICE_OPERATION" in
+            0) ACTION=stop ;;
+            1) ACTION=start ;;
+            2) ACTION=restart ;;
+          esac
+          export ACTION
+          ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ops.yml
+
+      - name: Operate grafana
+        if: steps.plan.outputs.has_service_ops == 'true' && inputs.grafana != '3'
+        env:
+          SERVICE: grafana
+          SERVICE_OPERATION: ${{ inputs.grafana }}
+        run: |
+          case "$SERVICE_OPERATION" in
+            0) ACTION=stop ;;
+            1) ACTION=start ;;
+            2) ACTION=restart ;;
+          esac
+          export ACTION
+          ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ops.yml
+
+      - name: Operate nginx-exporter
+        if: steps.plan.outputs.has_service_ops == 'true' && inputs.nginx_exporter != '3'
+        env:
+          SERVICE: nginx-exporter
+          SERVICE_OPERATION: ${{ inputs.nginx_exporter }}
         run: |
           case "$SERVICE_OPERATION" in
             0) ACTION=stop ;;
