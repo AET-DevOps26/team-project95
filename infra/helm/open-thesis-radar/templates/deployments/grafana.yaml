@@ -15,6 +15,11 @@ spec:
     metadata:
       labels:
         {{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "grafana" "component" "monitoring") | nindent 8 }}
+      annotations:
+        checksum/datasources: {{ include (print $.Template.BasePath "/grafana-datasource-configmap.yaml") . | sha256sum }}
+        checksum/dashboard-provider: {{ include (print $.Template.BasePath "/grafana-dashboards-provider-configmap.yaml") . | sha256sum }}
+        checksum/dashboards: {{ include (print $.Template.BasePath "/grafana-dashboards-configmap.yaml") . | sha256sum }}
+        checksum/alerting: {{ include (print $.Template.BasePath "/grafana-alerting-configmap.yaml") . | sha256sum }}
     spec:
       containers:
         - name: grafana-container
