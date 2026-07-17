@@ -53,6 +53,8 @@ spec:
               name: metrics
           securityContext:
             runAsNonRoot: true
+            runAsUser: 1001
+            runAsGroup: 1001
             readOnlyRootFilesystem: true
             allowPrivilegeEscalation: false
           resources:
