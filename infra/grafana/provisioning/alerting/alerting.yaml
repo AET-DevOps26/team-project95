@@ -8,7 +8,7 @@ groups:
     rules:
       - uid: "instance-down-alert"
         title: "InstanceDown"
-        condition: "A"
+        condition: "C"
         data:
           - refId: "A"
             relativeTimeRange:
@@ -16,12 +16,39 @@ groups:
               to: 0
             datasourceUid: "prometheus"
             model:
-              expr: "up == 0"
+              expr: "up"
               instant: true
               queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
+          - refId: "B"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              expression: "A"
+              reducer: "last"
+              type: "reduce"
+              refId: "B"
+          - refId: "C"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: "eq"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["B"]
+              expression: "B"
+              type: "threshold"
+              refId: "C"
         noDataState: "OK"
         execErrState: "Alerting"
         for: "1m"
@@ -33,7 +60,7 @@ groups:
 
       - uid: "jvm-heap-memory-critical-alert"
         title: "JvmHeapMemoryCritical"
-        condition: "A"
+        condition: "C"
         data:
           - refId: "A"
             relativeTimeRange:
@@ -41,24 +68,51 @@ groups:
               to: 0
             datasourceUid: "prometheus"
             model:
-              expr: 'jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} * 100 > 90'
+              expr: 'jvm_memory_used_bytes{area="heap"} / jvm_memory_max_bytes{area="heap"} * 100'
               instant: true
               queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
+          - refId: "B"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              expression: "A"
+              reducer: "last"
+              type: "reduce"
+              refId: "B"
+          - refId: "C"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [90]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["B"]
+              expression: "B"
+              type: "threshold"
+              refId: "C"
         noDataState: "OK"
         execErrState: "Alerting"
         for: "5m"
         annotations:
           summary: "JVM Heap Memory critical"
-          description: 'JVM Heap Memory usage for {{ $labels.instance }} is {{ printf "%.2f" $values.A.Value }}%, which is above 90% for 5 minutes.'
+          description: 'JVM Heap Memory usage for {{ $labels.instance }} is {{ printf "%.2f" $values.B.Value }}%, which is above 90% for 5 minutes.'
         labels:
           severity: "critical"
 
       - uid: "http-5xx-rate-high-alert"
         title: "Http5xxRateHigh"
-        condition: "A"
+        condition: "C"
         data:
           - refId: "A"
             relativeTimeRange:
@@ -66,24 +120,51 @@ groups:
               to: 0
             datasourceUid: "prometheus"
             model:
-              expr: '(sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) * 100 > 5) or (sum(rate(http_requests_total{status=~"5.."}[5m])) by (job) / sum(rate(http_requests_total[5m])) by (job) * 100 > 5)'
+              expr: '(sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) * 100) or (sum(rate(http_requests_total{status=~"5.."}[5m])) by (job) / sum(rate(http_requests_total[5m])) by (job) * 100)'
               instant: true
               queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
+          - refId: "B"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              expression: "A"
+              reducer: "last"
+              type: "reduce"
+              refId: "B"
+          - refId: "C"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [5]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["B"]
+              expression: "B"
+              type: "threshold"
+              refId: "C"
         noDataState: "OK"
         execErrState: "Alerting"
         for: "2m"
         annotations:
           summary: "HTTP 5xx Error Rate High"
-          description: 'HTTP 5xx error rate for job {{ $labels.job }} is {{ printf "%.2f" $values.A.Value }}%, which is above 5% for 2 minutes.'
+          description: 'HTTP 5xx error rate for job {{ $labels.job }} is {{ printf "%.2f" $values.B.Value }}%, which is above 5% for 2 minutes.'
         labels:
           severity: "critical"
 
       - uid: "service-high-latency-alert"
         title: "ServiceHighLatency"
-        condition: "A"
+        condition: "C"
         data:
           - refId: "A"
             relativeTimeRange:
@@ -91,24 +172,51 @@ groups:
               to: 0
             datasourceUid: "prometheus"
             model:
-              expr: '(sum(rate(http_server_requests_seconds_sum[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job) > 3) or (sum(rate(http_request_duration_seconds_sum[5m])) by (job) / sum(rate(http_request_duration_seconds_count[5m])) by (job) > 3)'
+              expr: '(sum(rate(http_server_requests_seconds_sum[5m])) by (job) / sum(rate(http_server_requests_seconds_count[5m])) by (job)) or (sum(rate(http_request_duration_seconds_sum[5m])) by (job) / sum(rate(http_request_duration_seconds_count[5m])) by (job))'
               instant: true
               queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
+          - refId: "B"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              expression: "A"
+              reducer: "last"
+              type: "reduce"
+              refId: "B"
+          - refId: "C"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [3]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["B"]
+              expression: "B"
+              type: "threshold"
+              refId: "C"
         noDataState: "OK"
         execErrState: "Alerting"
         for: "5m"
         annotations:
           summary: "Service response latency high"
-          description: 'Average latency for job {{ $labels.job }} is {{ printf "%.2f" $values.A.Value }} seconds, which is above 3 seconds for 5 minutes.'
+          description: 'Average latency for job {{ $labels.job }} is {{ printf "%.2f" $values.B.Value }} seconds, which is above 3 seconds for 5 minutes.'
         labels:
           severity: "warning"
 
       - uid: "scraper-failure-spike-alert"
         title: "ScraperFailureSpike"
-        condition: "A"
+        condition: "C"
         data:
           - refId: "A"
             relativeTimeRange:
@@ -116,12 +224,39 @@ groups:
               to: 0
             datasourceUid: "prometheus"
             model:
-              expr: 'increase(scraping_endpoints_processed_total{status="FAILED"}[15m]) > 0'
+              expr: 'increase(scraping_endpoints_processed_total{status="FAILED"}[15m])'
               instant: true
               queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
+          - refId: "B"
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              expression: "A"
+              reducer: "last"
+              type: "reduce"
+              refId: "B"
+          - refId: "C"
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["B"]
+              expression: "B"
+              type: "threshold"
+              refId: "C"
         noDataState: "OK"
         execErrState: "Alerting"
         for: "5m"
@@ -133,7 +268,7 @@ groups:
 
       - uid: "vector-index-sync-failed-alert"
         title: "VectorIndexSyncFailed"
-        condition: "A"
+        condition: "C"
         data:
           - refId: "A"
             relativeTimeRange:
@@ -141,12 +276,39 @@ groups:
               to: 0
             datasourceUid: "prometheus"
             model:
-              expr: 'increase(http_server_requests_seconds_count{uri="/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index", status=~"5.."}[5m]) > 0'
+              expr: 'increase(http_server_requests_seconds_count{uri="/internal/v1/vector-search-service/source-endpoints/{sourceEndpointId}/index", status=~"5.."}[5m])'
               instant: true
               queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
+          - refId: "B"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              expression: "A"
+              reducer: "last"
+              type: "reduce"
+              refId: "B"
+          - refId: "C"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [0]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["B"]
+              expression: "B"
+              type: "threshold"
+              refId: "C"
         noDataState: "OK"
         execErrState: "Alerting"
         for: "1m"
@@ -158,7 +320,7 @@ groups:
 
       - uid: "genai-upstream-errors-alert"
         title: "GenAiUpstreamErrors"
-        condition: "A"
+        condition: "C"
         data:
           - refId: "A"
             relativeTimeRange:
@@ -166,17 +328,44 @@ groups:
               to: 0
             datasourceUid: "prometheus"
             model:
-              expr: '(sum(rate(genai_llm_calls_total{status=~"upstream_error|config_error"}[5m])) / sum(rate(genai_llm_calls_total[5m]))) * 100 > 10'
+              expr: '(sum(rate(genai_llm_calls_total{status=~"upstream_error|config_error"}[5m])) / sum(rate(genai_llm_calls_total[5m]))) * 100'
               instant: true
               queryType: "instant"
               intervalMs: 15000
               maxDataPoints: 43200
               refId: "A"
+          - refId: "B"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              expression: "A"
+              reducer: "last"
+              type: "reduce"
+              refId: "B"
+          - refId: "C"
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: "__expr__"
+            model:
+              conditions:
+                - evaluator:
+                    params: [10]
+                    type: "gt"
+                  operator:
+                    type: "and"
+                  query:
+                    params: ["B"]
+              expression: "B"
+              type: "threshold"
+              refId: "C"
         noDataState: "OK"
         execErrState: "Alerting"
         for: "2m"
         annotations:
           summary: "GenAI Service Upstream Failure Rate High"
-          description: 'LLM extraction queries are failing at a rate of {{ printf "%.2f" $values.A.Value }}%.'
+          description: 'LLM extraction queries are failing at a rate of {{ printf "%.2f" $values.B.Value }}%.'
         labels:
           severity: "critical"
