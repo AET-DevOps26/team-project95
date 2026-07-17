@@ -1,0 +1,28 @@
+{{- if and .Values.ingress.enabled .Values.grafana.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: open-thesis-radar-monitoring
+  labels:
+    {{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "open-thesis-radar-monitoring" "component" "ingress") | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+spec:
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    - hosts:
+        - {{ printf "grafana-%s" .Values.ingress.host }}
+      secretName: "grafana-tls-secret"
+  {{- end }}
+  rules:
+    - host: {{ printf "grafana-%s" .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: grafana
+                port:
+                  number: 3000
+{{- end }}
