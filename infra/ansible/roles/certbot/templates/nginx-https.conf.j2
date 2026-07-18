@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name {{ app_domains | join(' ') }};
+    server_name {{ ([app_domain] + app_additional_domains) | unique | join(' ') }};
 
     location ^~ /.well-known/acme-challenge/ {
         root /var/www/certbot;
@@ -21,7 +21,7 @@ server {
 
 server {
     listen 443 ssl;
-    server_name {{ app_domains | join(' ') }};
+    server_name {{ ([app_domain] + app_additional_domains) | unique | join(' ') }};
 
     ssl_certificate /etc/letsencrypt/live/{{ app_domain }}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/{{ app_domain }}/privkey.pem;
