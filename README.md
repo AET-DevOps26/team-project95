@@ -2,6 +2,10 @@
 
 A thesis-discovery platform for TUM students. Open Thesis Radar centralizes open thesis proposals from chair websites, enriches them with GenAI-powered extraction and summaries, and supports both filter-based and natural-language semantic search.
 
+Check it out at:
+[Open Thesis Radar (Azure)](https://openthesisradar.20.215.191.148.nip.io)
+[Open Thesis Radar (Rancher/K8s)](https://open-thesis-radar.stud.k8s.aet.cit.tum.de/)
+
 > TUM DevOps Project 2026 · Team Project 95
 
 ## Quick Start
@@ -25,6 +29,8 @@ Local URLs:
 - Scraping Service: http://localhost:8081
 - Vector Search Service: http://localhost:8082
 - GenAI Service: http://localhost:8000
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3001
 - PostgreSQL thesis database: localhost:5432
 - PostgreSQL vector database: localhost:5433
 
@@ -42,26 +48,71 @@ Prerequisites:
 
 ### Environment Variables
 
-Important environment variables include:
+Important environment variables are grouped by their scope and purpose:
 
-| Variable                            | Purpose                                        |
-| ----------------------------------- | ---------------------------------------------- |
-| `GENAI_USE_OLLAMA`                  | Set to `true` to use Ollama instead of Azure OpenAI for GenAI |
-| `GENAI_MAX_COMPLETION_TOKENS`       | Maximum GenAI chat completion tokens           |
-| `AZURE_OPENAI_ENDPOINT`             | Azure OpenAI endpoint for GenAI and embeddings |
-| `AZURE_OPENAI_API_KEY`              | Azure OpenAI API key for GenAI and embeddings  |
-| `AZURE_OPENAI_CHAT_DEPLOYMENT`      | Azure OpenAI chat deployment for GenAI         |
-| `AZURE_OPENAI_API_VERSION`          | Azure OpenAI API version for GenAI             |
-| `GENAI_MODEL_NAME`                  | Ollama model name when `GENAI_USE_OLLAMA=true` |
-| `OLLAMA_BASE_URL`                   | Ollama endpoint when using local models        |
-| `THESIS_DB_NAME`                    | Thesis PostgreSQL database name                |
-| `THESIS_DB_USER`                    | Thesis PostgreSQL user                         |
-| `THESIS_DB_PASSWORD`                | Thesis PostgreSQL password                     |
-| `VECTOR_DB_NAME`                    | Vector PostgreSQL database name                |
-| `VECTOR_DB_USER`                    | Vector PostgreSQL user                         |
-| `VECTOR_DB_PASSWORD`                | Vector PostgreSQL password                     |
-| `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` | Embedding deployment name                      |
-| `PGVECTOR_DIMENSIONS`               | Embedding vector dimensions                    |
+#### 1. GenAI & Embeddings Configuration
+
+These variables configure the FastAPI GenAI and Vector Search services.
+
+| Variable                            | Purpose                                                              |
+| :---------------------------------- | :------------------------------------------------------------------- |
+| `GENAI_MODEL_PROVIDER`              | Provider for GenAI (e.g. `azure`, `openai`, or `ollama`)             |
+| `GENAI_USE_OLLAMA`                  | Set to `true` to use Ollama instead of Azure OpenAI (legacy switch)  |
+| `GENAI_MODEL_NAME`                  | Model name to use (e.g., `llama3.1` for Ollama, `gpt-4o` for OpenAI) |
+| `GENAI_MAX_COMPLETION_TOKENS`       | Maximum GenAI chat completion tokens                                 |
+| `OLLAMA_BASE_URL`                   | Ollama endpoint when using local models                              |
+| `AZURE_OPENAI_ENDPOINT`             | Azure OpenAI endpoint for GenAI and embeddings                       |
+| `AZURE_OPENAI_API_KEY`              | Azure OpenAI API key for GenAI and embeddings                        |
+| `AZURE_OPENAI_CHAT_DEPLOYMENT`      | Azure OpenAI chat deployment for GenAI                               |
+| `AZURE_OPENAI_API_VERSION`          | Azure OpenAI API version for GenAI                                   |
+| `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` | Embedding deployment name                                            |
+| `OPENAI_API_KEY`                    | Standard OpenAI API key (if using OpenAI provider directly)          |
+| `PGVECTOR_DIMENSIONS`               | Embedding vector dimensions (typically `1536`)                       |
+
+#### 2. Database Configuration
+
+These variables configure the PostgreSQL relational and vector databases.
+
+| Variable             | Purpose                         |
+| :------------------- | :------------------------------ |
+| `THESIS_DB_NAME`     | Thesis PostgreSQL database name |
+| `THESIS_DB_USER`     | Thesis PostgreSQL user          |
+| `THESIS_DB_PASSWORD` | Thesis PostgreSQL password      |
+| `VECTOR_DB_NAME`     | Vector PostgreSQL database name |
+| `VECTOR_DB_USER`     | Vector PostgreSQL user          |
+| `VECTOR_DB_PASSWORD` | Vector PostgreSQL password      |
+
+#### 3. Application & Monitoring Configuration
+
+General application runtime settings.
+
+| Variable                 | Purpose                                                              |
+| :----------------------- | :------------------------------------------------------------------- |
+| `APP_ADDITIONAL_DOMAINS` | Comma-separated list of additional domains mapped to the application |
+| `GRAFANA_ADMIN_PASSWORD` | Administrator password for Grafana                                   |
+
+#### 4. Deployment & Infrastructure Secrets (CI/CD)
+
+These variables are set in GitHub Secrets/Variables and are used by the deployment workflows.
+
+##### Azure VM (Terraform & Ansible)
+
+| Variable                           | Purpose                                                             |
+| :--------------------------------- | :------------------------------------------------------------------ |
+| `AZURE_CREDENTIALS`                | Azure service principal credentials (JSON) for login                |
+| `AZURE_VM_SSH_PUBLIC_KEY`          | Public SSH key configured on the Azure VM                           |
+| `AZURE_VM_SSH_PRIVATE_KEY`         | Private SSH key used by Ansible to connect to the VM                |
+| `CERTBOT_EMAIL`                    | Email address for Let's Encrypt TLS registration                    |
+| `AZURE_TF_BACKEND_RESOURCE_GROUP`  | Azure resource group containing the Terraform state storage account |
+| `AZURE_TF_BACKEND_STORAGE_ACCOUNT` | Azure storage account for Terraform remote state                    |
+| `AZURE_TF_BACKEND_CONTAINER`       | Azure blob container for Terraform remote state                     |
+| `AZURE_TF_BACKEND_KEY`             | Blob key/path for the Terraform state file                          |
+
+##### Kubernetes Deployment
+
+| Variable          | Purpose                                                                         |
+| :---------------- | :------------------------------------------------------------------------------ |
+| `KUBE_CONFIG_B64` | Base64-encoded Kubeconfig file used to authenticate with the Kubernetes cluster |
 
 For local development, most variables have defaults in `docker-compose.yml`.
 
@@ -71,10 +122,18 @@ For local development, most variables have defaults in `docker-compose.yml`.
 .
 ├── api/
 │   └── openapi-v1.yml                 # Shared OpenAPI contract
+├── bruno-workspace/                   # Bruno API client collections and environments
 ├── docs/
 │   ├── architecture.md                # High-level architecture
 │   ├── database-schema.md             # PostgreSQL schema and persistence model
-│   ├── api.html                       # Generated human-readable OpenAPI documentation
+│   └── api.html                       # Generated human-readable OpenAPI documentation
+├── infra/                             # Terraform, Ansible, Helm, and K8s setups
+│   ├── ansible/                       # Ansible playbooks for VM setup and config
+│   ├── grafana/                       # Grafana dashboards and provisioning
+│   ├── helm/                          # Helm charts for Kubernetes deployment
+│   ├── k8s/                           # Kubernetes resource manifests and configs
+│   ├── prometheus/                    # Prometheus scraping configs
+│   └── terraform/                     # Terraform code for Azure VM deployment
 ├── services/
 │   ├── pom.xml                        # Maven parent project
 │   ├── thesis-service/                # Main backend and relational data owner
@@ -83,7 +142,7 @@ For local development, most variables have defaults in `docker-compose.yml`.
 │   └── genai-service/                 # FastAPI + LangChain extraction service
 ├── user_interface/
 │   └── open-thesis-radar/             # React + TypeScript + Vite frontend
-├── scripts/
+├── scripts/                           # Helper shell and Python scripts
 ├── docker-compose.yml                 # Local development stack
 └── README.md
 ```
@@ -115,6 +174,25 @@ Main data flow:
 For more details, see [`docs/architecture.md`](docs/architecture.md).
 
 The PostgreSQL schema, relationships, Flyway migrations, and persistence setup are documented in [`docs/database-schema.md`](docs/database-schema.md).
+
+## Monitoring & Observability
+
+The application stack includes a fully configured monitoring and alerting
+pipeline to track health, performance, and API metrics:
+
+- **Prometheus:** Scrapes metrics at fixed-second intervals from:
+  - Spring Boot Actuator endpoints (`/actuator/prometheus`) on the
+    `thesis-service`, `scraping-service`, and `vector-search-service`.
+  - FastAPI metrics (`/metrics`) on the `genai-service`.
+  - Nginx ingress/frontend connection metrics via `nginx-exporter` (scraping `frontend:9113`).
+- **Grafana:** Visualizes collected metrics. It is provisioned automatically
+  with pre-configured data sources and dashboards located in `infra/grafana/`.
+- **Alerting & Logging:** Grafana-managed Alert Rules and monitoring
+  configurations are detailed under the deployment configurations in the `infra/` folder.
+
+The **Grafana Dashboard** is available at:
+- [Azure Deployment Monitor](https://grafana.openthesisradar.20.215.191.148.nip.io)
+- [K8s Deployment Monitor](https://grafana-open-thesis-radar.stud.k8s.aet.cit.tum.de/)
 
 ## API Contract
 
@@ -231,6 +309,21 @@ OpenAPI contract linting:
 npx --yes @redocly/cli lint api/openapi-v1.yml
 ```
 
+Integration / Smoke Tests (Bruno):
+
+You can run automated integration and smoke tests against local services using the Bruno CLI.
+Prerequisites:
+
+```bash
+npm install -g @usebruno/cli
+```
+
+Run tests:
+
+```bash
+./scripts/run-bruno-tests.sh
+```
+
 OpenAPI contract validation runs at multiple levels:
 
 - CI lints the canonical contract with Redocly.
@@ -256,6 +349,18 @@ Docker Compose validation:
 ```bash
 docker compose config
 ```
+
+## Deployments & Infrastructure
+
+The project includes two production deployment paths under the `infra/` folder,
+automated via GitHub Actions workflows:
+
+1. **Azure VM (Terraform & Ansible):**
+   - Infrastructure is provisioned via Terraform and deployed using Ansible playbooks.
+   - See [`infra/README.md`](infra/README.md) for local Ansible/Terraform setup and commands.
+2. **Kubernetes (Helm):**
+   - The application can be deployed using the Helm chart located in `infra/helm/open-thesis-radar`.
+   - See [`infra/k8s/README.md`](infra/k8s/README.md) for deployment guidelines and Kubernetes instructions.
 
 ## Service Ownership and Responsibilities
 
@@ -297,6 +402,9 @@ Future work and next steps should be tracked as backlog tickets.
 - Prefer configuration through environment variables.
 - Document important architectural decisions in `docs/`.
 
-# Weekly Documentation
+## Weekly Documentation
 
-Weekly meeting notes live in [`docs/weekly-updates/`](docs/weekly-updates/). For each meeting, copy [`docs/weekly-updates/template.md`](docs/weekly-updates/template.md), name the new file with the ISO meeting date (`YYYY-MM-DD.md`), and include status updates plus related issues/PRs where possible.
+Weekly meeting notes live in [`docs/weekly-updates/`](docs/weekly-updates/).
+For each meeting, copy [`docs/weekly-updates/template.md`](docs/weekly-updates/template.md),
+name the new file with the ISO meeting date (`YYYY-MM-DD.md`),
+and include status updates plus related issues/PRs where possible.
