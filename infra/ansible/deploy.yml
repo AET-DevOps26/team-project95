@@ -13,6 +13,7 @@
     ghcr_user: "{{ lookup('env', 'GHCR_USER') }}"
     ghcr_token: "{{ lookup('env', 'GHCR_TOKEN') }}"
     enable_certbot: "{{ lookup('env', 'ENABLE_CERTBOT') | default('true', true) | bool }}"
+    sync_source_registry: "{{ lookup('env', 'SYNC_SOURCE_REGISTRY') | default('false', true) | bool }}"
     thesis_db_name: "{{ lookup('env', 'THESIS_DB_NAME') | default('thesis_db', true) }}"
     thesis_db_user: "{{ lookup('env', 'THESIS_DB_USER') | default('thesis_user', true) }}"
     thesis_db_password: "{{ lookup('env', 'THESIS_DB_PASSWORD') }}"

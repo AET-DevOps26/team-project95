@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       help:
-        description: "Codes: 0=off/stop, 1=on/start, 2=restart, 3=no change. If VM is 0/1/2, service selections are ignored; stopping VM stops services, starting/restarting VM brings services up with Ansible."
+        description: "Codes: 0=off/stop, 1=on/start, 2=restart, 3=no change. If VM is 0/1/2, service selections are ignored; source registry sync runs after start/restart/service operations."
         required: false
         type: choice
         options:
@@ -60,6 +60,11 @@ on:
           - "1"
           - "2"
         default: "3"
+      sync_source_registry:
+        description: "Inject/sync thesis source endpoints into the database"
+        required: true
+        type: boolean
+        default: false
       prometheus:
         description: "prometheus operation"
         required: true
@@ -123,8 +128,14 @@ jobs:
             && "${{ inputs.vector_search_service }}" == "3" \
             && "${{ inputs.prometheus }}" == "3" \
             && "${{ inputs.grafana }}" == "3" \
-            && "${{ inputs.nginx_exporter }}" == "3" ]]; then
-            echo "Select at least one operation. Use 0=off/stop, 1=on/start, 2=restart, 3=no change."
+            && "${{ inputs.nginx_exporter }}" == "3" \
+            && "${{ inputs.sync_source_registry }}" != "true" ]]; then
+            echo "Select at least one operation. Use 0=off/stop, 1=on/start, 2=restart, 3=no change, or enable source registry sync."
+            exit 1
+          fi
+
+          if [[ "${{ inputs.vm }}" == "0" && "${{ inputs.sync_source_registry }}" == "true" ]]; then
+            echo "Cannot sync the thesis source registry while stopping/deallocating the VM."
             exit 1
           fi
 
@@ -187,6 +198,8 @@ jobs:
             [[ "${{ inputs.nginx_exporter }}" != "3" ]] && has_service_ops=true
             [[ "$has_service_ops" == "true" ]] && needs_ssh=true
           fi
+
+          [[ "${{ inputs.sync_source_registry }}" == "true" ]] && needs_ssh=true
 
           echo "vm_action=$vm_action" >> "$GITHUB_OUTPUT"
           echo "needs_ssh=$needs_ssh" >> "$GITHUB_OUTPUT"
@@ -309,6 +322,15 @@ jobs:
           export ACTION
           ansible-playbook -i infra/ansible/inventory.ini infra/ansible/ops.yml
 
+      - name: Sync thesis source registry
+        if: inputs.sync_source_registry == true
+        run: |
+          ansible app \
+            -i infra/ansible/inventory.ini \
+            -b \
+            -m ansible.builtin.shell \
+            -a "cd /open-thesis-radar && docker compose run --rm thesis-service --sync-source-registry"
+            
       - name: Operate prometheus
         if: steps.plan.outputs.has_service_ops == 'true' && inputs.prometheus != '3'
         env:

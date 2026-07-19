@@ -8,6 +8,11 @@ on:
         required: true
         type: boolean
         default: true
+      sync_source_registry:
+        description: "Sync thesis source endpoints into the database"
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -30,6 +35,7 @@ jobs:
       IMAGE_TAG: ${{ github.sha }}
       CERTBOT_EMAIL: ${{ secrets.CERTBOT_EMAIL }}
       ENABLE_CERTBOT: ${{ inputs.enable_certbot }}
+      SYNC_SOURCE_REGISTRY: ${{ inputs.sync_source_registry }}
       APP_ADDITIONAL_DOMAINS: ${{ vars.APP_ADDITIONAL_DOMAINS }}
       THESIS_DB_PASSWORD: ${{ secrets.THESIS_DB_PASSWORD }}
       VECTOR_DB_PASSWORD: ${{ secrets.VECTOR_DB_PASSWORD }}
