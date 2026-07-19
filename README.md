@@ -2,6 +2,10 @@
 
 A thesis-discovery platform for TUM students. Open Thesis Radar centralizes open thesis proposals from chair websites, enriches them with GenAI-powered extraction and summaries, and supports both filter-based and natural-language semantic search.
 
+Check it out at:
+[Open Thesis Radar (Azure)](https://openthesisradar.20.215.191.148.nip.io)
+[Open Thesis Radar (Rancher/K8s)](https://open-thesis-radar.stud.k8s.aet.cit.tum.de/)
+
 > TUM DevOps Project 2026 · Team Project 95
 
 ## Quick Start
@@ -185,6 +189,10 @@ pipeline to track health, performance, and API metrics:
   with pre-configured data sources and dashboards located in `infra/grafana/`.
 - **Alerting & Logging:** Grafana-managed Alert Rules and monitoring
   configurations are detailed under the deployment configurations in the `infra/` folder.
+
+The **Grafana Dashboard** is available at:
+- [Azure Deployment Monitor](https://grafana.openthesisradar.20.215.191.148.nip.io)
+- [K8s Deployment Monitor](https://grafana-open-thesis-radar.stud.k8s.aet.cit.tum.de/)
 
 ## API Contract
 
