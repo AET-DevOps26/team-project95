@@ -59,7 +59,7 @@
     mode: "0644"
 
 - name: Restart frontend Nginx with HTTPS config
-  ansible.builtin.command: docker compose up -d --force-recreate frontend
+  ansible.builtin.command: docker compose up -d --force-recreate frontend nginx-exporter
   args:
     chdir: "{{ app_dir }}"
 

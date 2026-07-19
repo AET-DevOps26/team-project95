@@ -6,6 +6,7 @@ services:
       context: ./user_interface/open-thesis-radar
     ports:
       - "3000:80"
+      - "127.0.0.1:9113:9113"
     healthcheck:
       test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:80/ || exit 1"]
       interval: 10s
@@ -50,6 +51,11 @@ services:
         condition: service_started
       genai-service:
         condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8081/actuator/health/liveness | grep UP || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   vector-search-service:
     build:
@@ -73,7 +79,7 @@ services:
       vector-db:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/health/liveness | grep UP || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8082/actuator/health/liveness | grep UP || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -97,7 +103,7 @@ services:
       vector-search-service:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health/liveness | grep UP || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health/liveness | grep UP || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -136,6 +142,55 @@ services:
       timeout: 5s
       retries: 5
 
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.5.1
+    container_name: nginx-exporter
+    network_mode: "service:frontend"
+    command:
+      - --nginx.scrape-uri=http://127.0.0.1:80/nginx_status
+    depends_on:
+      frontend:
+        condition: service_started
+
+  prometheus:
+    image: prom/prometheus:v3.13.1
+    container_name: prometheus
+    volumes:
+      - ./infra/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      thesis-service:
+        condition: service_healthy
+      scraping-service:
+        condition: service_healthy
+      vector-search-service:
+        condition: service_healthy
+      genai-service:
+        condition: service_healthy
+      nginx-exporter:
+        condition: service_started
+
+  grafana:
+    image: grafana/grafana:13.1.0
+    container_name: grafana
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
+      - THESIS_DB_USER=${THESIS_DB_USER:-thesis_user}
+      - THESIS_DB_NAME=${THESIS_DB_NAME:-thesis_db}
+      - THESIS_DB_PASSWORD=${THESIS_DB_PASSWORD:-thesis_password}
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      - prometheus
+
+
 volumes:
   postgres_data:
   vector_postgres_data:
+  prometheus_data:

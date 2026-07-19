@@ -5,6 +5,7 @@ import com.project95.thesis.vectorsearch.dto.ReplaceSourceEndpointVectorsRespons
 import com.project95.thesis.vectorsearch.dto.VectorThesisDocumentDto;
 import com.project95.thesis.vectorsearch.util.ThesisVectorMetadata;
 import com.project95.thesis.vectorsearch.util.ThesisVectorUtils;
+import io.micrometer.core.instrument.MeterRegistry;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -24,9 +25,11 @@ public class ThesisVectorIndexService {
   private static final Logger log = LoggerFactory.getLogger(ThesisVectorIndexService.class);
 
   private final VectorStore vectorStore;
+  private final MeterRegistry meterRegistry;
 
-  public ThesisVectorIndexService(VectorStore vectorStore) {
+  public ThesisVectorIndexService(VectorStore vectorStore, MeterRegistry meterRegistry) {
     this.vectorStore = vectorStore;
+    this.meterRegistry = meterRegistry;
   }
 
   @Transactional
@@ -52,18 +55,29 @@ public class ThesisVectorIndexService {
       documents.add(toDocument(thesis));
     }
 
-    log.info("Deleting existing vector documents for sourceEndpointId={}", sourceEndpointId);
-    vectorStore.delete(ThesisVectorUtils.sourceEndpointFilter(sourceEndpointId));
+    long start = System.nanoTime();
+    try {
+      log.info("Deleting existing vector documents for sourceEndpointId={}", sourceEndpointId);
+      vectorStore.delete(ThesisVectorUtils.sourceEndpointFilter(sourceEndpointId));
 
-    if (!documents.isEmpty()) {
-      vectorStore.add(documents);
-      log.info(
-          "Inserted replacement vector documents for sourceEndpointId={}. insertedCount={}",
-          sourceEndpointId,
-          documents.size());
-    } else {
-      log.info(
-          "No replacement vector documents to insert for sourceEndpointId={}", sourceEndpointId);
+      if (!documents.isEmpty()) {
+        vectorStore.add(documents);
+        log.info(
+            "Inserted replacement vector documents for sourceEndpointId={}. insertedCount={}",
+            sourceEndpointId,
+            documents.size());
+      } else {
+        log.info(
+            "No replacement vector documents to insert for sourceEndpointId={}", sourceEndpointId);
+      }
+    } finally {
+      long duration = System.nanoTime() - start;
+      meterRegistry
+          .timer("vector_index_replacement_duration")
+          .record(duration, java.util.concurrent.TimeUnit.NANOSECONDS);
+      if (!documents.isEmpty()) {
+        meterRegistry.counter("vector_index_documents_indexed_total").increment(documents.size());
+      }
     }
 
     // Spring AI VectorStore#delete(filter) does not expose the number of deleted rows.

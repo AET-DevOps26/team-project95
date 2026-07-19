@@ -109,7 +109,20 @@ export default function FilterDropdown({ label, values, options, onChange }: Fil
       ref={wrapperRef}
       className={`${styles.filterBox} ${isOpen ? styles.filterBoxOpen : ''}`}
     >
-      <span className={styles.filterLabel}>{label}</span>
+      <div className={styles.filterHeader}>
+        <span className={styles.filterLabel}>{label}</span>
+        <button
+          className={styles.filterClearButton}
+          type="button"
+          disabled={selectedCount === 0}
+          onClick={() => {
+            onChange([]);
+            closeDropdown();
+          }}
+        >
+          Clear
+        </button>
+      </div>
       <div className={styles.filterSearchWrapper}>
         <input
           ref={inputRef}

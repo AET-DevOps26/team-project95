@@ -37,7 +37,11 @@ class ThesisCoordinationServiceTest {
     RestClient.Builder restClientBuilder = RestClient.builder().baseUrl("http://vector-service");
     mockServer = MockRestServiceServer.bindTo(restClientBuilder).build();
 
-    service = new ThesisCoordinationService(thesisManagementService, restClientBuilder.build());
+    service =
+        new ThesisCoordinationService(
+            thesisManagementService,
+            restClientBuilder.build(),
+            new io.micrometer.core.instrument.simple.SimpleMeterRegistry());
   }
 
   @Test

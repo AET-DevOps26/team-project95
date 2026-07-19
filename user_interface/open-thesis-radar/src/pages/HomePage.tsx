@@ -12,15 +12,24 @@ import { Link } from 'react-router-dom';
 
 type ThesisSearchResult = components['schemas']['ThesisSearchResult'];
 
+const THESES_PER_PAGE = 21;
+
+
+function isUnspecifiedDegreeType(degreeType: string | null | undefined) {
+  const normalizedDegreeType = degreeType?.trim().toLowerCase();
+
+  return !normalizedDegreeType || normalizedDegreeType === 'not specified';
+}
 
 function thesisMatchesSelectedFilters(thesis: ThesisSearchResult, selectedFilters: components['schemas']['ThesisSearchFilters']) {
   const matchesChair = !selectedFilters.chairIds?.length || selectedFilters.chairIds.includes(thesis.chairId);
   const matchesDegree =
-    !selectedFilters.degreeTypes?.length || Boolean(thesis.degreeType && selectedFilters.degreeTypes.includes(thesis.degreeType));
+    !selectedFilters.degreeTypes?.length ||
+    isUnspecifiedDegreeType(thesis.degreeType) ||
+    Boolean(thesis.degreeType && selectedFilters.degreeTypes.includes(thesis.degreeType));
   const matchesResearchArea =
     !selectedFilters.researchAreas?.length ||
     Boolean(thesis.researchArea && selectedFilters.researchAreas.includes(thesis.researchArea));
-
   return matchesChair && matchesDegree && matchesResearchArea;
 }
 
@@ -29,22 +38,22 @@ export default function HomePage() {
   const [filters, setFilters] = useState<components['schemas']['AvailableFiltersResponse'] | null>(null);
   const [allTheses, setAllTheses] = useState<ThesisSearchResult[]>(cachedThesisList?.theses ?? []);
   const [thesisTotalCount, setThesisTotalCount] = useState(cachedThesisList?.totalCount ?? 0);
-  const [serverSearchResults, setServerSearchResults] = useState<ThesisSearchResult[] | null>(null);
   const [isLoadingTheses, setIsLoadingTheses] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [resultsError, setResultsError] = useState<string | null>(null);
   const searchSectionRef = useRef<HTMLElement | null>(null);
+  const resultsHeaderRef = useRef<HTMLDivElement | null>(null);
   const {
-    queryMode,
-    setQueryMode,
     naturalLanguageQuery,
     setNaturalLanguageQuery,
     selectedFilters,
     setSelectedFilters,
     resetSelectedFilters,
+    currentPage,
+    setCurrentPage,
+    serverSearchResults,
+    setServerSearchResults,
   } = useSearchState();
-  const showSearchBar = queryMode === 'Natural Language' || queryMode === 'Both';
-  const showFilters = queryMode === 'Filters' || queryMode === 'Both';
   const normalizedNaturalLanguageQuery = naturalLanguageQuery.trim();
   const selectedApiFilters = useMemo(
     () => ({
@@ -55,16 +64,34 @@ export default function HomePage() {
     }),
     [selectedFilters],
   );
-  const shouldUseServerSearch = showSearchBar && normalizedNaturalLanguageQuery.length > 0;
-  const clientFilteredTheses = useMemo(
-    () => allTheses.filter((thesis) => thesisMatchesSelectedFilters(thesis, selectedApiFilters)),
-    [allTheses, selectedApiFilters],
+  const shouldUseServerSearch = normalizedNaturalLanguageQuery.length > 0;
+  const resultSourceTheses = serverSearchResults ?? allTheses;
+  const displayedTheses = useMemo(
+    () => resultSourceTheses.filter((thesis) => thesisMatchesSelectedFilters(thesis, selectedApiFilters)),
+    [resultSourceTheses, selectedApiFilters],
   );
-  const displayedTheses = serverSearchResults ?? clientFilteredTheses;
+  const totalPages = Math.max(1, Math.ceil(displayedTheses.length / THESES_PER_PAGE));
+  const visiblePage = Math.min(currentPage, totalPages);
+  const pageStartIndex = (visiblePage - 1) * THESES_PER_PAGE;
+  const paginatedTheses = displayedTheses.slice(pageStartIndex, pageStartIndex + THESES_PER_PAGE);
 
   const scrollToSearch = () => {
     searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
+
+  function changePage(nextPage: number) {
+    setCurrentPage(nextPage);
+
+    window.requestAnimationFrame(() => {
+      resultsHeaderRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
+
+  useEffect(() => {
+    if (!isLoadingTheses && currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, isLoadingTheses, setCurrentPage, totalPages]);
 
   useEffect(() => {
     async function loadFilters() {
@@ -100,6 +127,7 @@ export default function HomePage() {
   async function handleSearchSubmit() {
     if (!shouldUseServerSearch) {
       setServerSearchResults(null);
+      setCurrentPage(1);
       setResultsError(null);
       return;
     }
@@ -115,6 +143,7 @@ export default function HomePage() {
         size: 50,
       });
       setServerSearchResults(response.items);
+      setCurrentPage(1);
     } catch (error) {
       console.error('Failed to search theses', error);
       setServerSearchResults([]);
@@ -152,11 +181,6 @@ export default function HomePage() {
       <header className={styles.topBar}>
         <div className={styles.topBarInner}>
           <div className={styles.logo}>Open Thesis Radar</div>
-          <nav className={styles.topNav} aria-label="Home page navigation">
-            <button className={styles.navButton} type="button" onClick={scrollToSearch}>
-              Search
-            </button>
-          </nav>
         </div>
       </header>
 
@@ -166,8 +190,8 @@ export default function HomePage() {
             <p className={styles.heroEyebrow}>TUM thesis discovery</p>
             <h1 className={styles.heroTitle}>Search open theses by fit.</h1>
             <p className={styles.heroSubtitle}>
-              Compare thesis offers across chairs, degree types, and research areas without losing your filter context while
-              you inspect a topic.
+              Instead of navigating through a sea of chair websites, discover open thesis opportunities from TUM chairs in one
+              place. Narrow your search by degree type, research area, chair, or semantic search to find a thesis that fits you.
             </p>
             <div className={styles.heroActions}>
               <button className={`${styles.primaryAction} ${styles.clickableButton}`} type="button" onClick={scrollToSearch}>
@@ -198,34 +222,8 @@ export default function HomePage() {
           Describe what you&apos;re looking for or use filters to find the right opportunities.
         </p>
 
-        <div className={styles.modeTabs}>
-          <button
-            className={`${styles.clickableButton} ${queryMode === 'Natural Language' ? styles.activeTab : styles.tab}`}
-            onClick={() => setQueryMode('Natural Language')}
-            type="button"
-          >
-            Natural Language
-          </button>
-          <button
-            className={`${styles.clickableButton} ${queryMode === 'Both' ? styles.activeTab : styles.tab}`}
-            onClick={() => setQueryMode('Both')}
-            type="button"
-          >
-            Both
-          </button>
-          <button
-            className={`${styles.clickableButton} ${queryMode === 'Filters' ? styles.activeTab : styles.tab}`}
-            onClick={() => setQueryMode('Filters')}
-            type="button"
-          >
-            Filters
-          </button>
-        </div>
-
         <form
-          className={`${styles.searchBarBlock} ${styles.animatedSection} ${showSearchBar ? styles.isVisible : styles.isHidden}`}
-          aria-hidden={!showSearchBar}
-          inert={!showSearchBar}
+          className={`${styles.searchBarBlock} ${styles.animatedSection} ${styles.isVisible}`}
           onSubmit={(event) => {
             event.preventDefault();
             void handleSearchSubmit();
@@ -233,7 +231,10 @@ export default function HomePage() {
         >
           <input
             className={styles.searchInput}
-            onChange={(event) => setNaturalLanguageQuery(event.target.value)}
+            onChange={(event) => {
+              setNaturalLanguageQuery(event.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Describe what you are looking for..."
             type="text"
             value={naturalLanguageQuery}
@@ -243,17 +244,17 @@ export default function HomePage() {
           </button>
         </form>
 
-        <div
-          className={`${styles.filtersCard} ${styles.animatedSection} ${showFilters ? styles.isVisible : styles.isHidden}`}
-          aria-hidden={!showFilters}
-          inert={!showFilters}
-        >
+        <div className={`${styles.filtersCard} ${styles.animatedSection} ${styles.isVisible}`}>
           <div className={styles.filtersHeader}>
             <h3 className={styles.filtersTitle}>Filters</h3>
             <button
               className={`${styles.resetLink} ${styles.clickableButton}`}
               type="button"
-              onClick={() => {resetSelectedFilters(); setServerSearchResults(null)}}
+              onClick={() => {
+                resetSelectedFilters();
+                setServerSearchResults(null);
+                setCurrentPage(1);
+              }}
             >
               Reset all
             </button>
@@ -263,39 +264,46 @@ export default function HomePage() {
               label="Degree Type"
               values={selectedFilters.degreeTypes}
               options={degreeTypeOptions}
-              onChange={(values) => setSelectedFilters((prev) => ({ ...prev, degreeTypes: values }))}
+              onChange={(values) => {
+                setSelectedFilters((prev) => ({ ...prev, degreeTypes: values }));
+                setCurrentPage(1);
+              }}
             />
             <FilterDropdown
               label="Research Area"
               values={selectedFilters.researchAreas}
               options={researchAreaOptions}
-              onChange={(values) => setSelectedFilters((prev) => ({ ...prev, researchAreas: values }))}
+              onChange={(values) => {
+                setSelectedFilters((prev) => ({ ...prev, researchAreas: values }));
+                setCurrentPage(1);
+              }}
             />
             <FilterDropdown
               label="Chair"
               values={selectedFilters.chairIds.map(String)}
               options={chairOptions}
-              onChange={(values) =>
+              onChange={(values) => {
                 setSelectedFilters((prev) => ({
                   ...prev,
                   chairIds: values.map((value) => Number(value)),
-                }))
-              }
+                }));
+                setCurrentPage(1);
+              }}
             />
           </div>
         </div>
 
-        <div className={styles.resultsHeader}>
+        <div className={styles.resultsHeader} ref={resultsHeaderRef}>
           <div>
             <h3 className={styles.resultsTitle}>Thesis proposals</h3>
             <p className={styles.resultsMeta}>
               {isSearching
                 ? 'Searching thesis service…'
                 : serverSearchResults
-                  ? `${displayedTheses.length} thesis proposals shown`
+                  ? `${thesisTotalCount} thesis proposals available${isLoadingTheses ? ' · refreshing…' : ''} — ${displayedTheses.length} thesis proposals matched by filters ${isLoadingTheses ? ' · refreshing…' : ''}`
                   : isLoadingTheses && thesisTotalCount === 0
                     ? 'Loading thesis proposals…'
-                    : `${thesisTotalCount} thesis proposals available${isLoadingTheses ? ' · refreshing…' : ''}`}
+                    : `${thesisTotalCount} thesis proposals available${isLoadingTheses ? ' · refreshing…' : ''} — ${displayedTheses.length} thesis proposals matched by filters ${isLoadingTheses ? ' · refreshing…' : ''}`}
             </p>
           </div>
         </div>
@@ -305,7 +313,7 @@ export default function HomePage() {
         {displayedTheses.length > 0 ? (
           <>
             <div className={styles.resultsGrid}>
-              {displayedTheses.map((thesis) => (
+              {paginatedTheses.map((thesis) => (
                 <Link className={styles.resultCard} to={`/thesis/${thesis.id}`} key={thesis.id}>
                   <div className={styles.resultTopline}>
                     <span>{thesis.degreeType ?? 'Degree type open'}</span>
@@ -317,6 +325,44 @@ export default function HomePage() {
                 </Link>
               ))}
             </div>
+            {displayedTheses.length > THESES_PER_PAGE && (
+              <nav className={styles.paginationControls} aria-label="Thesis result pages">
+                <button
+                  className={`${styles.paginationButton} ${styles.clickableButton}`}
+                  type="button"
+                  aria-label="Previous page"
+                  disabled={visiblePage === 1}
+                  onClick={() => changePage(Math.max(1, visiblePage - 1))}
+                >
+                  ←
+                </button>
+                <label className={styles.paginationMeta}>
+                  <span>Page</span>
+                  <select
+                    className={styles.paginationSelect}
+                    aria-label="Select thesis result page"
+                    value={visiblePage}
+                    onChange={(event) => changePage(Number(event.target.value))}
+                  >
+                    {Array.from({ length: totalPages }, (_, index) => index + 1).map((page) => (
+                      <option key={page} value={page}>
+                        {page}
+                      </option>
+                    ))}
+                  </select>
+                  <span>out of {totalPages}</span>
+                </label>
+                <button
+                  className={`${styles.paginationButton} ${styles.clickableButton}`}
+                  type="button"
+                  aria-label="Next page"
+                  disabled={visiblePage === totalPages}
+                  onClick={() => changePage(Math.min(totalPages, visiblePage + 1))}
+                >
+                  →
+                </button>
+              </nav>
+            )}
             {isLoadingTheses && <div className={styles.loadingState} role="status"><span className={styles.loadingSpinner} />Refreshing thesis proposals…</div>}
           </>
         ) : isLoadingTheses && !serverSearchResults ? (

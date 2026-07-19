@@ -21,7 +21,6 @@ export function registerLoadingAndErrorStatesTest() {
           status: 'OPEN',
           aiOverview: 'Explore perception methods for autonomous warehouse robots.',
           originalDescription: 'This thesis studies robot perception in warehouses.',
-          tags: ['robotics'],
           advisors: [],
           sourceUrl: 'https://example.edu/theses/robot-perception',
           lastSeenAt: '2026-06-15T10:00:00Z',

@@ -2,6 +2,7 @@ import difflib
 import logging
 import os
 import re
+import time
 from functools import lru_cache
 from typing import Any, Optional
 from urllib.parse import unquote, urlparse
@@ -10,9 +11,13 @@ from bs4 import BeautifulSoup
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
+from langchain_core.callbacks import BaseCallbackHandler
 from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.outputs import LLMResult
 from langchain_ollama import ChatOllama
 from langchain_openai import AzureChatOpenAI
+from prometheus_client import Counter, Histogram
+from prometheus_fastapi_instrumentator import Instrumentator
 from pydantic import BaseModel, Field, ValidationError
 
 logging.basicConfig(
@@ -20,6 +25,42 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
 logger = logging.getLogger("genai-service")
+
+
+class TokenTrackerCallback(BaseCallbackHandler):
+    def __init__(self):
+        super().__init__()
+        self.prompt_tokens = 0
+        self.completion_tokens = 0
+
+    def on_llm_end(self, response: LLMResult, **kwargs: Any) -> None:
+        try:
+            if response.llm_output and "token_usage" in response.llm_output:
+                usage = response.llm_output["token_usage"]
+                if isinstance(usage, dict):
+                    self.prompt_tokens += usage.get("prompt_tokens", 0)
+                    self.completion_tokens += usage.get("completion_tokens", 0)
+                elif hasattr(usage, "prompt_tokens"):
+                    self.prompt_tokens += getattr(usage, "prompt_tokens", 0)
+                    self.completion_tokens += getattr(usage, "completion_tokens", 0)
+
+            for generations in response.generations:
+                for gen in generations:
+                    info = getattr(gen, "generation_info", None)
+                    if not info:
+                        continue
+                    metadata = info.get("response_metadata", {})
+                    token_usage = metadata.get("token_usage", {})
+                    if token_usage:
+                        self.prompt_tokens += token_usage.get("prompt_tokens", 0)
+                        self.completion_tokens += token_usage.get("completion_tokens", 0)
+                        continue
+                    if "prompt_eval_count" in info or "eval_count" in info:
+                        self.prompt_tokens += info.get("prompt_eval_count", 0)
+                        self.completion_tokens += info.get("eval_count", 0)
+        except Exception as e:
+            logger.warning("Failed to extract token usage in callback: %s", e)
+
 
 MAX_INPUT_CHARS = 40000
 DEFAULT_MAX_COMPLETION_TOKENS = 30000
@@ -159,6 +200,29 @@ app = FastAPI(
     version="0.1.0",
     description="Minimal FastAPI + LangChain thesis extraction service",
 )
+
+# Custom Prometheus metrics
+LLM_CALL_DURATION = Histogram(
+    "genai_llm_call_duration_seconds",
+    "Latency of LangChain LLM structured generation call",
+    ["provider", "model_name"],
+)
+LLM_CALLS_TOTAL = Counter(
+    "genai_llm_calls_total",
+    "Total number of upstream LLM calls",
+    ["provider", "model_name", "status"],
+)
+THESES_EXTRACTED_TOTAL = Counter(
+    "genai_theses_extracted_total", "Total number of theses extracted", ["chair_id", "status"]
+)
+LLM_TOKENS_TOTAL = Counter(
+    "llm_tokens_consumed_total",
+    "Total number of LLM tokens consumed",
+    ["model", "type"],
+)
+
+# Instrument the app and expose standard HTTP metrics under /metrics
+Instrumentator().instrument(app).expose(app, endpoint="/metrics")
 
 
 @app.exception_handler(GenAIServiceError)
@@ -470,6 +534,15 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
     llm = get_llm()
     structured_llm = llm.with_structured_output(ExtractionDraftResult)
 
+    use_ollama = (get_env("GENAI_USE_OLLAMA", "false") or "false").lower() == "true"
+    provider = "ollama" if use_ollama else "azure"
+    if use_ollama:
+        model_name = get_env("GENAI_MODEL_NAME", DEFAULT_OLLAMA_MODEL) or DEFAULT_OLLAMA_MODEL
+    else:
+        model_name = get_env("AZURE_OPENAI_CHAT_DEPLOYMENT") or DEFAULT_AZURE_OPENAI_DEPLOYMENT
+
+    start_time = time.perf_counter()
+    tracker = TokenTrackerCallback()
     try:
         result = structured_llm.invoke(
             [
@@ -480,11 +553,27 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
                     )
                 ),
                 HumanMessage(content=build_prompt(request, cleaned_text)),
-            ]
+            ],
+            config={"callbacks": [tracker]},
         )
-    except GenAIServiceError:
+        duration = time.perf_counter() - start_time
+        LLM_CALL_DURATION.labels(provider=provider, model_name=model_name).observe(duration)
+        LLM_CALLS_TOTAL.labels(provider=provider, model_name=model_name, status="success").inc()
+
+        if tracker.prompt_tokens > 0:
+            LLM_TOKENS_TOTAL.labels(model=model_name, type="prompt").inc(tracker.prompt_tokens)
+        if tracker.completion_tokens > 0:
+            LLM_TOKENS_TOTAL.labels(model=model_name, type="completion").inc(
+                tracker.completion_tokens
+            )
+    except GenAIServiceError as exc:
+        status = "config_error" if isinstance(exc, ConfigError) else "extraction_error"
+        LLM_CALLS_TOTAL.labels(provider=provider, model_name=model_name, status=status).inc()
         raise
     except Exception as exc:
+        LLM_CALLS_TOTAL.labels(
+            provider=provider, model_name=model_name, status="upstream_error"
+        ).inc()
         raise UpstreamServiceError(details={"errorType": type(exc).__name__}) from exc
 
     normalized_theses: list[ThesisProposalInput] = []
@@ -504,6 +593,14 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
         seen_titles.add(title_key)
         normalized_theses.append(normalized)
 
+    chair_id_str = str(request.chairId)
+    if normalized_theses:
+        THESES_EXTRACTED_TOTAL.labels(chair_id=chair_id_str, status="success").inc(
+            len(normalized_theses)
+        )
+    else:
+        THESES_EXTRACTED_TOTAL.labels(chair_id=chair_id_str, status="empty").inc(1)
+
     notes = result.extractionNotes
     if not notes:
         notes = f"Extracted {len(normalized_theses)} thesis proposal(s)."
@@ -511,9 +608,7 @@ def run_extraction(request: GenAIExtractionRequest) -> GenAIExtractionResponse:
     return GenAIExtractionResponse(theses=normalized_theses, extractionNotes=notes)
 
 
-@app.get("/internal/v1/health", response_model=HealthResponse)
 @app.get("/health", response_model=HealthResponse)
-@app.get("/ready", response_model=HealthResponse)
 def health_check() -> HealthResponse:
     return HealthResponse(status="UP", service="genai-service")
 

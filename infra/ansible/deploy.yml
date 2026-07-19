@@ -6,7 +6,7 @@
     app_dir: /open-thesis-radar
     app_domain: "{{ lookup('env', 'APP_DOMAIN') | lower }}"
     app_additional_domains: "{{ lookup('env', 'APP_ADDITIONAL_DOMAINS') | default('', true) | lower | split(',') | map('trim') | reject('equalto', '') | list }}"
-    app_domains: "{{ ([app_domain] + app_additional_domains) | unique | list }}"
+    app_domains: "{{ ([app_domain, 'grafana.' ~ app_domain] + app_additional_domains) | unique | list }}"
     certbot_email: "{{ lookup('env', 'CERTBOT_EMAIL') }}"
     image_repository: "{{ lookup('env', 'IMAGE_REPOSITORY') }}"
     image_tag: "{{ lookup('env', 'IMAGE_TAG') | default('latest', true) }}"
@@ -33,6 +33,8 @@
     azure_openai_api_version: "{{ lookup('env', 'AZURE_OPENAI_API_VERSION') | default('2024-12-01-preview', true) }}"
     genai_model_name: "{{ lookup('env', 'GENAI_MODEL_NAME') | default('llama3.1', true) }}"
     ollama_base_url: "{{ lookup('env', 'OLLAMA_BASE_URL') | default('http://host.docker.internal:11434', true) }}"
+    grafana_admin_user: "{{ lookup('env', 'GRAFANA_ADMIN_USER') | default('admin', true) }}"
+    grafana_admin_password: "{{ lookup('env', 'GRAFANA_ADMIN_PASSWORD') }}"
   pre_tasks:
     - name: Validate required deployment environment variables
       ansible.builtin.assert:
@@ -43,7 +45,8 @@
           - vector_db_password | length > 0
           - azure_openai_endpoint | length > 0
           - azure_openai_api_key | length > 0
-        fail_msg: "Set APP_DOMAIN, IMAGE_REPOSITORY, THESIS_DB_PASSWORD, VECTOR_DB_PASSWORD, AZURE_OPENAI_ENDPOINT, and AZURE_OPENAI_API_KEY before running this playbook."
+          - grafana_admin_password | length > 0
+        fail_msg: "Set APP_DOMAIN, IMAGE_REPOSITORY, THESIS_DB_PASSWORD, VECTOR_DB_PASSWORD, AZURE_OPENAI_ENDPOINT, AZURE_OPENAI_API_KEY, and GRAFANA_ADMIN_PASSWORD before running this playbook."
 
     - name: Validate Certbot environment variables when Certbot is enabled
       ansible.builtin.assert:

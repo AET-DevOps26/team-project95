@@ -1,0 +1,17 @@
+{{- if .Values.prometheus.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  labels:
+    {{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "prometheus" "component" "monitoring") | nindent 4 }}
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/instance: {{ .Release.Name | quote }}
+  ports:
+    - protocol: TCP
+      port: 9090
+      targetPort: http
+{{- end }}

@@ -31,6 +31,10 @@ secrets:
     name: "azure-openai-secret"
     endpoint: "CHANGE_ME"
     apiKey: "CHANGE_ME"
+  grafana:
+    name: "grafana-admin-secret"
+    username: "admin"
+    password: "CHANGE_ME"
 
 ingress:
   enabled: true
@@ -54,7 +58,7 @@ thesisService:
       cpu: "50m"
       memory: "256Mi"
     limits:
-      cpu: "500m"
+      cpu: "400m"
       memory: "512Mi"
 
 vectorSearchService:
@@ -71,7 +75,7 @@ vectorSearchService:
       cpu: "50m"
       memory: "256Mi"
     limits:
-      cpu: "500m"
+      cpu: "400m"
       memory: "512Mi"
 
 genaiService:
@@ -86,7 +90,7 @@ genaiService:
       cpu: "50m"
       memory: "128Mi"
     limits:
-      cpu: "500m"
+      cpu: "300m"
       memory: "256Mi"
 
 scrapingService:
@@ -100,7 +104,7 @@ scrapingService:
       cpu: "50m"
       memory: "256Mi"
     limits:
-      cpu: "500m"
+      cpu: "400m"
       memory: "512Mi"
 
 userInterface:
@@ -110,8 +114,16 @@ userInterface:
       cpu: "50m"
       memory: "32Mi"
     limits:
-      cpu: "500m"
+      cpu: "200m"
       memory: "64Mi"
+  exporter:
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "16Mi"
+      limits:
+        cpu: "50m"
+        memory: "32Mi"
 
 syncSourceRegistry:
   enabled: false
@@ -170,3 +182,60 @@ vector-db:
     enabled: true
     image:
       digest: "sha256:4397aaaa6cf99a37ced6e7bada638fa3a02600326a9e71572d7f4e36f3fba736"
+
+prometheus:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "prom/prometheus"
+    tag: "v3.13.1"
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "256Mi"
+    limits:
+      cpu: "300m"
+      memory: "512Mi"
+  persistence:
+    enabled: true
+    size: "10Gi"
+    storageClass: ""
+  config:
+    global:
+      scrape_interval: 15s
+    scrape_configs:
+      - job_name: 'thesis-service'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['thesis-service:8080']
+      - job_name: 'scraping-service'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['scraping-service:8081']
+      - job_name: 'vector-search-service'
+        metrics_path: '/actuator/prometheus'
+        static_configs:
+          - targets: ['vector-search-service:8082']
+      - job_name: 'genai-service'
+        metrics_path: '/metrics'
+        static_configs:
+          - targets: ['genai-service:8000']
+      - job_name: 'user-interface'
+        metrics_path: '/metrics'
+        static_configs:
+          - targets: ['user-interface:9113']
+
+grafana:
+  enabled: true
+  replicaCount: 1
+  image:
+    repository: "grafana/grafana"
+    tag: "13.1.0"
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "300m"
+      memory: "512Mi"
+

@@ -43,8 +43,7 @@ tags:
     description: Endpoints exposed by the Vector Search Service.
   - name: GenAI API
     description: Endpoints exposed by the GenAI Service.
-  - name: Health
-    description: Health checks for all services.
+
 
 paths:
   /api/v1/theses:
@@ -446,7 +445,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
-
 components:
   parameters:
     SourceEndpointId:
@@ -587,10 +585,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Advisor'
-        tags:
-          type: array
-          items:
-            type: string
         semanticScore:
           type: number
           format: float

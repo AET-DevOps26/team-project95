@@ -111,3 +111,11 @@ infra/ansible/inventory.ini
 azure_credentials.json
 sp_raw.json
 fetch-raw-html.sh
+
+
+# Emacs auto-save files
+\#*\#
+
+#Emacs backup files
+*~
+

@@ -17,6 +17,10 @@ spec:
       app.kubernetes.io/instance: {{ .Release.Name | quote }}
   template:
     metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8082"
+        prometheus.io/path: "/actuator/prometheus"
       labels:
 {{- include "open-thesis-radar.componentLabels" (dict "root" . "name" "vector-search-service" "component" "backend") | nindent 8 }}
     spec:
@@ -34,7 +38,7 @@ spec:
             - name: PGVECTOR_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.vectorDb.name }}
+                  name: {{ index .Values "vector-db" "auth" "existingSecret" | default .Values.secrets.vectorDb.name }}
                   key: {{ index .Values "vector-db" "auth" "secretKeys" "userPasswordKey" }}
             - name: PGVECTOR_DIMENSIONS
               value: {{ .Values.vectorSearchService.pgvector.dimensions | quote }}
@@ -54,13 +58,13 @@ spec:
               value: {{ .Values.vectorSearchService.azureOpenAi.embeddingModel | quote }}
           livenessProbe:
             httpGet:
-              path: /health
+              path: /actuator/health/liveness
               port: 8082
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /health
+              path: /actuator/health/readiness
               port: 8082
             initialDelaySeconds: 30
             periodSeconds: 10

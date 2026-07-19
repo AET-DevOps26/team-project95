@@ -9,7 +9,6 @@ export const mockTheses = [
     status: 'OPEN',
     aiOverview: 'Explore perception methods for autonomous warehouse robots.',
     originalDescription: 'This thesis studies robot perception in warehouses.',
-    tags: ['robotics', 'computer vision'],
     semanticScore: null,
   },
   {
@@ -22,7 +21,6 @@ export const mockTheses = [
     status: 'OPEN',
     aiOverview: 'Investigate scheduling policies for lower cloud energy usage.',
     originalDescription: 'This thesis focuses on cloud resource scheduling.',
-    tags: ['cloud', 'scheduling'],
     semanticScore: null,
   },
 ];
@@ -37,7 +35,6 @@ export const semanticSearchThesis = {
   status: 'OPEN',
   aiOverview: 'Study explanations for clinical AI recommendations.',
   originalDescription: 'This thesis evaluates explainability methods in healthcare.',
-  tags: ['ai', 'healthcare'],
   semanticScore: 0.92,
 };
 
@@ -49,7 +46,6 @@ export const mockFilters = {
   ],
   degreeTypes: ['Bachelor', 'Master'],
   researchAreas: ['Robotics', 'Cloud Computing', 'Artificial Intelligence'],
-  tags: ['robotics', 'computer vision', 'cloud', 'scheduling', 'ai', 'healthcare'],
 };
 
 export const mockThesisDetail = {

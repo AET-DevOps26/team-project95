@@ -33,6 +33,8 @@ management:
         enabled: true
   endpoints:
     web:
-      base-path: /
       exposure:
-        include: health, info
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}

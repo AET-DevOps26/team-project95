@@ -1,0 +1,25 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    uid: prometheus
+    editable: true
+
+  - name: PostgreSQL-Thesis
+    type: postgres
+    access: proxy
+    url: thesis-db:5432
+    user: ${THESIS_DB_USER}
+    secureJsonData:
+      password: ${THESIS_DB_PASSWORD}
+    jsonData:
+      sslmode: disable
+      database: ${THESIS_DB_NAME}
+      postgresVersion: 1600
+      timescaledb: false
+    uid: thesis-db-postgres
+    editable: true

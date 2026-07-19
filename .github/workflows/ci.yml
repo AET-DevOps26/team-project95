@@ -168,8 +168,8 @@ jobs:
       - name: Wait for required service health endpoints
         run: |
           bash scripts/wait-for-health.sh \
-            http://localhost:8080/health \
-            http://localhost:8081/health
+            http://localhost:8080/actuator/health \
+            http://localhost:8081/actuator/health
 
       - name: Run Bruno smoke tests
         run: |
@@ -204,6 +204,7 @@ jobs:
       - backend
       - genai
       - docker-compose
+      - compose-smoke-tests
     permissions:
       contents: read
       packages: write

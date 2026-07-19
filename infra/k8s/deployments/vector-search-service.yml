@@ -19,6 +19,10 @@ spec:
     metadata:
       labels:
         app: vector-search-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8082"
+        prometheus.io/path: "/actuator/prometheus"
     spec:
       containers:
         - name: vector-search-service-container
@@ -54,13 +58,13 @@ spec:
               value: text-embedding-ada-002
           livenessProbe:
             httpGet:
-              path: /health
+              path: /actuator/health/liveness
               port: 8082
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /health
+              path: /actuator/health/readiness
               port: 8082
             initialDelaySeconds: 30
             periodSeconds: 10

@@ -17,7 +17,7 @@ from app import (
 def test_health_endpoint_returns_up_status():
     client = TestClient(app)
 
-    response = client.get("/internal/v1/health")
+    response = client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "UP", "service": "genai-service"}

@@ -34,7 +34,7 @@ spec:
             - name: THESIS_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.secrets.thesisDb.name }}
+                  name: {{ index .Values "thesis-db" "auth" "existingSecret" | default .Values.secrets.thesisDb.name }}
                   key: {{ index .Values "thesis-db" "auth" "secretKeys" "userPasswordKey" }}
             - name: THESIS_VECTOR_SEARCH_URL
               value: {{ .Values.thesisService.vectorSearchUrl | quote }}

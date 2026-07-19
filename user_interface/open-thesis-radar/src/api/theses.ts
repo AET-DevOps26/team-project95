@@ -5,47 +5,8 @@ import { defaultApiClient, type ApiClient } from './client';
 
 type SearchThesesRequest = operations['searchTheses']['requestBody']['content']['application/json'];
 type SearchThesesResponse = operations['searchTheses']['responses'][200]['content']['application/json'];
-type ThesisProposal = components['schemas']['ThesisProposal'];
 
-// function thesisMatchesFilters(thesis: ThesisProposal, filters?: SearchThesesRequest['filters']) {
-//   if (!filters) {
-//     return true;
-//   }
-//
-//   const matchesChair = !filters.chairIds?.length || filters.chairIds.includes(thesis.chairId);
-//   const matchesDegree = !filters.degreeTypes?.length || Boolean(thesis.degreeType && filters.degreeTypes.includes(thesis.degreeType));
-//   const matchesResearchArea =
-//     !filters.researchAreas?.length || Boolean(thesis.researchArea && filters.researchAreas.includes(thesis.researchArea));
-//   const matchesStatus = !filters.status || thesis.status === filters.status;
-//
-//   return matchesChair && matchesDegree && matchesResearchArea && matchesStatus;
-// }
-//
-// function thesisMatchesNaturalLanguage(thesis: ThesisProposal, query?: string | null) {
-//   const normalizedQuery = query?.trim().toLowerCase();
-//
-//   if (!normalizedQuery) {
-//     return true;
-//   }
-//
-//   const searchableText = [
-//     thesis.title,
-//     thesis.chairName,
-//     thesis.degreeType,
-//     thesis.researchArea,
-//     thesis.aiOverview,
-//     thesis.originalDescription,
-//     ...(thesis.advisors?.map((advisor) => `${advisor.name ?? ''} ${advisor.email ?? ''}`) ?? []),
-//   ]
-//     .filter(Boolean)
-//     .join(' ')
-//     .toLowerCase();
-//
-//   return normalizedQuery
-//     .split(/\s+/)
-//     .filter(Boolean)
-//     .every((token) => searchableText.includes(token));
-// }
+type ThesisProposal = components['schemas']['ThesisProposal'];
 
 type ThesisSearchResult = components['schemas']['ThesisSearchResult'];
 
